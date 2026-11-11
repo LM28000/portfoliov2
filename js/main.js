@@ -22,6 +22,12 @@
     $('archi').hidden = !vals.showArchi;
     const app = $('appview'); app.hidden = !vals.showApp;
     if (vals.showApp && !$('appframe').src) $('appframe').src = 'https://insula.du-cray.eu/';
+    const P = vals.panel, pe = $('panel'); pe.hidden = !P;
+    if (P && pe.dataset.k !== P.title) { pe.dataset.k = P.title; $('pKicker').textContent = P.kicker; $('pTitle').textContent = P.title;
+      $('pList').innerHTML = ''; (P.list || []).forEach(([h, t]) => { const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = h; li.appendChild(b); li.appendChild(document.createTextNode(t)); $('pList').appendChild(li); }); $('pList').hidden = !(P.list && P.list.length);
+      $('pParas').innerHTML = ''; (P.paras || []).forEach((t) => { const p = document.createElement('p'); p.textContent = t; $('pParas').appendChild(p); });
+      $('pLinks').innerHTML = ''; (P.links || []).forEach(([t, u]) => { const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t + ' ↗'; $('pLinks').appendChild(a); }); }
+    if (!P) pe.dataset.k = '';
   };
   C._render = render;
   $('askGo').onclick = () => vals.askGo(); $('askNo').onclick = () => vals.askNo();
@@ -33,6 +39,7 @@
   $('creditsBtn').onclick = () => { $('credits').hidden = false; };
   $('creditsClose').onclick = () => { $('credits').hidden = true; };
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('credits').hidden) $('credits').hidden = true; else if (vals.showApp) vals.closeApp(); } });
+  window.__elba = C; // pour les tests
   C.componentDidMount();
   render();
 })();

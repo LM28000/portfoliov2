@@ -75,17 +75,17 @@ init() {
  const cam = new T.PerspectiveCamera(50, W / H, 0.3, 3000); this.cam = cam;
  // ciel d'aube
  const sky = new T.Mesh(new T.SphereGeometry(1500, 64, 32), new T.ShaderMaterial({ side: T.BackSide, depthWrite: false, fog: false,
-  uniforms: { top: { value: new T.Color(0x5d86b8) }, hor: { value: new T.Color(0xf2cfb0) }, sun: { value: new T.Vector3(-0.35, 0.12, -0.93).normalize() } },
+  uniforms: { top: { value: new T.Color(0x5d86b8) }, hor: { value: new T.Color(0xf2cfb0) }, sun: { value: new T.Vector3(-0.35, 0.12, -0.93).normalize() }, glow: { value: 1 } },
   vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-  fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 sun; varying vec3 vP; void main(){ vec3 d = normalize(vP); float h = clamp(d.y,0.0,1.0); vec3 c = mix(hor, top, pow(h,0.55)); float s = max(dot(d,sun),0.0); c += vec3(1.0,0.8,0.6)*pow(s,300.0)*1.2 + vec3(1.0,0.65,0.45)*pow(s,12.0)*0.12; gl_FragColor = vec4(c,1.0); }' }));
+  fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 sun; uniform float glow; varying vec3 vP; void main(){ vec3 d = normalize(vP); float h = clamp(d.y,0.0,1.0); vec3 c = mix(hor, top, pow(h,0.55)); float s = max(dot(d,sun),0.0); c += (vec3(1.0,0.8,0.6)*pow(s,300.0)*1.2 + vec3(1.0,0.65,0.45)*pow(s,12.0)*0.12)*glow; gl_FragColor = vec4(c,1.0); }' }));
  scene.add(sky); this.sky = sky;
- scene.add(new T.HemisphereLight(0xcfe0ff, 0x6b5a48, 0.75));
- const sun = new T.DirectionalLight(0xffe2c4, 1.35); sun.position.set(-160, 120, -300); scene.add(sun);
+ const hemi = new T.HemisphereLight(0xcfe0ff, 0x6b5a48, 0.75); scene.add(hemi); this.hemi = hemi;
+ const sun = new T.DirectionalLight(0xffe2c4, 1.35); sun.position.set(-160, 120, -300); scene.add(sun); this.sunL = sun;
  // mer
  const sea = new T.Mesh(new T.PlaneGeometry(3000, 3000, 220, 220), new T.ShaderMaterial({ fog: true,
-  uniforms: T.UniformsUtils.merge([T.UniformsLib.fog, { t: { value: 0 }, deep: { value: new T.Color(0x0d3a5c) }, shallow: { value: new T.Color(0x2f7f9a) }, skyc: { value: new T.Color(0xf0d2b8) }, sunDir: { value: new T.Vector3(-0.35, 0.2, -0.93).normalize() } }]),
+  uniforms: T.UniformsUtils.merge([T.UniformsLib.fog, { t: { value: 0 }, deep: { value: new T.Color(0x0d3a5c) }, shallow: { value: new T.Color(0x2f7f9a) }, skyc: { value: new T.Color(0xf0d2b8) }, sunDir: { value: new T.Vector3(-0.35, 0.2, -0.93).normalize() }, spec: { value: new T.Color(1.0, 0.85, 0.65) } }]),
   vertexShader: 'uniform float t; varying vec3 vW; varying vec3 vN; #include <fog_pars_vertex>\n void main(){ vec3 p = position; float x = p.x, y = -p.y; float h = 0.22*sin(0.11*x+0.7*t)+0.16*sin(0.13*y*1.3+0.9*t+x*0.03)+0.08*sin(0.31*(x+y)+1.6*t); float dx = 0.22*0.11*cos(0.11*x+0.7*t)+0.16*0.03*cos(0.169*y+0.9*t+x*0.03)+0.08*0.31*cos(0.31*(x+y)+1.6*t); float dy = 0.16*0.169*cos(0.169*y+0.9*t+x*0.03)+0.08*0.31*cos(0.31*(x+y)+1.6*t); p.z += h; vec4 w = modelMatrix*vec4(p,1.0); vW = w.xyz; vN = normalize(vec3(-dx, 1.0, dy)); vec4 mvPosition = viewMatrix*w; gl_Position = projectionMatrix*mvPosition; #include <fog_vertex>\n }'.replace(/#include <fog_pars_vertex>/, '\n#include <fog_pars_vertex>').replace(/#include <fog_vertex>/, '\n#include <fog_vertex>'),
-  fragmentShader: 'uniform vec3 deep; uniform vec3 shallow; uniform vec3 skyc; uniform vec3 sunDir; varying vec3 vW; varying vec3 vN;\n#include <fog_pars_fragment>\n void main(){ vec3 V = normalize(cameraPosition - vW); float fr = pow(1.0 - max(dot(V, vN), 0.0), 3.0); vec3 c = mix(deep, shallow, 0.35) ; c = mix(c, skyc, clamp(fr*0.9,0.0,0.85)); vec3 R = reflect(-V, vN); float sp = pow(max(dot(R, sunDir), 0.0), 600.0); c += vec3(1.0,0.85,0.65)*sp*0.9; gl_FragColor = vec4(c, 1.0);\n#include <fog_fragment>\n }' }));
+  fragmentShader: 'uniform vec3 deep; uniform vec3 shallow; uniform vec3 skyc; uniform vec3 sunDir; uniform vec3 spec; varying vec3 vW; varying vec3 vN;\n#include <fog_pars_fragment>\n void main(){ vec3 V = normalize(cameraPosition - vW); float fr = pow(1.0 - max(dot(V, vN), 0.0), 3.0); vec3 c = mix(deep, shallow, 0.35) ; c = mix(c, skyc, clamp(fr*0.9,0.0,0.85)); vec3 R = reflect(-V, vN); float sp = pow(max(dot(R, sunDir), 0.0), 600.0); c += spec*sp*0.9; gl_FragColor = vec4(c, 1.0);\n#include <fog_fragment>\n }' }));
  sea.rotation.x = -Math.PI / 2; scene.add(sea); this.sea = sea;
  // ponton de départ (planches)
  const wood = new T.MeshStandardMaterial({ color: new T.Color(0x7a5a3a).convertSRGBToLinear(), roughness: 0.9 });
@@ -118,16 +118,24 @@ init() {
  const ray = new T.Raycaster(), ndc = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0);
  let down = null;
  r.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
- r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orbW) }; });
+ r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb) }; if (this.st().phase === 'accoste' || this.st().phase === 'nuit') Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
  r.domElement.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 5) down.moved = true;
-  if (this.st().phase === 'accoste') { const o = this.orbW, d0 = down.o; if (down.pan) { const k = d0.dist * 0.0016, cy = Math.cos(d0.yaw), sy = Math.sin(d0.yaw); let tx = d0.tx - (dx * cy - dy * sy) * k, tz = d0.tz - (-dx * sy - dy * cy) * k; const rr = Math.hypot(tx / 80, tz / 52); if (rr > 1) { tx /= rr; tz /= rr; } o.tx = tx; o.tz = tz; } else { o.yaw = d0.yaw - dx * 0.006; o.pitch = Math.max(0.3, Math.min(1.35, d0.pitch + dy * 0.004)); } return; }
+  const phx = this.st().phase;
+  if (phx === 'accoste' || phx === 'nuit') { const o = this.orbW, O = this.orb, d0 = down.o;
+   if (!down.pan) { // glisser = déplacer : le point saisi reste sous le curseur
+    const rc = r.domElement.getBoundingClientRect(); const hitAt = (px, py) => { ndc.set(((px - rc.left) / rc.width) * 2 - 1, -((py - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam); const pl = new T.Plane(new T.Vector3(0, 1, 0), -O.ty); const h = new T.Vector3(); return ray.ray.intersectPlane(pl, h) ? h : null; };
+    const prev = down.last || { x: down.x, y: down.y }; const h0 = hitAt(prev.x, prev.y), h1 = hitAt(e.clientX, e.clientY); down.last = { x: e.clientX, y: e.clientY };
+    if (h0 && h1) { let tx = O.tx + (h0.x - h1.x), tz = O.tz + (h0.z - h1.z); const rr = Math.hypot(tx / 85, tz / 55); if (rr > 1) { tx /= rr; tz /= rr; } O.tx = o.tx = tx; O.tz = o.tz = tz; this.placeCam(); }
+   } else { o.yaw = O.yaw = d0.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, d0.pitch - dy * 0.004)); this.placeCam(); }
+   return; }
   this.camYaw = down.yaw - dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, down.pitch + dy * 0.004)); });
- r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const dy = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY)); const f = Math.exp(dy * 0.0012); if (this.st().phase === 'accoste') this.orbW.dist = Math.max(22, Math.min(220, this.orbW.dist * f)); else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
+ r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const dy = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY)); const f = Math.exp(dy * 0.0012); if (this.st().phase === 'accoste' || this.st().phase === 'nuit') this.orbW.dist = Math.max(10, Math.min(220, this.orbW.dist * f)); else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
+  if (ph === 'cabine') { this.cabinClick(e.clientX, e.clientY); return; }
   if (ph !== 'mer' && ph !== 'approche' || !this.island) return;
   const rc = r.domElement.getBoundingClientRect(); ndc.set(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam);
-  const hit = ray.intersectObject(this.island, true).length || ray.intersectObject(this.trees, true).length; if (hit && !this.st().auto) this.setState({ ask: { x: e.clientX - rc.left, y: e.clientY - rc.top } }); else this.setState({ ask: null }); });
+  const hit = ray.intersectObject(this.island, true).length || ray.intersectObject(this.trees, true).length || (this.marker && ray.intersectObject(this.marker, true).length); if (hit && !this.st().auto) this.setState({ ask: { x: e.clientX - rc.left, y: e.clientY - rc.top } }); else this.setState({ ask: null }); });
  this.ro = new ResizeObserver(() => { W = host.clientWidth || W; H = host.clientHeight || H; r.setSize(W, H); cam.aspect = W / H; cam.updateProjectionMatrix(); }); this.ro.observe(host);
  // étiquettes des lieux (DOM géré à la main, mis à jour à chaque image)
  this.labels = [];
@@ -142,7 +150,7 @@ init() {
  this.dot = document.createElement('div'); this.dot.style.cssText = 'position:absolute;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:13px solid #B4412E;margin:-7px 0 0 -5px;transform-origin:5px 7px';
  this.chart.appendChild(this.dot); this.chartHost.appendChild(this.chart);
  this.clock = new T.Clock();
- const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); r.render(scene, cam); };
+ const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); if (this.st().phase === 'cabine' && this.cabin) r.render(this.cabin.scene, this.cabin.cam); else r.render(scene, cam); };
  tick();
 }
 prepIsland(T) {
@@ -164,9 +172,16 @@ prepIsland(T) {
  if (!tip) tip = new T.Vector3(-50, 0, 40);
  const o = new T.Vector2(tip.x / (72 * 72), tip.z / (46 * 46)).normalize();
  this.quaiPts = Array.from(pts.values()); this.out = o;
- this.D = { x: tip.x + o.x * 4.5, z: tip.z + o.y * 4.5 }; this.A = { x: tip.x + o.x * 32, z: tip.z + o.y * 32 };
+ // axe de la jetée (analyse en composantes principales des points proches du bout)
+ const near = this.quaiPts.filter(([x, z]) => Math.hypot(x - tip.x, z - tip.z) < 18); let mx = 0, mz = 0; near.forEach(([x, z]) => { mx += x; mz += z; }); mx /= near.length || 1; mz /= near.length || 1;
+ let sxx = 0, szz = 0, sxz = 0; near.forEach(([x, z]) => { sxx += (x - mx) ** 2; szz += (z - mz) ** 2; sxz += (x - mx) * (z - mz); });
+ const ang = 0.5 * Math.atan2(2 * sxz, sxx - szz); let u = { x: Math.cos(ang), z: Math.sin(ang) }; if (u.x * o.x + u.z * o.y < 0) u = { x: -u.x, z: -u.z };
+ let n = { x: -u.z, z: u.x }; if (n.z < 0) n = { x: -n.x, z: -n.z };
+ let wmax = 1; near.forEach(([x, z]) => { const al = (x - tip.x) * u.x + (z - tip.z) * u.z; if (al > -12) wmax = Math.max(wmax, Math.abs((x - tip.x) * n.x + (z - tip.z) * n.z)); }); wmax = Math.min(4, wmax);
+ const ax = tip.x - u.x * 6, az = tip.z - u.z * 6, lat = wmax + 1.7; this.jetty = { u, n };
+ this.D = { x: ax + n.x * lat, z: az + n.z * lat }; this.Dapp = { x: this.D.x + u.x * 16, z: this.D.z + u.z * 16 }; this.A = { x: this.D.x + u.x * 38 + n.x * 6, z: this.D.z + u.z * 38 + n.z * 6 };
  if (this.dest) { this.dest.style.left = this.cx(this.D.x) + 'px'; this.dest.style.top = this.cy(this.D.z) + 'px'; this.dest.style.display = 'block'; }
- this.buildLife(T);
+ this.buildLife(T); this.buildMarker(T);
 }
 // hauteur du dessus de l'île (sol, quai, toits) en (x, z)
 topY(x, z, only) { const rc = this.rcY || (this.rcY = new window.THREE.Raycaster()); rc.set(new window.THREE.Vector3(x, 200, z), new window.THREE.Vector3(0, -1, 0)); const h = rc.intersectObject(only || this.island, true); return h.length ? h[0].point.y : 0; }
@@ -252,14 +267,26 @@ plan(from, to, depth) {
  const am = a1 + da / 2, w = { x: Math.cos(am) * 72 * 1.55, z: Math.sin(am) * 46 * 1.55 };
  return this.plan(from, w, depth + 1).concat(this.plan(w, to, depth + 1));
 }
-autopilot() { if (!this.A) return; this.setState({ ask: null }); const near = Math.hypot(this.b.x - this.P0.x, this.b.z - this.P0.z) < 30; const start = near ? { x: this.b.x, z: this.P0.z - 24 } : null; this.route = (start ? [start] : []).concat(this.plan(start || this.b, this.A)); this.autoDock = true; this.setState({ auto: true }); this.say("Je prends la barre et je t'emmène au quai d'Insula. Regarde la carte marine : la route est en pointillés."); }
-dock() { if (!this.A) return; const d = Math.hypot(this.b.x - this.A.x, this.b.z - this.A.z); if (d > 40) { this.autopilot(); return; } this.route = []; this.startFinal(); }
-startFinal() {
- const b = this.b, D = this.D, o = this.out; const f = { x: Math.cos(b.h), z: -Math.sin(b.h) }; const dd = Math.hypot(D.x - b.x, D.z - b.z);
- const P = [{ x: b.x, z: b.z }, { x: b.x + f.x * Math.min(12, dd / 3), z: b.z + f.z * Math.min(12, dd / 3) }, { x: D.x + o.x * 14, z: D.z + o.y * 14 }, { x: D.x, z: D.z }];
- const at = (t) => { const u = 1 - t; return { x: u * u * u * P[0].x + 3 * u * u * t * P[1].x + 3 * u * t * t * P[2].x + t * t * t * P[3].x, z: u * u * u * P[0].z + 3 * u * u * t * P[1].z + 3 * u * t * t * P[2].z + t * t * t * P[3].z }; };
- let len = 0, prev = at(0); for (let i = 1; i <= 30; i++) { const c = at(i / 30); len += Math.hypot(c.x - prev.x, c.z - prev.z); prev = c; }
- this.path = { at, len: Math.max(len, 1), t: 0 }; this.autoDock = false; this.setState({ phase: 'accostage', auto: false }); this.say('On réduit… je te mets le long du quai.');
+// point de dégagement si le bateau est collé à un obstacle
+escape(from) { if (this.pen(from.x, from.z) < -2.5) return null; let best = null, bp = 1e9; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = from.x + Math.cos(a) * 10, z = from.z + Math.sin(a) * 10; const p = this.pen(x, z) + 0.02 * Math.hypot(x - this.A.x, z - this.A.z) / 10; if (p < bp) { bp = p; best = { x, z }; } } return best; }
+// suit une courbe lissée passant par des points ; arrive (option dock) le long du quai
+cruise(pts, dock, vmax) {
+ const T = window.THREE; const clean = [pts[0]]; pts.slice(1).forEach((p) => { const q = clean[clean.length - 1]; if (Math.hypot(p.x - q.x, p.z - q.z) > 3) clean.push(p); });
+ const curve = new T.CatmullRomCurve3(clean.map((p) => new T.Vector3(p.x, 0, p.z)), false, 'centripetal', 0.5);
+ this.cruiseP = { curve, len: curve.getLength(), s: 0, v: Math.max(1, this.b.v), dock, vmax: vmax || 14 };
+ this.route = clean.slice(1);
+}
+autopilot() {
+ if (!this.A) return; this.setState({ ask: null });
+ const b = { x: this.b.x, z: this.b.z }; const esc = this.escape(b); const s0 = esc || b;
+ const pts = [b].concat(esc ? [esc] : [], this.plan(s0, this.A), [this.Dapp, this.D]);
+ this.cruise(pts, true); this.autoDock = true; this.setState({ auto: true });
+ this.say("Je prends la barre et je t'emmène au quai d'Insula. Regarde la carte marine : la route est en pointillés.");
+}
+dock() { this.autopilot(); }
+leaveIsland() {
+ const u = this.jetty.u, n = this.jetty.n, b = this.b; const p1 = { x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 };
+ this.b.v = 1; this.cruise([{ x: b.x, z: b.z }, p1, { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }, { x: this.A.x + u.x * 25 + n.x * 20, z: this.A.z + u.z * 25 + n.z * 20 }], false, 7);
 }
 // pénétration dans un obstacle (> 0 = dedans) : île, ponton de départ, quai
 pen(x, z) {
@@ -275,33 +302,41 @@ step(T, dt) {
  const s = this.st(), b = this.b, k = this.keys; const t = this.clock.elapsedTime;
  this.sea.material.uniforms.t.value = t;
  const ph = s.phase;
- if (ph === 'accostage' && this.path) {
-  const P = this.path; const speed = Math.max(2.5, 9 * (1 - P.t)); P.t = Math.min(1, P.t + speed * dt / P.len);
-  const c = P.at(P.t), c2 = P.at(Math.min(1, P.t + 0.01)); if (P.t < 0.995) b.h = Math.atan2(-(c2.z - c.z), c2.x - c.x);
-  b.x = c.x; b.z = c.z; b.v = speed; b.turn *= 0.9;
-  if (P.t >= 1) { this.path = null; b.v = 0; this.docked(); }
+ if (this.cruiseP && (ph === 'mer' || ph === 'approche' || ph === 'accostage')) {
+  const C = this.cruiseP, rest = C.len - C.s;
+  const manual = k['arrowleft'] || k['arrowright'] || k['arrowup'] || k['arrowdown'] || k['q'] || k['a'] || k['d'] || k['z'] || k['w'] || k['s'] || this.pad;
+  if (manual && ph !== 'accostage') { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
+  else {
+   const vt = C.dock ? Math.max(1.8, Math.min(C.vmax, Math.sqrt(2 * 1.6 * rest) + 0.5)) : C.vmax; C.v += Math.max(-4 * dt, Math.min(3.2 * dt, vt - C.v)); C.s = Math.min(C.len, C.s + C.v * dt);
+   const f = C.s / C.len, pnt = C.curve.getPointAt(f), tg = C.curve.getTangentAt(Math.min(0.999, f));
+   let want = Math.atan2(-tg.z, tg.x), dh = want - b.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+   const rate = 0.9 + C.v * 0.05; const turn = Math.max(-rate * dt, Math.min(rate * dt, dh)); b.h += turn; b.turn += (Math.sign(dh) * Math.min(1, Math.abs(dh) * 2) - b.turn) * dt * 2;
+   b.x = pnt.x; b.z = pnt.z; b.v = C.v;
+   while (this.route.length > 1 && Math.hypot(this.route[0].x - b.x, this.route[0].z - b.z) < 8) this.route.shift();
+   if (C.dock && rest < 45 && ph !== 'accostage') { this.setState({ phase: 'accostage', auto: false }); this.say('On réduit… je te mets le long du quai.'); }
+   if (C.s >= C.len - 0.05) { this.cruiseP = null; this.route = []; if (C.dock) { b.v = 0; this.autoDock = false; this.docked(); } else { b.v = Math.min(b.v, 4); this.setState({ auto: false }); } }
+  }
  } else if (ph === 'mer' || ph === 'approche') {
   let turn = 0, thr = 0;
   if (k['arrowleft'] || k['q'] || k['a'] || this.pad === 'L') turn += 1;
   if (k['arrowright'] || k['d'] || this.pad === 'R') turn -= 1;
   if (k['arrowup'] || k['z'] || k['w'] || this.pad === 'U') thr = 1;
   if (k['arrowdown'] || k['s']) thr = -1;
-  if ((turn || thr) && this.route.length) { this.route = []; if (this.autoDock) { this.autoDock = false; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
-  if (this.route.length) { const w = this.route[0]; const dx = w.x - b.x, dz = w.z - b.z, d = Math.hypot(dx, dz); let da = Math.atan2(-dz, dx) - b.h; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+  if (false) { const w = this.route[0]; const dx = w.x - b.x, dz = w.z - b.z, d = Math.hypot(dx, dz); let da = Math.atan2(-dz, dx) - b.h; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
    turn = Math.max(-1, Math.min(1, da * 2.5)); thr = Math.abs(da) > 1.2 ? 0.35 : 1;
    if (d < (this.route.length > 1 ? 12 : 6)) { this.route.shift(); if (!this.route.length) { if (this.autoDock) this.startFinal(); else thr = 0; } } }
   const vmax = this.autoDock ? 18 : 8; b.v += (thr * vmax - b.v) * dt * (thr > 0 ? (this.autoDock ? 0.8 : 0.35) : 0.5) + (thr < 0 ? -2 * dt : 0); b.v = Math.max(0, Math.min(vmax, b.v));
   b.turn += (turn - b.turn) * dt * 3; b.h += b.turn * dt * (0.3 + b.v * 0.07);
   const nx = b.x + Math.cos(b.h) * b.v * dt, nz = b.z - Math.sin(b.h) * b.v * dt;
   if (!this.blocked(nx, nz, b.x, b.z)) { b.x = nx; b.z = nz; } else { b.v *= 0.2; }
-  if (this.A) { const dq = Math.hypot(b.x - this.A.x, b.z - this.A.z); if (ph === 'mer' && dq < 45) { this.setState({ phase: 'approche' }); if (!this.autoDock) this.say(PR_RADIO.approche); } if (ph === 'approche' && dq > 60) this.setState({ phase: 'mer' }); }
+  if (this.A) { const dq = Math.hypot(b.x - this.A.x, b.z - this.A.z); if (ph === 'mer' && dq < 45) { this.setState({ phase: 'approche' }); this.say(PR_RADIO.approche); } if (ph === 'approche' && dq > 60) this.setState({ phase: 'mer' }); }
  }
- if (this.boat) { const bo = this.boat; bo.position.set(b.x, 0.05 * Math.sin(t * 1.3) - 0.05, b.z); bo.rotation.set(0, 0, 0); bo.rotateY(b.h); bo.rotateX(-0.12 * (b.v / 7) - b.turn * 0.06 + 0.02 * Math.sin(t * 1.1)); bo.rotateZ(0.015 * Math.sin(t * 0.9)); }
+ if (this.boat) { const bo = this.boat; bo.position.set(b.x, 0.05 * Math.sin(t * 1.3) - 0.05, b.z); bo.rotation.set(0, 0, 0); bo.rotateY(b.h); bo.rotateX(0.14 * Math.min(1, b.v / 8) + b.turn * 0.04 + 0.02 * Math.sin(t * 1.1)); bo.rotateZ(0.015 * Math.sin(t * 0.9)); }
  // caméra : derrière le bateau ; en montant, elle regarde le bateau lui-même
  const cam = this.cam;
- if (ph === 'accoste') { const O = this.orb, W2 = this.orbW, k2 = Math.min(1, dt * 2.2); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
+ if (ph === 'accoste' || ph === 'nuit') { const O = this.orb, W2 = this.orbW, k2 = Math.min(1, dt * 2.2); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
   for (const key of ['tx', 'tz', 'ty', 'pitch', 'dist']) O[key] += (W2[key] - O[key]) * k2; let dy = W2.yaw - O.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; O.yaw += dy * k2;
-  const cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 2) cam.position.y = 2; cam.lookAt(O.tx, O.ty, O.tz); }
+  this.placeCam(); }
  else {
   const back = this.camDist + b.v * 0.5; const a = b.h + Math.PI + this.camYaw; const pc = this.camPitch;
   const tgt = new T.Vector3(b.x + Math.cos(a) * back * Math.cos(pc), 1.5 + back * Math.sin(pc), b.z - Math.sin(a) * back * Math.cos(pc));
@@ -312,29 +347,32 @@ step(T, dt) {
   this.look = ahead.lerp(onBoat, f);
   cam.lookAt(ph === 'ponton' ? new T.Vector3(b.x - 5, 2.5, b.z - 12) : this.look);
  }
- this.lifeStep(T, t, dt);
+ this.lifeStep(T, t, dt); this.markerStep(T, t, ph); this.nightStep(T, dt); if (ph === 'cabine') this.cabinStep(T, t, dt);
  if (ph === 'accoste' && this.mouse && this.island && (this.hovT = (this.hovT || 0) + dt) > 0.08) { this.hovT = 0; const k = this.hitPlace(this.mouse.x, this.mouse.y); const r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'grab';
   if (k) { const pl = this.poi[k]; this.tip.innerHTML = '<b>' + pl.n + '</b>' + pl.name; this.tip.style.display = 'block'; this.tip.style.left = (this.mouse.x - r0.left) + 'px'; this.tip.style.top = (this.mouse.y - r0.top - 14) + 'px'; } else this.tip.style.display = 'none'; }
- if (ph !== 'accoste' && this.tip) this.tip.style.display = 'none';
+ if (!['accoste', 'mer', 'approche', 'cabine'].includes(ph) && this.tip) this.tip.style.display = 'none';
  // étiquettes
  const show = ph === 'accoste'; const W = this.host.clientWidth, H = this.host.clientHeight;
  this.labels.forEach((L) => { if (!show) { L.el.style.display = 'none'; return; } const p = L.v.clone().project(cam); if (p.z > 1) { L.el.style.display = 'none'; return; } L.el.style.display = 'block'; L.el.style.left = ((p.x + 1) / 2 * W) + 'px'; L.el.style.top = ((1 - p.y) / 2 * H) + 'px'; });
  // carte marine : 1 px = 2,8 m ; route en pointillés
  this.dot.style.left = this.cx(b.x) + 'px'; this.dot.style.top = this.cy(b.z) + 'px'; this.dot.style.transform = 'rotate(' + (90 - b.h * 180 / Math.PI) + 'deg)';
- const rt = this.route.length ? [b].concat(this.route) : (this.path ? [b, this.D] : []);
- if (this.autoDock && this.route.length && this.D) rt.push(this.D);
+ const rt = this.cruiseP ? [b].concat(this.route) : [];
  this.routeLine.setAttribute('points', rt.map((p) => this.cx(p.x).toFixed(1) + ',' + this.cy(p.z).toFixed(1)).join(' '));
 }
-docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
+placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
+docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
  const acts = [];
  if (ph === 'ponton') acts.push({ label: 'Larguer les amarres ⚓', cls: 'pr-btn', go: () => this.leave() });
- if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.route = []; this.autoDock = false; this.setState({ auto: false }); } });
+ if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.cruiseP = null; this.route = []; this.autoDock = false; this.setState({ auto: false }); } });
  if (ph === 'mer' && !s.auto) acts.push({ label: 'Pilote auto → Insula', cls: 'pr-btn', go: () => this.autopilot() });
  if (ph === 'approche' && !s.auto) acts.push({ label: 'Accoster', cls: 'pr-btn', go: () => this.dock() });
- if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: 'Reprendre la mer', cls: 'pr-btn', go: () => { if (plan) this.setPlan(false); this.focused = null; this.b.h = Math.atan2(-this.out.y, this.out.x); this.b.v = 2; this.setState({ phase: 'mer', showCard: false, auto: false, focus: null, showApp: false }); this.say('Bon vent ! Les autres îles arrivent bientôt.'); } }); }
- const hint = ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner autour de l'île · clic droit ou Maj + glisser pour la déplacer · molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glisser pour tourner la vue, molette pour zoomer · cliquez sur une île pour y aller en pilote auto';
+ if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: 'Reprendre la mer', cls: 'pr-btn2', go: () => { if (plan) this.setPlan(false); this.focused = null; this.setState({ phase: 'mer', showCard: false, auto: false, focus: null, showApp: false }); this.leaveIsland(); this.say('Bon vent ! Les autres îles arrivent bientôt.'); } }); acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn', go: () => { if (plan) this.setPlan(false); this.startNight(); } }); }
+ if (ph === 'nuit') { acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
+ if (ph === 'cabine') { if (s.panel) acts.push({ label: '← La cabine', cls: 'pr-btn2', go: () => this.setState({ panel: null }) }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => location.reload() }); }
+ if (ph === 'mer' && !s.auto && this.visited) acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn2', go: () => this.startNight() });
+ const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur la photo, le livre de bord ou la VHF' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour déplacer l'île · clic droit ou Maj + glisser pour tourner · molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glisser pour tourner la vue, molette pour zoomer · cliquez sur une île pour y aller en pilote auto';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });
@@ -347,7 +385,7 @@ renderVals() {
   showPads: touch && (ph === 'mer' || ph === 'approche'),
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askGo: () => this.autopilot(), askNo: () => this.setState({ ask: null }),
   showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
-  showArchi: !!s.plan && ph === 'accoste',
+  showArchi: !!s.plan && ph === 'accoste', panel: ph === 'cabine' && s.panel ? PR_CABIN[s.panel] : null,
   padL: () => { this.pad = 'L'; }, padR: () => { this.pad = 'R'; }, padU: () => { this.pad = 'U'; }, padOff: () => { this.pad = null; }
  };
 }
