@@ -25,7 +25,8 @@
     <p id="hint" class="hint"></p>
   </header>
 
-  <div class="chart" aria-hidden="true"><div id="chart" class="chart-in"></div><span class="chart-n">N · CARTE MARINE</span></div>
+  <button id="chartBtn" class="chart" title="Ouvrir la carte du voyage" aria-label="Ouvrir la carte du voyage"><div id="chart" class="chart-in"></div><span class="chart-n">N · CARTE MARINE</span></button>
+  <button id="mapBtn" class="map-btn">🗺 Carte du voyage</button>
 
   <section class="vhf" aria-live="polite">
     <div class="vhf-top"><span class="vhf-chip">VHF 16</span><span id="radioFrom" class="vhf-from"></span></div>
@@ -77,6 +78,21 @@
     <div id="pParas"></div>
     <div id="pLinks" class="p-links"></div>
   </article>
+
+  <div id="voyage" class="voyage" hidden>
+    <div class="voy-in">
+      <div class="voy-head">
+        <div><p class="p-k">CARTE DU VOYAGE</p><h2 class="voy-t">Où veux-tu aller ?</h2><p class="voy-s">Le parcours conseillé suit les numéros. Tu peux aussi sauter directement à n'importe quelle étape, et revenir ici à tout moment (carte marine en haut à droite).</p></div>
+        <button id="voyClose" class="pr-btn2 dark sm">Fermer ×</button>
+      </div>
+      <div id="voyMap" class="voy-map">
+        <svg class="voy-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path id="voyPath" d="" fill="none" stroke="#B4412E" stroke-width="0.5" stroke-dasharray="1.6 1.2" vector-effect="non-scaling-stroke"/></svg>
+        <div class="voy-isle" style="left:24%;top:12%;width:42%;height:40%"></div>
+        <div class="voy-next" style="left:2%;top:4%">Prochaines îles · bientôt</div>
+      </div>
+      <div class="voy-foot"><button id="voyStart" class="pr-btn">Suivre le parcours depuis le début</button></div>
+    </div>
+  </div>
 
   <div id="loading" class="loading">
     <div><p class="ld-t"><i>Elba</i> se prépare…</p><p id="loadMsg" class="ld-m"></p></div>

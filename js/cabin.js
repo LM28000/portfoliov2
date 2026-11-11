@@ -32,7 +32,20 @@ const PR_CABIN_RADIO = {
   contact: "Canal 16, je t'écoute. Laisse-moi un message, je te réponds."
 };
 
+const PR_STOPS = [
+  { k: 'ponton', n: '1', t: 'Le ponton', d: 'Le départ, à bord d’Elba', x: 12, y: 84 },
+  { k: 'insula', n: '2', t: 'Insula', d: 'Île n° 1 · choisir où acheter, entre amis', x: 40, y: 34, big: true },
+  { k: 'cinema', n: '2a', t: 'Le cinéma', d: 'La démo, en une minute', x: 56, y: 18, sub: true },
+  { k: 'longuevue', n: '2b', t: 'La longue-vue', d: 'Essayer l’app pour de vrai', x: 25, y: 16, sub: true },
+  { k: 'archi', n: '2c', t: 'Les coulisses', d: 'L’architecture', x: 60, y: 46, sub: true },
+  { k: 'nuit', n: '3', t: 'La nuit tombe', d: 'Fin de la traversée', x: 78, y: 60 },
+  { k: 'cabine', n: '4', t: 'La cabine', d: 'À bord, à la lanterne', x: 82, y: 76, big: true },
+  { k: 'apropos', n: '4a', t: 'À propos', d: 'La photo', x: 62, y: 86, sub: true },
+  { k: 'recap', n: '4b', t: 'Livre de bord', d: 'Récap du voyage', x: 74, y: 93, sub: true },
+  { k: 'contact', n: '4c', t: 'La VHF', d: 'Me laisser un message', x: 90, y: 93, sub: true }
+];
 Object.assign(Component.prototype, {
+  seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; this.setState({ v: Date.now() }); } },
   // ---------- repère au-dessus de l'île, visible en mer
   buildMarker(T) {
     const c = document.createElement('canvas'); c.width = 640; c.height = 170; const g = c.getContext('2d');
@@ -56,23 +69,46 @@ Object.assign(Component.prototype, {
     }
   },
   // ---------- tombée de la nuit
+  ensureNight() {
+    const T = window.THREE; if (this.stars) return;
+    const n = 1400, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const u = Math.random(), v = Math.random() * 0.95 + 0.05; const th = 2 * Math.PI * u, y = v; const rr = Math.sqrt(1 - y * y); pos[3 * i] = Math.cos(th) * rr * 1350; pos[3 * i + 1] = y * 1350; pos[3 * i + 2] = Math.sin(th) * rr * 1350; }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
+    this.stars = new T.Points(g, new T.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false })); this.scene.add(this.stars);
+    const mc = document.createElement('canvas'); mc.width = mc.height = 128; const mg = mc.getContext('2d'); const gr = mg.createRadialGradient(64, 64, 10, 64, 64, 64); gr.addColorStop(0, 'rgba(255,250,235,1)'); gr.addColorStop(0.32, 'rgba(255,250,235,1)'); gr.addColorStop(0.36, 'rgba(200,215,255,0.35)'); gr.addColorStop(1, 'rgba(200,215,255,0)'); mg.fillStyle = gr; mg.fillRect(0, 0, 128, 128);
+    this.moon = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(mc), transparent: true, opacity: 0, fog: false, depthWrite: false })); this.moon.position.set(-420, 520, -1100); this.moon.scale.set(150, 150, 1); this.scene.add(this.moon);
+    this.boatLamp = new T.PointLight(0xffb36b, 0, 14, 2); this.scene.add(this.boatLamp);
+    this.boatWin = []; if (this.boat) this.boat.traverse((o) => { if (o.isMesh && o.material && /^Hublot/.test(o.material.name || '')) { o.material = o.material.clone(); o.material.emissive = new T.Color(0xffa64d); o.material.emissiveIntensity = 0; this.boatWin.push(o.material); } });
+    const C = (h) => new T.Color(h); this.nightCols = { top: [C(0x5d86b8), C(0x050a18)], hor: [C(0xf2cfb0), C(0x1b2c4e)], fog: [this.fogDay.clone(), C(0x0a1426).convertSRGBToLinear()], deep: [C(0x0d3a5c), C(0x020c18)], shallow: [C(0x2f7f9a), C(0x0a2236)], skyc: [C(0xf0d2b8), C(0x1d2d4a)], spec: [C(0xffd9a6), C(0x9fb8ff)], hemi: [C(0xcfe0ff), C(0x41598c)], sun: [C(0xffe2c4), C(0x9fb4ff)] };
+  },
+  // nuit instantanée (0 = jour, 1 = nuit), pour les sauts de la carte du voyage
+  setNightNow(v) { this.ensureNight(); this.nightTarget = v; this.night = v === 1 ? 0.999 : 0.001; this.nightStep(window.THREE, 1); this.night = v; },
+  orbitBoat(dist, pitch) { const T = window.THREE, b = this.b, c = this.cam.position, O = this.orb;
+    O.tx = b.x; O.tz = b.z; O.ty = 1.5; O.dist = Math.min(60, Math.max(18, Math.hypot(c.x - b.x, c.z - b.z))); O.yaw = Math.atan2(c.x - b.x, c.z - b.z); O.pitch = 0.3;
+    Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1.5, yaw: O.yaw + 0.5, pitch: pitch || 0.2, dist: dist || 22 }); },
   startNight() {
-    const T = window.THREE; this.cruiseP = null; this.route = []; this.autoDock = false;
-    const b = this.b, c = this.cam.position, O = this.orb;
-    O.tx = b.x; O.tz = b.z; O.ty = 1.5; O.dist = Math.min(60, Math.max(18, Math.hypot(c.x - b.x, c.z - b.z))); O.yaw = Math.atan2(c.x - b.x, c.z - b.z); O.pitch = Math.max(0.15, Math.min(0.8, Math.asin(Math.min(1, (c.y - 1.5) / Math.max(1, c.distanceTo(new T.Vector3(b.x, 1.5, b.z)))))));
-    Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1.5, yaw: O.yaw + 0.5, pitch: 0.2, dist: 22 });
-    this.nightTarget = 1; this.setState({ phase: 'nuit', auto: false, focus: null, showApp: false, ask: null });
-    this.say("Le soleil se couche, on rentre. Descends dans la cabine : je t'y attends.");
-    if (!this.stars) {
-      const n = 1400, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const u = Math.random(), v = Math.random() * 0.95 + 0.05; const th = 2 * Math.PI * u, y = v; const rr = Math.sqrt(1 - y * y); pos[3 * i] = Math.cos(th) * rr * 1350; pos[3 * i + 1] = y * 1350; pos[3 * i + 2] = Math.sin(th) * rr * 1350; }
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
-      this.stars = new T.Points(g, new T.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false })); this.scene.add(this.stars);
-      const mc = document.createElement('canvas'); mc.width = mc.height = 128; const mg = mc.getContext('2d'); const gr = mg.createRadialGradient(64, 64, 10, 64, 64, 64); gr.addColorStop(0, 'rgba(255,250,235,1)'); gr.addColorStop(0.32, 'rgba(255,250,235,1)'); gr.addColorStop(0.36, 'rgba(200,215,255,0.35)'); gr.addColorStop(1, 'rgba(200,215,255,0)'); mg.fillStyle = gr; mg.fillRect(0, 0, 128, 128);
-      this.moon = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(mc), transparent: true, opacity: 0, fog: false, depthWrite: false })); this.moon.position.set(-420, 520, -1100); this.moon.scale.set(150, 150, 1); this.scene.add(this.moon);
-      this.boatLamp = new T.PointLight(0xffb36b, 0, 14, 2); this.scene.add(this.boatLamp);
-      this.boatWin = []; if (this.boat) this.boat.traverse((o) => { if (o.isMesh && o.material && /^Hublot/.test(o.material.name || '')) { o.material = o.material.clone(); o.material.emissive = new T.Color(0xffa64d); o.material.emissiveIntensity = 0; this.boatWin.push(o.material); } });
-      const C = (h) => new T.Color(h); this.nightCols = { top: [C(0x5d86b8), C(0x050a18)], hor: [C(0xf2cfb0), C(0x1b2c4e)], fog: [this.fogDay.clone(), C(0x0a1426).convertSRGBToLinear()], deep: [C(0x0d3a5c), C(0x020c18)], shallow: [C(0x2f7f9a), C(0x0a2236)], skyc: [C(0xf0d2b8), C(0x1d2d4a)], spec: [C(0xffd9a6), C(0x9fb8ff)], hemi: [C(0xcfe0ff), C(0x41598c)], sun: [C(0xffe2c4), C(0x9fb4ff)] };
-    }
+    this.ensureNight(); const ph = this.st().phase; this.prevPhase = ph === 'accoste' ? 'accoste' : 'mer';
+    this.cruiseP = null; this.route = []; this.autoDock = false; this.orbitBoat();
+    this.seen('nuit'); this.nightTarget = 1; this.setState({ phase: 'nuit', auto: false, focus: null, showApp: false, ask: null });
+    this.say("Le soleil se couche, on rentre. Descends dans la cabine : je t'y attends. (Tu peux aussi annuler et repartir.)");
+  },
+  cancelNight() {
+    this.nightTarget = 0; const back = this.prevPhase || 'accoste'; this.setState({ phase: back });
+    if (back === 'accoste') { this.overview(); this.say("Pas encore sommeil ? L'île est à toi."); } else this.say('On repart ! Le soleil remonte.');
+  },
+  // ---------- carte du voyage : tous les lieux, le parcours suggéré, et un saut vers n'importe lequel
+  goTo(k) {
+    this.setState({ showMap: false });
+    this.fade(() => {
+      const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
+      this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
+      const atQuay = () => { const u = this.jetty.u; this.b.x = this.D.x; this.b.z = this.D.z; this.b.h = Math.atan2(u.z, -u.x); this.b.v = 0; this.b.turn = 0; };
+      if (k === 'ponton') { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.camYaw = 0; this.camPitch = 0.28; this.setState({ phase: 'ponton' }); this.say(PR_RADIO.ponton); return; }
+      if (['insula', 'cinema', 'longuevue', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); return; }
+      this.setNightNow(1); atQuay(); this.prevPhase = 'accoste';
+      if (k === 'nuit') { this.orbitBoat(); this.setState({ phase: 'nuit' }); this.say("La nuit est tombée sur Insula. Descends dans la cabine quand tu veux."); return; }
+      if (!this.cabin) this.buildCabin(window.THREE); this.cabin.cam.aspect = this.host.clientWidth / this.host.clientHeight; this.cabin.cam.updateProjectionMatrix();
+      const panel = ['apropos', 'recap', 'contact'].includes(k) ? k : null; this.setState({ phase: 'cabine', panel }); this.say(panel ? PR_CABIN_RADIO[panel] : PR_CABIN_RADIO.enter, 'LOUIS-MARIE · CABINE');
+    });
   },
   nightStep(T, dt) {
     if (this.nightTarget == null) return; const n0 = this.night || 0; const n = n0 + Math.max(-dt / 4, Math.min(dt / 4, this.nightTarget - n0)); if (n === n0 && n0 > 0.999) return; this.night = n;
@@ -156,7 +192,7 @@ Object.assign(Component.prototype, {
   },
   enterCabin() {
     const T = window.THREE; if (!this.cabin) this.buildCabin(T);
-    this.fade(() => { this.cabin.cam.aspect = this.host.clientWidth / this.host.clientHeight; this.cabin.cam.updateProjectionMatrix(); this.setState({ phase: 'cabine', panel: null }); this.say(PR_CABIN_RADIO.enter); });
+    this.fade(() => { this.cabin.cam.aspect = this.host.clientWidth / this.host.clientHeight; this.cabin.cam.updateProjectionMatrix(); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null }); this.say(PR_CABIN_RADIO.enter); });
   },
   leaveCabin() { this.fade(() => { this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
   cabinPick(cx, cy) {
@@ -164,7 +200,7 @@ Object.assign(Component.prototype, {
     rc.setFromCamera(new T.Vector2(((cx - r0.left) / r0.width) * 2 - 1, -((cy - r0.top) / r0.height) * 2 + 1), C.cam);
     const h = rc.intersectObjects(C.clickables, true); if (!h.length) return null; let o = h[0].object; while (o && !o.userData.k) o = o.parent; return o ? o.userData.k : null;
   },
-  cabinClick(cx, cy) { const k = this.cabinPick(cx, cy); if (!k) return; this.setState({ panel: k }); this.say(PR_CABIN_RADIO[k], 'LOUIS-MARIE · CABINE'); },
+  cabinClick(cx, cy) { const k = this.cabinPick(cx, cy); if (!k) return; this.seen(k); this.setState({ panel: k }); this.say(PR_CABIN_RADIO[k], 'LOUIS-MARIE · CABINE'); },
   cabinStep(T, t, dt) {
     const C = this.cabin; if (!C) return;
     C.room.rotation.x = 0.025 * Math.sin(t * 0.7); C.room.rotation.z = 0.012 * Math.sin(t * 0.5);

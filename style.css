@@ -12,7 +12,9 @@ html, body { margin: 0; height: 100%; background: var(--night); color: #F4EFE6; 
 .kicker { margin: 0; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--sun); text-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .hint { margin: 6px 0 0; font-size: 13.5px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 
-.chart { position: absolute; right: 20px; top: 18px; width: 150px; height: 150px; border-radius: 50%; background: rgba(233,224,200,.92); border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,0,0,.3); overflow: hidden; pointer-events: none; }
+.chart { position: absolute; right: 20px; top: 18px; width: 150px; height: 150px; padding: 0; border-radius: 50%; background: rgba(233,224,200,.92); border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,0,0,.3); overflow: hidden; cursor: pointer; }
+.chart:hover { box-shadow: 0 0 0 4px var(--sun), 0 8px 24px rgba(0,0,0,.3); }
+.map-btn { position: absolute; right: 20px; top: 176px; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--sun); color: var(--ink); font: 700 12px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
 .chart-in { position: absolute; inset: 0; }
 .chart-n { position: absolute; left: 0; right: 0; top: 5px; text-align: center; font: 700 10px 'JetBrains Mono', monospace; color: var(--ink); }
 
@@ -66,7 +68,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .ld-t { margin: 0; font: 700 30px Fraunces, serif; }
 .ld-m { margin: 10px 0 0; font: 400 13px 'JetBrains Mono', monospace; color: var(--cyan); }
 
-.credits-btn { position: absolute; right: 20px; top: 178px; padding: 4px 10px; border: 0; border-radius: 999px; background: rgba(11,22,38,.5); color: rgba(255,255,255,.8); font: 600 11px Inter, sans-serif; cursor: pointer; }
+.credits-btn { position: absolute; right: 20px; top: 214px; padding: 4px 10px; border: 0; border-radius: 999px; background: rgba(11,22,38,.5); color: rgba(255,255,255,.8); font: 600 11px Inter, sans-serif; cursor: pointer; }
 .credits { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; background: rgba(11,22,38,.7); }
 .credits-in { width: min(560px, calc(100% - 32px)); padding: 22px 24px; border-radius: 14px; background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.55; }
 .credits-in ul { padding-left: 18px; }
@@ -74,7 +76,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .nojs { position: absolute; inset: 0; padding: 40px 24px; background: var(--night); }
 .nojs a { color: var(--cyan); }
 
-.panel { position: absolute; right: 20px; top: 186px; bottom: 90px; width: 400px; max-width: calc(100% - 40px); overflow-y: auto; padding: 24px 26px; border-radius: 6px; background: var(--cream); color: var(--ink); box-shadow: 0 14px 40px rgba(0,0,0,.45); background-image: linear-gradient(90deg, transparent 22px, rgba(180,65,46,.25) 22px, rgba(180,65,46,.25) 24px, transparent 24px); }
+.panel { position: absolute; right: 20px; top: 250px; bottom: 90px; width: 400px; max-width: calc(100% - 40px); overflow-y: auto; padding: 24px 26px; border-radius: 6px; background: var(--cream); color: var(--ink); box-shadow: 0 14px 40px rgba(0,0,0,.45); background-image: linear-gradient(90deg, transparent 22px, rgba(180,65,46,.25) 22px, rgba(180,65,46,.25) 24px, transparent 24px); }
 .p-k { margin: 0 0 6px; font: 700 11px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--rust); }
 .p-t { margin: 0 0 14px; font: 700 28px/1.15 Fraunces, serif; }
 .panel p { margin: 0 0 12px; font: 400 16px/1.6 Fraunces, serif; color: #24364D; }
@@ -84,8 +86,35 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .p-links a { padding: 10px 16px; border-radius: 999px; background: var(--ink); color: #fff; font: 700 14px Inter, sans-serif; text-decoration: none; }
 .p-links a:first-child { background: var(--rust); }
 
+.voyage { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: rgba(6,12,24,.6); backdrop-filter: blur(2px); }
+.voy-in { width: min(1000px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 22px 24px; border-radius: 14px; background: #EFE6D0; color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.voy-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.voy-t { margin: 0 0 6px; font: 700 30px Fraunces, serif; }
+.voy-s { margin: 0; font-size: 14px; line-height: 1.5; color: #3B4D63; max-width: 640px; }
+.pr-btn2.dark { color: var(--ink); border-color: rgba(20,37,58,.5); background: transparent; }
+.voy-map { position: relative; margin: 16px 0; height: 440px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
+.voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 40px 40px; }
+.voy-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.voy-isle { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, #b9c98e 0%, #9fb57a 60%, #d8c99a 92%, transparent 94%); }
+.voy-next { position: absolute; padding: 4px 8px; border: 1.5px dashed rgba(20,37,58,.4); border-radius: 8px; font: 600 11px Inter, sans-serif; color: rgba(20,37,58,.6); }
+.stop { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; border: 0; border-radius: 999px; background: #FBF7EE; color: var(--ink); box-shadow: 0 3px 10px rgba(0,0,0,.2); cursor: pointer; text-align: left; white-space: nowrap; }
+.stop:hover { background: #fff; box-shadow: 0 0 0 3px var(--sun), 0 3px 10px rgba(0,0,0,.2); }
+.stop .num { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 999px; background: var(--rust); color: #fff; font: 700 12px 'JetBrains Mono', monospace; }
+.stop b { display: block; font: 700 13px Inter, sans-serif; } .stop small { display: block; font: 400 11.5px Inter, sans-serif; color: #3B4D63; }
+.stop.sub { padding: 4px 9px 4px 4px; } .stop.sub .num { min-width: 22px; height: 22px; background: #14253A; font-size: 10.5px; } .stop.sub small { display: none; }
+.stop.big .num { min-width: 32px; height: 32px; font-size: 14px; }
+.stop.done .num::after { content: ' ✓'; }
+.stop.here { box-shadow: 0 0 0 3px var(--cyan), 0 3px 10px rgba(0,0,0,.2); }
+.voy-foot { display: flex; justify-content: flex-end; }
+
 @media (max-width: 760px) {
-  .panel { top: 110px; right: 12px; left: 12px; width: auto; bottom: 190px; }
+  .voy-map { height: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #cfe3ea; }
+  .voy-map::before, .voy-svg, .voy-isle, .voy-next { display: none; }
+  .stop { position: static; transform: none; white-space: normal; }
+  .stop.sub { margin-left: 24px; }
+  .map-btn { top: 114px; right: 12px; font-size: 11px; } .credits-btn { top: 150px; }
+  .voy-t { font-size: 24px; }
+  .panel { top: 186px; right: 12px; left: 12px; width: auto; bottom: 190px; }
   .brand .hint { display: none; }
   .chart { width: 96px; height: 96px; top: 12px; right: 12px; }
   .chart-in { transform: scale(.64); transform-origin: 0 0; width: 150px; height: 150px; }

@@ -106,7 +106,7 @@ init() {
   const boat = new T.Group(); const m = g.scene; boat.add(m); scene.add(boat); this.boat = boat;
   m.traverse((o) => { if (o.isMesh && o.material && o.material.name && o.material.name.startsWith('feu')) o.material.emissiveIntensity = 2; });
   this.setState({ loadMsg: "l'île d'Insula…" });
-  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.setState({ loading: false }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
+  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.seen('ponton'); this.setState({ loading: false, showMap: true }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
  }, undefined, (e) => this.setState({ loadMsg: 'erreur bateau : ' + e }));
  // état du bateau
  this.P0 = P0; this.b = { x: P0.x + 3.0, z: P0.z - 4, h: Math.PI / 2, v: 0, turn: 0, thr: 0, auto: null }; this.route = []; this.path = null; this.camDist = 16;
@@ -122,14 +122,22 @@ init() {
  r.domElement.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 5) down.moved = true;
   const phx = this.st().phase;
   if (phx === 'accoste' || phx === 'nuit') { const o = this.orbW, O = this.orb, d0 = down.o;
-   if (!down.pan) { // glisser = déplacer : le point saisi reste sous le curseur
+   if (down.pan) { // clic droit / Maj + glisser = déplacer : le point saisi reste sous le curseur
     const rc = r.domElement.getBoundingClientRect(); const hitAt = (px, py) => { ndc.set(((px - rc.left) / rc.width) * 2 - 1, -((py - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam); const pl = new T.Plane(new T.Vector3(0, 1, 0), -O.ty); const h = new T.Vector3(); return ray.ray.intersectPlane(pl, h) ? h : null; };
     const prev = down.last || { x: down.x, y: down.y }; const h0 = hitAt(prev.x, prev.y), h1 = hitAt(e.clientX, e.clientY); down.last = { x: e.clientX, y: e.clientY };
     if (h0 && h1) { let tx = O.tx + (h0.x - h1.x), tz = O.tz + (h0.z - h1.z); const rr = Math.hypot(tx / 85, tz / 55); if (rr > 1) { tx /= rr; tz /= rr; } O.tx = o.tx = tx; O.tz = o.tz = tz; this.placeCam(); }
-   } else { o.yaw = O.yaw = d0.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, d0.pitch - dy * 0.004)); this.placeCam(); }
+   } else { o.yaw = O.yaw = d0.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, d0.pitch + dy * 0.004)); this.placeCam(); }
    return; }
   this.camYaw = down.yaw - dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, down.pitch + dy * 0.004)); });
- r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const dy = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY)); const f = Math.exp(dy * 0.0012); if (this.st().phase === 'accoste' || this.st().phase === 'nuit') this.orbW.dist = Math.max(10, Math.min(220, this.orbW.dist * f)); else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
+ r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const ph = this.st().phase; const isle = ph === 'accoste' || ph === 'nuit';
+  const pad = !e.ctrlKey && e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || (Math.abs(e.deltaY) < 40 && e.deltaY % 1 !== 0));
+  if (pad) { // deux doigts sur le trackpad : pivoter, comme en glissant
+   const dx = -e.deltaX, dy = -e.deltaY;
+   if (isle) { const O = this.orb, o = this.orbW; o.yaw = O.yaw = O.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, O.pitch + dy * 0.004)); this.placeCam(); }
+   else { this.camYaw -= dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, this.camPitch + dy * 0.004)); }
+   return; }
+  const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))); const f = Math.exp(d * 0.0012);
+  if (isle) this.orbW.dist = Math.max(10, Math.min(220, this.orbW.dist * f)); else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
   if (ph === 'cabine') { this.cabinClick(e.clientX, e.clientY); return; }
@@ -167,8 +175,8 @@ prepIsland(T) {
  });
  // quai : son bout côté large (le plus loin du centre de l'île) et des points pour les collisions
  this.island.updateMatrixWorld(true);
- const q = this.island.getObjectByName('Quai'); const v = new T.Vector3(); let best = -1, tip = null; const pts = new Map();
- if (q) q.traverse((o) => { if (!o.isMesh) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); if (v.y < -1.5 || v.y > 4) continue; const rr = (v.x / 72) ** 2 + (v.z / 46) ** 2; if (rr > best) { best = rr; tip = v.clone(); } pts.set(Math.round(v.x * 2) + ',' + Math.round(v.z * 2), [v.x, v.z]); } });
+ const q = this.island.getObjectByName('Quai'); const v = new T.Vector3(); let best = -1, tip = null; const pts = new Map(); const deckPts = [];
+ if (q) q.traverse((o) => { if (!o.isMesh) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); if (v.y > 3.0 && v.y < 3.8) deckPts.push([v.x, v.z]); if (v.y < -1.5 || v.y > 4) continue; const rr = (v.x / 72) ** 2 + (v.z / 46) ** 2; if (rr > best) { best = rr; tip = v.clone(); } pts.set(Math.round(v.x * 2) + ',' + Math.round(v.z * 2), [v.x, v.z]); } });
  if (!tip) tip = new T.Vector3(-50, 0, 40);
  const o = new T.Vector2(tip.x / (72 * 72), tip.z / (46 * 46)).normalize();
  this.quaiPts = Array.from(pts.values()); this.out = o;
@@ -177,9 +185,13 @@ prepIsland(T) {
  let sxx = 0, szz = 0, sxz = 0; near.forEach(([x, z]) => { sxx += (x - mx) ** 2; szz += (z - mz) ** 2; sxz += (x - mx) * (z - mz); });
  const ang = 0.5 * Math.atan2(2 * sxz, sxx - szz); let u = { x: Math.cos(ang), z: Math.sin(ang) }; if (u.x * o.x + u.z * o.y < 0) u = { x: -u.x, z: -u.z };
  let n = { x: -u.z, z: u.x }; if (n.z < 0) n = { x: -n.x, z: -n.z };
- let wmax = 1; near.forEach(([x, z]) => { const al = (x - tip.x) * u.x + (z - tip.z) * u.z; if (al > -12) wmax = Math.max(wmax, Math.abs((x - tip.x) * n.x + (z - tip.z) * n.z)); }); wmax = Math.min(4, wmax);
- const ax = tip.x - u.x * 6, az = tip.z - u.z * 6, lat = wmax + 1.7; this.jetty = { u, n };
- this.D = { x: ax + n.x * lat, z: az + n.z * lat }; this.Dapp = { x: this.D.x + u.x * 16, z: this.D.z + u.z * 16 }; this.A = { x: this.D.x + u.x * 38 + n.x * 6, z: this.D.z + u.z * 38 + n.z * 6 };
+ // demi-largeur du plancher, côté où l'on accoste (seulement les planches, pas la cabane ni la cale)
+ let wmax = 0.8; const deck = deckPts.length > 30 ? deckPts : near; deck.forEach(([x, z]) => { const al = (x - tip.x) * u.x + (z - tip.z) * u.z, la = (x - tip.x) * n.x + (z - tip.z) * n.z; if (al > -10 && al < 1 && la > 0) wmax = Math.max(wmax, la); }); wmax = Math.min(3, wmax);
+ const ax = tip.x - u.x * 5, az = tip.z - u.z * 5, lat = wmax + 1.45; this.jetty = { u, n, wmax };
+ this.D = { x: ax + n.x * lat, z: az + n.z * lat };
+ // recale l'écart réel : 1,55 m entre l'axe du bateau et le bord du plancher (≈ 40 cm de coque à quai)
+ for (let it = 0; it < 3; it++) { let dmin = 1e9; deck.forEach(([x, z]) => { const dd = Math.hypot(x - this.D.x, z - this.D.z); if (dd < dmin) dmin = dd; }); const corr = dmin - 1.55; this.D.x -= n.x * corr; this.D.z -= n.z * corr; }
+ this.Dapp = { x: this.D.x + u.x * 16 + n.x * 0.8, z: this.D.z + u.z * 16 + n.z * 0.8 }; this.A = { x: this.D.x + u.x * 38 + n.x * 6, z: this.D.z + u.z * 38 + n.z * 6 };
  if (this.dest) { this.dest.style.left = this.cx(this.D.x) + 'px'; this.dest.style.top = this.cy(this.D.z) + 'px'; this.dest.style.display = 'block'; }
  this.buildLife(T); this.buildMarker(T);
 }
@@ -232,8 +244,8 @@ along(pts, seg, L, u) { let d = u * L; for (let i = 0; i < seg.length; i++) { if
 focus(k) {
  const f = this.focusPts[k]; if (!f) return;
  Object.assign(this.orbW, { tx: f.x, tz: f.z, ty: f.y, yaw: f.yaw != null ? f.yaw : -0.59, pitch: f.pitch != null ? f.pitch : 0.2, dist: f.d });
- this.focused = k; this.say(PR_RADIO[k], 'LOUIS-MARIE');
- if (k === 'cinema' && this.video) this.video.play().catch(() => {});
+ this.focused = k; this.seen(k); this.say(PR_RADIO[k], 'LOUIS-MARIE');
+ if (k === 'cinema' && this.video) { this.video.currentTime = 0; this.video.play().catch(() => {}); }
  this.setState({ focus: k });
  if (k === 'longuevue') { clearTimeout(this.appT); this.appT = setTimeout(() => this.setState({ showApp: true }), 1400); }
 }
@@ -241,10 +253,11 @@ overview() { Object.assign(this.orbW, { tx: 4, tz: -2, ty: 4, yaw: -0.59, pitch:
 lifeStep(T, t, dt) {
  if (!this.life) return;
  if (this.pulses) this.pulses.forEach((r, i) => { const u = (t * 0.6 + i * 0.4) % 1; r.scale.setScalar(1 + u * 0.5); r.material.opacity = 0.85 * (1 - u); r.visible = this.st().phase === 'accoste' && r.userData.place !== this.focused; });
- if (this.beam) this.beam.material.opacity = 0.06 + 0.02 * Math.sin(t * 7) * Math.sin(t * 2.3);
+ if (this.beam) { this.beamK = (this.beamK == null ? 1 : this.beamK) + ((this.focused === 'cinema' ? 0 : 1) - (this.beamK == null ? 1 : this.beamK)) * Math.min(1, dt * 5); this.beam.material.opacity = (0.06 + 0.02 * Math.sin(t * 7) * Math.sin(t * 2.3)) * this.beamK; this.beam.visible = this.beamK > 0.02; }
 }
 
 setPlan(on) {
+ if (on) this.seen('archi');
  const T = window.THREE; if (!this.island) return;
  if (on && !this.planMat) { this.planMat = new T.MeshBasicMaterial({ color: new T.Color(0x184e8e).convertSRGBToLinear(), polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }); this.lineMat = new T.LineBasicMaterial({ color: 0xffffff }); this.edges = new T.Group();
   this.island.updateMatrixWorld(true);
@@ -278,8 +291,10 @@ cruise(pts, dock, vmax) {
 }
 autopilot() {
  if (!this.A) return; this.setState({ ask: null });
- const b = { x: this.b.x, z: this.b.z }; const esc = this.escape(b); const s0 = esc || b;
- const pts = [b].concat(esc ? [esc] : [], this.plan(s0, this.A), [this.Dapp, this.D]);
+ const b = { x: this.b.x, z: this.b.z }; const P = this.P0; let esc = null;
+ if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) esc = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; // sortir du ponton tout droit
+ else esc = this.escape(b);
+ const s0 = esc || b; const pts = [b].concat(esc ? [esc] : [], this.plan(s0, this.A), [this.Dapp, this.D]);
  this.cruise(pts, true); this.autoDock = true; this.setState({ auto: true });
  this.say("Je prends la barre et je t'emmène au quai d'Insula. Regarde la carte marine : la route est en pointillés.");
 }
@@ -360,7 +375,8 @@ step(T, dt) {
  this.routeLine.setAttribute('points', rt.map((p) => this.cx(p.x).toFixed(1) + ',' + this.cy(p.z).toFixed(1)).join(' '));
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
-docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
+whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.panel || 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; return null; }
+docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
  const acts = [];
@@ -369,10 +385,10 @@ renderVals() {
  if (ph === 'mer' && !s.auto) acts.push({ label: 'Pilote auto → Insula', cls: 'pr-btn', go: () => this.autopilot() });
  if (ph === 'approche' && !s.auto) acts.push({ label: 'Accoster', cls: 'pr-btn', go: () => this.dock() });
  if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: 'Reprendre la mer', cls: 'pr-btn2', go: () => { if (plan) this.setPlan(false); this.focused = null; this.setState({ phase: 'mer', showCard: false, auto: false, focus: null, showApp: false }); this.leaveIsland(); this.say('Bon vent ! Les autres îles arrivent bientôt.'); } }); acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn', go: () => { if (plan) this.setPlan(false); this.startNight(); } }); }
- if (ph === 'nuit') { acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
+ if (ph === 'nuit') { acts.push({ label: '↶ Annuler, repartir', cls: 'pr-btn2', go: () => this.cancelNight() }); acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
  if (ph === 'cabine') { if (s.panel) acts.push({ label: '← La cabine', cls: 'pr-btn2', go: () => this.setState({ panel: null }) }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => location.reload() }); }
  if (ph === 'mer' && !s.auto && this.visited) acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn2', go: () => this.startNight() });
- const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur la photo, le livre de bord ou la VHF' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour déplacer l'île · clic droit ou Maj + glisser pour tourner · molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glisser pour tourner la vue, molette pour zoomer · cliquez sur une île pour y aller en pilote auto';
+ const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur la photo, le livre de bord ou la VHF' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · pincez ou molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });
@@ -385,6 +401,7 @@ renderVals() {
   showPads: touch && (ph === 'mer' || ph === 'approche'),
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askGo: () => this.autopilot(), askNo: () => this.setState({ ask: null }),
   showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
+  showMap: !!s.showMap, openMap: () => this.setState({ showMap: true }), closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => Object.assign({ done: !!(this.visitedSet && this.visitedSet[x.k]), here: x.k === this.whereAmI() }, x)),
   showArchi: !!s.plan && ph === 'accoste', panel: ph === 'cabine' && s.panel ? PR_CABIN[s.panel] : null,
   padL: () => { this.pad = 'L'; }, padR: () => { this.pad = 'R'; }, padU: () => { this.pad = 'U'; }, padOff: () => { this.pad = null; }
  };
