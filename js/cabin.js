@@ -33,16 +33,19 @@ const PR_CABIN_RADIO = {
 };
 
 const PR_STOPS = [
-  { k: 'ponton', n: '1', t: 'Le ponton', d: 'Le départ, à bord d’Elba', x: 12, y: 84 },
-  { k: 'insula', n: '2', t: 'Insula', d: 'Île n° 1 · choisir où acheter, entre amis', x: 40, y: 34, big: true },
-  { k: 'cinema', n: '2a', t: 'Le cinéma', d: 'La démo, en une minute', x: 56, y: 18, sub: true },
-  { k: 'longuevue', n: '2b', t: 'La longue-vue', d: 'Essayer l’app pour de vrai', x: 25, y: 16, sub: true },
-  { k: 'archi', n: '2c', t: 'Les coulisses', d: 'L’architecture', x: 60, y: 46, sub: true },
-  { k: 'nuit', n: '3', t: 'La nuit tombe', d: 'Fin de la traversée', x: 78, y: 60 },
-  { k: 'cabine', n: '4', t: 'La cabine', d: 'À bord, à la lanterne', x: 82, y: 76, big: true },
-  { k: 'apropos', n: '4a', t: 'À propos', d: 'La photo', x: 62, y: 86, sub: true },
-  { k: 'recap', n: '4b', t: 'Livre de bord', d: 'Récap du voyage', x: 74, y: 93, sub: true },
-  { k: 'contact', n: '4c', t: 'La VHF', d: 'Me laisser un message', x: 90, y: 93, sub: true }
+  { k: 'ponton', n: '1', t: 'Le ponton', d: 'Le départ, à bord d\u2019Elba', x: 12, y: 84 },
+  { k: 'insula', n: '2', t: 'Insula', d: 'Île n° 1 · choisir où acheter, entre amis', x: 38, y: 32, big: true },
+  { k: 'cinema', n: '2a', t: 'Le cinéma', d: 'La démo, en une minute', x: 56, y: 14, sub: true },
+  { k: 'longuevue', n: '2b', t: 'La longue-vue', d: 'Essayer l\u2019app pour de vrai', x: 20, y: 14, sub: true },
+  { k: 'archi', n: '2c', t: 'Les coulisses', d: 'L\u2019architecture', x: 56, y: 46, sub: true },
+  { k: 'nuit', n: '3', t: 'La nuit tombe', d: 'Fin de la traversée', x: 82, y: 30 },
+  { k: 'cabine', n: '4', t: 'La cabine', d: 'À bord, à la lanterne', x: 78, y: 60, big: true },
+  { k: 'carte', n: '4a', t: 'La carte', d: 'Mon parcours', x: 52, y: 66, sub: true },
+  { k: 'coffre', n: '4b', t: 'Le coffre', d: 'Mon CV', x: 56, y: 80, sub: true },
+  { k: 'recap', n: '4c', t: 'Livre de bord', d: 'Ta traversée', x: 66, y: 93, sub: true },
+  { k: 'bouteilles', n: '4d', t: 'Les bouteilles', d: 'Anecdotes', x: 84, y: 93, sub: true },
+  { k: 'apropos', n: '4e', t: 'La photo', d: 'À propos', x: 92, y: 80, sub: true },
+  { k: 'contact', n: '4f', t: 'La VHF', d: 'Me contacter', x: 92, y: 46, sub: true }
 ];
 Object.assign(Component.prototype, {
   seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; this.setState({ v: Date.now() }); } },
@@ -91,7 +94,7 @@ Object.assign(Component.prototype, {
     this.ensureNight(); const ph = this.st().phase; this.prevPhase = ph === 'accoste' ? 'accoste' : 'mer';
     this.cruiseP = null; this.route = []; this.autoDock = false; this.orbitBoat();
     this.seen('nuit'); this.nightTarget = 1; this.setState({ phase: 'nuit', auto: false, focus: null, showApp: false, ask: null });
-    this.say("Le soleil se couche, on rentre. Descends dans la cabine : je t'y attends. (Tu peux aussi annuler et repartir.)");
+    this.say("Le soleil se couche, on rentre. Descends dans la cabine : je t'y attends. (Tu peux aussi annuler et repartir.)"); this.loadCabin();
   },
   cancelNight() {
     this.nightTarget = 0; const back = this.prevPhase || 'accoste'; this.setState({ phase: back });
@@ -108,8 +111,9 @@ Object.assign(Component.prototype, {
       if (['insula', 'cinema', 'longuevue', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); return; }
       this.setNightNow(1); atQuay(); this.prevPhase = 'accoste';
       if (k === 'nuit') { this.orbitBoat(); this.setState({ phase: 'nuit' }); this.say("La nuit est tombée sur Insula. Descends dans la cabine quand tu veux."); return; }
-      if (!this.cabin) this.buildCabin(window.THREE); this.cabin.cam.aspect = this.host.clientWidth / this.host.clientHeight; this.cabin.cam.updateProjectionMatrix();
-      const panel = ['apropos', 'recap', 'contact'].includes(k) ? k : null; this.setState({ phase: 'cabine', panel }); this.say(panel ? PR_CABIN_RADIO[panel] : PR_CABIN_RADIO.enter, 'LOUIS-MARIE · CABINE');
+      const obj = { carte: 'carte', coffre: 'coffre', recap: 'livre', bouteilles: 'bouteilles', apropos: 'photo', contact: 'vhf' }[k];
+      const inCab = () => { const C = this.cabin; C.cam.aspect = this.host.clientWidth / this.host.clientHeight; C.cam.updateProjectionMatrix(); this.cabUnfocus(true); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null, loading: false }); if (obj) setTimeout(() => this.cabFocus(obj), 250); else this.say(PR_CAB_RADIO2.enter); };
+      if (this.cabin) inCab(); else { this.setState({ loading: true, loadMsg: 'la cabine…' }); this.loadCabin(inCab); }
     });
   },
   nightStep(T, dt) {
@@ -123,98 +127,8 @@ Object.assign(Component.prototype, {
     this.boatLamp.intensity = 1.6 * e; this.boatLamp.position.set(this.b.x, 1.8, this.b.z); this.boatWin.forEach((m) => { m.emissiveIntensity = 1.8 * e; });
     if (this.boat) this.boat.traverse((o) => { if (o.isMesh && o.material && /^feu/.test(o.material.name || '')) o.material.emissiveIntensity = 2 + 4 * e; });
   },
-  // ---------- la cabine
-  buildCabin(T) {
-    const scene = new T.Scene(); scene.background = new T.Color(0x07101e); scene.fog = new T.Fog(0x120b06, 4, 12);
-    const cam = new T.PerspectiveCamera(62, this.host.clientWidth / this.host.clientHeight, 0.05, 50);
-    const room = new T.Group(); scene.add(room);
-    const lin = (h) => new T.Color(h).convertSRGBToLinear();
-    const planks = (base, line, n) => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d'); g.fillStyle = base; g.fillRect(0, 0, 256, 256); for (let i = 0; i < n; i++) { g.fillStyle = i % 2 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.04)'; g.fillRect(0, i * 256 / n, 256, 256 / n); g.fillStyle = line; g.fillRect(0, i * 256 / n, 256, 2); } const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.wrapS = t.wrapT = T.RepeatWrapping; return t; };
-    const teak = new T.MeshStandardMaterial({ map: planks('#7a4a26', '#3a2210', 8), roughness: 0.7 });
-    const teakDark = new T.MeshStandardMaterial({ color: lin(0x4a2c16), roughness: 0.6 });
-    const floorT = planks('#6b4022', '#2e1a0b', 10); floorT.repeat.set(2, 1);
-    const cream = new T.MeshStandardMaterial({ color: lin(0xe9e1cf), roughness: 0.9 });
-    const cushion = new T.MeshStandardMaterial({ color: lin(0x1f4f9a), roughness: 0.95 });
-    const box = (w, h, d, m, x, y, z) => { const o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(x, y, z); room.add(o); return o; };
-    const Lx = 4.4, Wz = 2.5, Hy = 1.95;
-    const floor = new T.Mesh(new T.PlaneGeometry(Lx, Wz), new T.MeshStandardMaterial({ map: floorT, roughness: 0.6 })); floor.rotation.x = -Math.PI / 2; room.add(floor);
-    const ceil = new T.Mesh(new T.PlaneGeometry(Lx, Wz), cream); ceil.rotation.x = Math.PI / 2; ceil.position.y = Hy; room.add(ceil);
-    for (let i = -2; i <= 2; i++) box(0.08, 0.07, Wz, teakDark, i * 0.9, Hy - 0.04, 0);
-    for (const sz of [-1, 1]) { const w = new T.Mesh(new T.PlaneGeometry(Lx, Hy), teak); w.position.set(0, Hy / 2, sz * Wz / 2); w.rotation.y = sz > 0 ? Math.PI : 0; room.add(w); }
-    const front = new T.Mesh(new T.PlaneGeometry(Wz, Hy), teak); front.position.set(Lx / 2, Hy / 2, 0); front.rotation.y = -Math.PI / 2; room.add(front);
-    box(0.02, 1.45, 0.7, new T.MeshStandardMaterial({ color: 0x0c0806 }), Lx / 2 - 0.02, 0.8, 0);
-    const back = new T.Mesh(new T.PlaneGeometry(Wz, Hy), teak); back.position.set(-Lx / 2, Hy / 2, 0); back.rotation.y = Math.PI / 2; room.add(back);
-    for (let i = 0; i < 3; i++) box(0.32, 0.05, 0.62, teakDark, -Lx / 2 + 0.25 + i * 0.12, 0.3 + i * 0.42, 0);
-    // couchettes
-    for (const sz of [-1, 1]) { box(2.9, 0.42, 0.66, teakDark, 0.15, 0.21, sz * 0.9); box(2.85, 0.14, 0.62, cushion, 0.15, 0.49, sz * 0.9); box(2.85, 0.42, 0.12, cushion, 0.15, 0.78, sz * 1.17); }
-    // table
-    box(1.2, 0.05, 0.62, teakDark, 0.35, 0.74, 0); box(0.1, 0.72, 0.1, teakDark, 0.35, 0.36, 0);
-    // hublots (clair de lune)
-    for (const sz of [-1, 1]) for (const x of [-0.6, 0.9]) { const h = new T.Mesh(new T.CircleGeometry(0.16, 24), new T.MeshBasicMaterial({ color: 0x3a5a9a })); h.scale.set(1.6, 1, 1); h.position.set(x, 1.45, sz * (Wz / 2 - 0.01)); h.rotation.y = sz > 0 ? Math.PI : 0; room.add(h); const rim = new T.Mesh(new T.RingGeometry(0.16, 0.2, 24), new T.MeshStandardMaterial({ color: 0xb58a3a, metalness: 0.8, roughness: 0.3 })); rim.scale.set(1.6, 1, 1); rim.position.copy(h.position); rim.position.z -= sz * 0.005; rim.rotation.y = h.rotation.y; room.add(rim); }
-    // lanterne
-    const lamp = new T.Mesh(new T.SphereGeometry(0.07, 16, 12), new T.MeshBasicMaterial({ color: 0xffd08a })); lamp.position.set(0.35, 1.55, 0); room.add(lamp);
-    box(0.01, 0.35, 0.01, teakDark, 0.35, 1.78, 0);
-    const light = new T.PointLight(0xffb36b, 2.2, 7, 1.6); light.position.copy(lamp.position); room.add(light); this.cabinLight = light;
-    scene.add(new T.HemisphereLight(0x5a78b8, 0x2a1608, 0.35));
-    const moonL = new T.DirectionalLight(0x8fa8ff, 0.25); moonL.position.set(0, 2, -3); scene.add(moonL);
-    // objets cliquables
-    const clickables = [];
-    const tl = new T.TextureLoader(); const canvasTex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t; };
-    // 1. la photo (à propos), sur la cloison tribord
-    const photo = new T.Group(); photo.userData.k = 'apropos';
-    const fr = new T.Mesh(new T.BoxGeometry(0.62, 0.46, 0.03), teakDark); photo.add(fr);
-    const ptex = tl.load('assets/og.jpg'); ptex.encoding = T.sRGBEncoding;
-    const pic = new T.Mesh(new T.PlaneGeometry(0.54, 0.31), new T.MeshStandardMaterial({ map: ptex, roughness: 0.5 })); pic.position.set(0, 0.03, 0.017); photo.add(pic);
-    const cap = new T.Mesh(new T.PlaneGeometry(0.54, 0.06), new T.MeshBasicMaterial({ map: canvasTex(512, 56, (g) => { g.fillStyle = '#efe6d2'; g.fillRect(0, 0, 512, 56); g.fillStyle = '#3a2210'; g.font = 'italic 30px Georgia, serif'; g.fillText('Elba · LR · et son skipper', 18, 38); }) })); cap.position.set(0, -0.17, 0.017); photo.add(cap);
-    photo.position.set(0.2, 1.3, Wz / 2 - 0.03); photo.rotation.y = Math.PI; room.add(photo); clickables.push(photo);
-    // 2. le livre de bord (récap), ouvert sur la table
-    const book = new T.Group(); book.userData.k = 'recap';
-    const cover = new T.Mesh(new T.BoxGeometry(0.46, 0.012, 0.32), new T.MeshStandardMaterial({ color: lin(0x6b1d14), roughness: 0.6 })); book.add(cover);
-    const pagesTex = canvasTex(512, 360, (g, w, h) => { g.fillStyle = '#f3ead5'; g.fillRect(0, 0, w, h); g.fillStyle = '#c9b892'; g.fillRect(w / 2 - 1, 0, 2, h); g.fillStyle = '#6b1d14'; g.font = '700 26px Georgia, serif'; g.fillText('Livre de bord', 30, 50); g.fillStyle = '#3a3226'; g.font = 'italic 19px Georgia, serif'; ['Départ : le ponton', 'Escale : Insula', 'Vent : léger', 'Mer : belle'].forEach((l, i) => g.fillText(l, 30, 100 + i * 34)); g.fillText('Prochaines îles…', w / 2 + 24, 100); for (let i = 0; i < 7; i++) { g.fillStyle = 'rgba(80,60,40,0.18)'; g.fillRect(w / 2 + 24, 140 + i * 28, 200, 2); } });
-    const pages = new T.Mesh(new T.PlaneGeometry(0.44, 0.3), new T.MeshStandardMaterial({ map: pagesTex, roughness: 0.9 })); pages.rotation.x = -Math.PI / 2; pages.position.y = 0.008; book.add(pages);
-    book.position.set(0.35, 0.775, 0); book.rotation.y = Math.PI / 2 + 0.15; room.add(book); clickables.push(book);
-    // 3. la VHF (contact), au-dessus de la table à cartes bâbord
-    box(0.34, 0.04, 0.22, teakDark, Lx / 2 - 0.13, 1.1, -0.72);
-    const vhf = new T.Group(); vhf.userData.k = 'contact';
-    const body = new T.Mesh(new T.BoxGeometry(0.34, 0.13, 0.14), new T.MeshStandardMaterial({ color: 0x15171a, roughness: 0.5 })); vhf.add(body);
-    const scr = new T.Mesh(new T.PlaneGeometry(0.14, 0.06), new T.MeshBasicMaterial({ map: canvasTex(140, 60, (g) => { g.fillStyle = '#7dffb0'; g.fillRect(0, 0, 140, 60); g.fillStyle = '#0b2a18'; g.font = '700 40px JetBrains Mono, monospace'; g.fillText('16', 46, 44); g.font = '700 12px monospace'; g.fillText('CH', 10, 20); }) })); scr.position.set(-0.06, 0.01, 0.071); vhf.add(scr);
-    for (let i = 0; i < 2; i++) { const kb = new T.Mesh(new T.CylinderGeometry(0.022, 0.022, 0.02, 16), new T.MeshStandardMaterial({ color: 0x333333 })); kb.rotation.x = Math.PI / 2; kb.position.set(0.08 + i * 0.06, 0, 0.075); vhf.add(kb); }
-    const led = new T.Mesh(new T.SphereGeometry(0.008, 8, 6), new T.MeshBasicMaterial({ color: 0xff3b2f })); led.position.set(0.14, 0.045, 0.072); vhf.add(led); this.vhfLed = led;
-    const hand = new T.Mesh(new T.BoxGeometry(0.06, 0.16, 0.035), new T.MeshStandardMaterial({ color: 0x15171a })); hand.position.set(0.24, -0.02, 0.02); vhf.add(hand);
-    const vl = new T.PointLight(0x7dffb0, 0.4, 1.2); vl.position.set(-0.06, 0, 0.2); vhf.add(vl);
-    vhf.position.set(Lx / 2 - 0.1, 1.2, -0.72); vhf.rotation.y = -Math.PI / 2; room.add(vhf); clickables.push(vhf);
-    // repères dorés au-dessus des objets cliquables
-    const dots = clickables.map((o) => { const d = new T.Mesh(new T.SphereGeometry(0.025, 12, 8), new T.MeshBasicMaterial({ color: 0xffc94a, transparent: true })); room.add(d); return { d, o }; });
-    this.cabin = { scene, cam, room, clickables, dots, look: new T.Vector3(1.2, 0.95, 0) };
-    window.addEventListener('resize', () => { cam.aspect = this.host.clientWidth / this.host.clientHeight; cam.updateProjectionMatrix(); });
-  },
   fade(onMid) {
     if (!this.fader) { this.fader = document.createElement('div'); this.fader.style.cssText = 'position:absolute;inset:0;background:#000;opacity:0;transition:opacity .6s;pointer-events:none;z-index:4'; this.layer.appendChild(this.fader); }
     this.fader.style.opacity = 1; setTimeout(() => { onMid(); setTimeout(() => { this.fader.style.opacity = 0; }, 120); }, 650);
   },
-  enterCabin() {
-    const T = window.THREE; if (!this.cabin) this.buildCabin(T);
-    this.fade(() => { this.cabin.cam.aspect = this.host.clientWidth / this.host.clientHeight; this.cabin.cam.updateProjectionMatrix(); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null }); this.say(PR_CABIN_RADIO.enter); });
-  },
-  leaveCabin() { this.fade(() => { this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
-  cabinPick(cx, cy) {
-    const T = window.THREE, C = this.cabin, r0 = this.renderer.domElement.getBoundingClientRect(); const rc = new T.Raycaster();
-    rc.setFromCamera(new T.Vector2(((cx - r0.left) / r0.width) * 2 - 1, -((cy - r0.top) / r0.height) * 2 + 1), C.cam);
-    const h = rc.intersectObjects(C.clickables, true); if (!h.length) return null; let o = h[0].object; while (o && !o.userData.k) o = o.parent; return o ? o.userData.k : null;
-  },
-  cabinClick(cx, cy) { const k = this.cabinPick(cx, cy); if (!k) return; this.seen(k); this.setState({ panel: k }); this.say(PR_CABIN_RADIO[k], 'LOUIS-MARIE · CABINE'); },
-  cabinStep(T, t, dt) {
-    const C = this.cabin; if (!C) return;
-    C.room.rotation.x = 0.025 * Math.sin(t * 0.7); C.room.rotation.z = 0.012 * Math.sin(t * 0.5);
-    const mx = this.mouse ? (this.mouse.x / innerWidth - 0.5) : 0, my = this.mouse ? (this.mouse.y / innerHeight - 0.5) : 0;
-    C.cam.position.set(-1.75, 1.42, 0.05); const look = C.look.clone(); look.z += mx * 2.2; look.y -= my * 1.0; C.cam.lookAt(look);
-    this.cabinLight.intensity = 2.1 + 0.15 * Math.sin(t * 9) * Math.sin(t * 2.3);
-    this.vhfLed.visible = Math.sin(t * 4) > 0;
-    C.dots.forEach(({ d, o }, i) => { const p = new T.Vector3(); o.getWorldPosition(p); C.room.worldToLocal(p); d.position.set(p.x, p.y + 0.3 + 0.03 * Math.sin(t * 3 + i), p.z); d.material.opacity = 0.6 + 0.4 * Math.sin(t * 3 + i); });
-    if (this.mouse && (this.cabHov = (this.cabHov || 0) + 1) % 5 === 0) {
-      const k = this.cabinPick(this.mouse.x, this.mouse.y), r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'default';
-      const names = { apropos: 'La photo · à propos', recap: 'Le livre de bord · récap', contact: 'La VHF · me contacter' };
-      if (k) { this.tip.innerHTML = '<b>' + (k === 'contact' ? '✆' : k === 'recap' ? '✎' : '◎') + '</b>' + names[k]; this.tip.style.display = 'block'; this.tip.style.left = (this.mouse.x - r0.left) + 'px'; this.tip.style.top = (this.mouse.y - r0.top - 14) + 'px'; } else this.tip.style.display = 'none';
-    }
-  }
 });

@@ -158,7 +158,7 @@ init() {
  this.dot = document.createElement('div'); this.dot.style.cssText = 'position:absolute;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:13px solid #B4412E;margin:-7px 0 0 -5px;transform-origin:5px 7px';
  this.chart.appendChild(this.dot); this.chartHost.appendChild(this.chart);
  this.clock = new T.Clock();
- const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); if (this.st().phase === 'cabine' && this.cabin) r.render(this.cabin.scene, this.cabin.cam); else r.render(scene, cam); };
+ const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); if (this.st().phase === 'cabine' && this.cabin) { r.toneMappingExposure = 0.95; r.render(this.cabin.scene, this.cabin.cam); } else { r.toneMappingExposure = 1.05; r.render(scene, cam); } };
  tick();
 }
 prepIsland(T) {
@@ -375,7 +375,7 @@ step(T, dt) {
  this.routeLine.setAttribute('points', rt.map((p) => this.cx(p.x).toFixed(1) + ',' + this.cy(p.z).toFixed(1)).join(' '));
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
-whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.panel || 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; return null; }
+whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; return null; }
 docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
@@ -386,9 +386,14 @@ renderVals() {
  if (ph === 'approche' && !s.auto) acts.push({ label: 'Accoster', cls: 'pr-btn', go: () => this.dock() });
  if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: 'Reprendre la mer', cls: 'pr-btn2', go: () => { if (plan) this.setPlan(false); this.focused = null; this.setState({ phase: 'mer', showCard: false, auto: false, focus: null, showApp: false }); this.leaveIsland(); this.say('Bon vent ! Les autres îles arrivent bientôt.'); } }); acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn', go: () => { if (plan) this.setPlan(false); this.startNight(); } }); }
  if (ph === 'nuit') { acts.push({ label: '↶ Annuler, repartir', cls: 'pr-btn2', go: () => this.cancelNight() }); acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
- if (ph === 'cabine') { if (s.panel) acts.push({ label: '← La cabine', cls: 'pr-btn2', go: () => this.setState({ panel: null }) }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => location.reload() }); }
+ if (ph === 'cabine') { const f = s.cabFocus;
+  if (f) acts.push({ label: '← Revenir', cls: 'pr-btn2', go: () => this.cabUnfocus() });
+  if (f === 'coffre') acts.push({ label: '⬇ Télécharger mon CV', cls: 'pr-btn', go: () => window.open(PR_CV_URL, '_blank', 'noopener') });
+  if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
+  if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
+  if (!f) { acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => location.reload() }); } }
  if (ph === 'mer' && !s.auto && this.visited) acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn2', go: () => this.startNight() });
- const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur la photo, le livre de bord ou la VHF' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · pincez ou molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
+ const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · pincez ou molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });
@@ -396,13 +401,15 @@ renderVals() {
  return {
   setHost: (el) => { this.host = el; }, setLayer: (el) => { this.layer = el; }, setChart: (el) => { this.chartHost = el; },
   hint, radio: s.radio || '', radioFrom: s.radioFrom || 'LOUIS-MARIE', actions: acts,
+  radioLinks: ph === 'cabine' && s.cabFocus === 'vhf' ? [['✉ louis-marie@du-cray.com', 'mailto:louis-marie@du-cray.com'], ['in · LinkedIn', 'https://www.linkedin.com/in/louismarie-perret-du-cray/'], ['⌥ GitHub', 'https://github.com/LM28000']] : [],
+  cabEsc: () => { if (ph === 'cabine' && s.cabFocus) { this.cabUnfocus(); return true; } return false; },
   showCard: !!s.showCard && ph === 'accoste', card, closeCard: () => this.setState({ showCard: false }),
   loading: s.loading !== false, loadMsg: s.loadMsg || '',
   showPads: touch && (ph === 'mer' || ph === 'approche'),
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askGo: () => this.autopilot(), askNo: () => this.setState({ ask: null }),
   showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
   showMap: !!s.showMap, openMap: () => this.setState({ showMap: true }), closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => Object.assign({ done: !!(this.visitedSet && this.visitedSet[x.k]), here: x.k === this.whereAmI() }, x)),
-  showArchi: !!s.plan && ph === 'accoste', panel: ph === 'cabine' && s.panel ? PR_CABIN[s.panel] : null,
+  showArchi: !!s.plan && ph === 'accoste', panel: null,
   padL: () => { this.pad = 'L'; }, padR: () => { this.pad = 'R'; }, padU: () => { this.pad = 'U'; }, padOff: () => { this.pad = null; }
  };
 }

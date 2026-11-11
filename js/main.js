@@ -10,6 +10,7 @@
     $('hint').textContent = vals.hint;
     $('radioFrom').textContent = vals.radioFrom;
     $('radio').textContent = vals.radio;
+    const rl = vals.radioLinks.map((l) => l.join('|')).join('§'); if ($('radioLinks').dataset.sig !== rl) { $('radioLinks').dataset.sig = rl; $('radioLinks').innerHTML = ''; vals.radioLinks.forEach(([t, u]) => { const a = document.createElement('a'); a.href = u; if (!u.startsWith('mailto')) { a.target = '_blank'; a.rel = 'noopener'; } a.textContent = t; $('radioLinks').appendChild(a); }); }
     $('loadMsg').textContent = vals.loadMsg;
     $('loading').classList.toggle('done', !vals.loading);
     const sig = vals.actions.map((a) => a.label + '|' + a.cls).join('§');
@@ -45,7 +46,7 @@
   $('chartBtn').onclick = () => vals.openMap(); $('mapBtn').onclick = () => vals.openMap(); $('voyClose').onclick = () => vals.closeMap(); $('voyStart').onclick = () => vals.goTo('ponton');
   $('creditsBtn').onclick = () => { $('credits').hidden = false; };
   $('creditsClose').onclick = () => { $('credits').hidden = true; };
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('credits').hidden) $('credits').hidden = true; else if (vals.showMap) vals.closeMap(); else if (vals.showApp) vals.closeApp(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (vals.cabEsc && vals.cabEsc()) return; if (!$('credits').hidden) $('credits').hidden = true; else if (vals.showMap) vals.closeMap(); else if (vals.showApp) vals.closeApp(); } });
   window.__elba = C; // pour les tests
   C.componentDidMount();
   render();
