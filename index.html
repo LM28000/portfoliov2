@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Louis-Marie Perret du Cray · à bord d'Elba</title>
+<meta name="description" content="Prenez la barre d'Elba, un voilier de 1977, et naviguez d'île en île : chaque île est un projet de Louis-Marie Perret du Cray, étudiant ingénieur.">
+<meta property="og:title" content="Louis-Marie Perret du Cray · à bord d'Elba">
+<meta property="og:description" content="Un monde marin en 3D : chaque île est un projet. Première escale : Insula.">
+<meta property="og:image" content="https://louis-marie.du-cray.eu/assets/og.jpg">
+<meta name="theme-color" content="#0B1626">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <div id="host" class="pr-host" role="img" aria-label="Monde 3D : on barre Elba depuis un ponton jusqu'à l'île d'Insula"></div>
+  <div id="layer" class="layer"></div>
+
+  <header class="brand">
+    <p class="kicker">LOUIS-MARIE PERRET DU CRAY · À BORD D'ELBA</p>
+    <p id="hint" class="hint"></p>
+  </header>
+
+  <div class="chart" aria-hidden="true"><div id="chart" class="chart-in"></div><span class="chart-n">N · CARTE MARINE</span></div>
+
+  <section class="vhf" aria-live="polite">
+    <div class="vhf-top"><span class="vhf-chip">VHF 16</span><span id="radioFrom" class="vhf-from"></span></div>
+    <p id="radio" class="vhf-msg"></p>
+  </section>
+
+  <nav id="actions" class="actions"></nav>
+
+  <div id="pads" class="pads" hidden>
+    <button class="pr-pad" data-pad="L" aria-label="Bâbord">◀</button>
+    <button class="pr-pad" data-pad="U" aria-label="Avancer">▲</button>
+    <button class="pr-pad" data-pad="R" aria-label="Tribord">▶</button>
+  </div>
+
+  <div id="ask" class="ask" hidden>
+    <p>Insula · île n° 1 — y aller ?</p>
+    <div><button class="pr-btn sm" id="askGo">⛵ Pilote auto</button><button class="pr-btn2 sm" id="askNo">Non merci</button></div>
+  </div>
+
+  <div id="archi" class="archi" hidden>
+    <p class="archi-k">ARCHITECTURE D'INSULA · CE QUI SE PASSE CHAQUE SOIR</p>
+    <div class="archi-row">
+      <div class="box"><b>SOURCES</b><span>annonces Bien'ici<br>+ ~15 jeux publics : DVF, IGN, ADEME, Insee, OSM, GTFS…</span></div><i>→</i>
+      <div class="box"><b>RELEVÉ DU SOIR</b><span>routine Claude · 22 villes<br>fiches lues une fois (150/soir)</span></div><i>→</i>
+      <div class="box"><b>MOTEUR</b><span>crédit · LMNP · zone tendue<br>DPE · revente · TRI 15 ans</span></div><i>→</i>
+      <div class="box hi"><b>APP</b><span>carte MapLibre 3D · fiches<br>4 espaces · hors ligne (PWA)</span></div><i>⇄</i>
+      <div class="box"><b>BASE PARTAGÉE</b><span>Supabase · « Nos biens »<br>code de groupe jamais envoyé</span></div>
+    </div>
+    <div class="archi-2">
+      <div class="box dash cy"><b>SERVEUR MCP · UNE IA INTERROGE L'APP</b><span>10 outils (fiche_annonce, nouveautes, simuler_bien…) · même moteur de calcul que la page</span></div>
+      <div class="box dash"><b>GARDE-FOUS · RIEN NE PART SI UN TEST ÉCHOUE</b><span>build.py refuse une page cassée · 55 tests Playwright · GitHub Actions · GitHub Pages</span></div>
+    </div>
+  </div>
+
+  <div id="appview" class="appview" hidden>
+    <div class="scope">
+      <div class="scope-bar">
+        <span class="scope-k">◉ LONGUE-VUE · INSULA, L'APP RÉELLE</span>
+        <span class="scope-r"><a href="https://insula.du-cray.eu/" target="_blank" rel="noopener">Ouvrir dans un onglet ↗</a><button class="pr-btn sm" id="closeApp">Revenir sur l'île ×</button></span>
+      </div>
+      <iframe id="appframe" title="Insula, l'application" allow="geolocation; clipboard-write"></iframe>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">
+    <div><p class="ld-t"><i>Elba</i> se prépare…</p><p id="loadMsg" class="ld-m"></p></div>
+  </div>
+
+  <button id="creditsBtn" class="credits-btn">Crédits</button>
+  <div id="credits" class="credits" hidden>
+    <div class="credits-in">
+      <p class="archi-k" style="color:#B4412E">CRÉDITS</p>
+      <p>Site et modèle d'<i>Elba</i> : Louis-Marie Perret du Cray, avec Claude. Moteur 3D : three.js.</p>
+      <ul>
+        <li>Quai : « river jetty » par floor2727 (CC-BY 4.0)</li>
+        <li>Entrepôt : « Warehouse Building » par rajibkc (CC-BY 4.0)</li>
+        <li>Atelier : « old warehouse » par AlanTinka (CC-BY 4.0)</li>
+        <li>Antenne : « Radio tower » par ocelotlmx (CC-BY 4.0)</li>
+        <li>Maisons : « Slate Cottage » par howittworks · Immeuble : « PSX – Apartment » par Kasugay (Sketchfab)</li>
+        <li>Arbres : island_tree_01 et pine_tree_01, Poly Haven (CC0)</li>
+      </ul>
+      <button class="pr-btn sm" id="creditsClose">Fermer</button>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="nojs">
+      <h1>Louis-Marie Perret du Cray</h1>
+      <p>Ce site est un monde marin en 3D : il a besoin de JavaScript. Première escale : <a href="https://insula.du-cray.eu/">Insula</a>, un outil pour choisir où acheter un appartement entre amis.</p>
+      <p><a href="https://github.com/LM28000">GitHub</a> · <a href="https://www.linkedin.com/in/louismarie-perret-du-cray/">LinkedIn</a></p>
+    </div>
+  </noscript>
+</main>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="js/shim.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
