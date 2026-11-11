@@ -82,9 +82,11 @@ Object.assign(Component.prototype, {
   },
   // nuit instantanée (0 = jour, 1 = nuit), pour les sauts de la carte du voyage
   setNightNow(v) { this.ensureNight(); this.nightTarget = v; this.night = v === 1 ? 0.999 : 0.001; this.nightStep(window.THREE, 1); this.night = v; },
-  orbitBoat(dist, pitch) { const T = window.THREE, b = this.b, c = this.cam.position, O = this.orb;
-    O.tx = b.x; O.tz = b.z; O.ty = 1.5; O.dist = Math.min(60, Math.max(18, Math.hypot(c.x - b.x, c.z - b.z))); O.yaw = Math.atan2(c.x - b.x, c.z - b.z); O.pitch = 0.3;
-    Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1.5, yaw: O.yaw + 0.5, pitch: pitch || 0.2, dist: dist || 22 }); },
+  // caméra en orbite autour du bateau, placée sur son trois-quarts arrière tribord
+  orbitBoat(dist, pitch) { const b = this.b, c = this.cam.position, O = this.orb;
+    const fx = Math.cos(b.h), fz = -Math.sin(b.h), rx = Math.sin(b.h), rz = Math.cos(b.h); const dx = rx - fx * 0.75, dz = rz - fz * 0.75; const yaw = Math.atan2(dx, dz);
+    O.tx = b.x; O.tz = b.z; O.ty = 1.8; O.dist = Math.min(60, Math.max(18, Math.hypot(c.x - b.x, c.z - b.z))); O.yaw = Math.atan2(c.x - b.x, c.z - b.z); O.pitch = 0.3;
+    Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1.8, yaw, pitch: pitch || 0.16, dist: dist || 19 }); },
   startNight() {
     this.ensureNight(); const ph = this.st().phase; this.prevPhase = ph === 'accoste' ? 'accoste' : 'mer';
     this.cruiseP = null; this.route = []; this.autoDock = false; this.orbitBoat();

@@ -22,7 +22,7 @@
     $('archi').hidden = !vals.showArchi;
     const app = $('appview'); app.hidden = !vals.showApp;
     if (vals.showApp && !$('appframe').src) $('appframe').src = 'https://insula.du-cray.eu/';
-    $('voyage').hidden = !vals.showMap;
+    $('voyage').hidden = !vals.showMap; $('chartBtn').style.visibility = vals.showMap ? 'hidden' : ''; $('mapBtn').hidden = !!vals.showMap;
     if (vals.showMap) { const sig2 = vals.stops.map((x) => x.k + (x.done ? 1 : 0) + (x.here ? 1 : 0)).join(); const m = $('voyMap');
       if (m.dataset.sig !== sig2) { m.dataset.sig = sig2; m.querySelectorAll('.stop').forEach((e) => e.remove());
         vals.stops.forEach((x) => { const bt = document.createElement('button'); bt.className = 'stop' + (x.sub ? ' sub' : '') + (x.big ? ' big' : '') + (x.done ? ' done' : '') + (x.here ? ' here' : ''); bt.style.left = x.x + '%'; bt.style.top = x.y + '%';

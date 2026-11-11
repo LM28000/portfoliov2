@@ -86,29 +86,32 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .p-links a { padding: 10px 16px; border-radius: 999px; background: var(--ink); color: #fff; font: 700 14px Inter, sans-serif; text-decoration: none; }
 .p-links a:first-child { background: var(--rust); }
 
-.voyage { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: rgba(6,12,24,.6); backdrop-filter: blur(2px); }
-.voy-in { width: min(1000px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 22px 24px; border-radius: 14px; background: #EFE6D0; color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
-.voy-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-.voy-t { margin: 0 0 6px; font: 700 30px Fraunces, serif; }
-.voy-s { margin: 0; font-size: 14px; line-height: 1.5; color: #3B4D63; max-width: 640px; }
+.voyage { position: absolute; right: 20px; top: 18px; z-index: 5; width: min(640px, calc(100% - 40px)); transform-origin: top right; animation: voyIn .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes voyIn { from { transform: scale(.24); opacity: .3; border-radius: 50%; } to { transform: scale(1); opacity: 1; } }
+.voy-in { padding: 14px 16px 16px; border-radius: 14px; background: rgba(239,230,208,.97); color: var(--ink); box-shadow: 0 18px 50px rgba(0,0,0,.45); border: 3px solid #fff; }
+.voy-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.voy-t { margin: 0 0 4px; font: 700 22px Fraunces, serif; }
+.voy-s { margin: 0; font-size: 12.5px; line-height: 1.45; color: #3B4D63; }
 .pr-btn2.dark { color: var(--ink); border-color: rgba(20,37,58,.5); background: transparent; }
-.voy-map { position: relative; margin: 16px 0; height: 440px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
-.voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 40px 40px; }
+.voy-map { position: relative; margin: 10px 0; height: 330px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
+.voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 32px 32px; }
 .voy-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .voy-isle { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, #b9c98e 0%, #9fb57a 60%, #d8c99a 92%, transparent 94%); }
 .voy-next { position: absolute; padding: 4px 8px; border: 1.5px dashed rgba(20,37,58,.4); border-radius: 8px; font: 600 11px Inter, sans-serif; color: rgba(20,37,58,.6); }
-.stop { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; border: 0; border-radius: 999px; background: #FBF7EE; color: var(--ink); box-shadow: 0 3px 10px rgba(0,0,0,.2); cursor: pointer; text-align: left; white-space: nowrap; }
+.stop { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 7px; padding: 5px 9px 5px 5px; border: 0; border-radius: 999px; background: #FBF7EE; color: var(--ink); box-shadow: 0 3px 10px rgba(0,0,0,.2); cursor: pointer; text-align: left; white-space: nowrap; }
 .stop:hover { background: #fff; box-shadow: 0 0 0 3px var(--sun), 0 3px 10px rgba(0,0,0,.2); }
 .stop .num { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 999px; background: var(--rust); color: #fff; font: 700 12px 'JetBrains Mono', monospace; }
-.stop b { display: block; font: 700 13px Inter, sans-serif; } .stop small { display: block; font: 400 11.5px Inter, sans-serif; color: #3B4D63; }
+.stop b { display: block; font: 700 12px Inter, sans-serif; } .stop small { display: block; font: 400 10.5px Inter, sans-serif; color: #3B4D63; }
 .stop.sub { padding: 4px 9px 4px 4px; } .stop.sub .num { min-width: 22px; height: 22px; background: #14253A; font-size: 10.5px; } .stop.sub small { display: none; }
 .stop.big .num { min-width: 32px; height: 32px; font-size: 14px; }
 .stop.done .num::after { content: ' ✓'; }
 .stop.here { box-shadow: 0 0 0 3px var(--cyan), 0 3px 10px rgba(0,0,0,.2); }
 .voy-foot { display: flex; justify-content: flex-end; }
+.voy-foot .pr-btn { padding: 9px 14px; font-size: 13px; }
 
 @media (max-width: 760px) {
-  .voy-map { height: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: #cfe3ea; }
+  .voyage { right: 8px; top: 8px; width: calc(100% - 16px); max-height: calc(100% - 16px); overflow: auto; }
+  .voy-map { height: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: #cfe3ea; }
   .voy-map::before, .voy-svg, .voy-isle, .voy-next { display: none; }
   .stop { position: static; transform: none; white-space: normal; }
   .stop.sub { margin-left: 24px; }
