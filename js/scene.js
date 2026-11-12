@@ -39,7 +39,7 @@ const PR_VIS = {
 };
 const PR_RADIO = {
  ponton: "Elba, Elba, ici Louis-Marie. Bienvenue à bord ! C'est toi qui barres, moi je te guide à la radio. La carte marine, en haut à droite, montre tout le voyage. Quand tu es prêt, largue les amarres.",
- mer: "Cap au nord : l'île droit devant, c'est Insula, mon premier projet. Barre avec les flèches (ou ZQSD), ou clique sur l'eau pour y aller.",
+ mer: "Cap au nord : l'île droit devant, c'est Insula, mon premier projet. Barre avec les flèches (ou ZQSD), ou clique sur l'île : le pilote auto t'y emmène.",
  approche: "Tu vois le quai, sur la gauche de l'île ? Approche doucement, je t'aide à accoster.",
  accoste: "Bien accosté ! Je voulais acheter un appartement avec des amis : il fallait comparer des villes, des quartiers, des annonces, avec des critères qui comptent vraiment. Alors j'ai construit Insula. Va voir la démo au cinéma en plein air, puis essaie l'app avec la longue-vue.",
  cinema: "Installe-toi : en une minute, tu vois comment on passe de la carte des villes à la fiche d'un studio, avec son vrai rendement sur quinze ans.",

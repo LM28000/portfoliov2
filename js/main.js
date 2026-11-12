@@ -22,6 +22,7 @@
     document.body.classList.toggle('hint-on', !!vals.hintOn);
     $('mapCount').textContent = '· ' + vals.progress; $('chartBtn').classList.toggle('pulse', !!vals.pulseChart);
     $('objText').textContent = vals.objText || '';
+    const son = C.soundOn(); $('soundBtn').textContent = son ? '🔊' : '🔇'; $('soundBtn').title = son ? 'Couper le son' : 'Activer le son'; $('soundBtn').setAttribute('aria-label', $('soundBtn').title);
     const sig = vals.actions.map((a) => a.label + '|' + a.cls).join('§');
     if (sig !== actSig) {
       actSig = sig; const nav = $('actions'); nav.innerHTML = '';
@@ -53,7 +54,7 @@
     const k = b.dataset.pad; const on = () => (k === 'L' ? vals.padL : k === 'R' ? vals.padR : vals.padU)(); const off = () => vals.padOff();
     b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
   });
-  $('radioPrev').onclick = () => vals.radioPrev();
+  $('radioPrev').onclick = () => vals.radioPrev(); $('soundBtn').onclick = () => { C.setSound(!C.soundOn()); render(); };
   setTimeout(() => { if (vals.loading) { window.__slow = true; $('loadMsg').innerHTML = 'C\u2019est long… <button class="pr-btn2 sm" id="goText">Voir la version texte</button>'; const g = $('goText'); if (g) g.onclick = no3d; } }, 30000);
   $('chartBtn').onclick = () => vals.openMap(); $('mapBtn').onclick = () => vals.openMap(); $('voyClose').onclick = () => vals.closeMap(); $('voyStart').onclick = () => vals.goTo('ponton'); $('voyArch').onclick = () => vals.goArch(); $('voyText').onclick = () => vals.openText(); $('texteClose').onclick = () => vals.closeText();
   $('creditsBtn').onclick = () => { $('credits').hidden = false; };

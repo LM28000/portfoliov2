@@ -1,9 +1,9 @@
 /* L'archipel : vue aérienne d'arrivée, une île par projet (Insula, Carte vivante, le serveur), survol au clic. */
 const PR_ISLES = {
-  insula: { n: 1, name: 'Insula', line: 'Choisir où acheter, entre amis', x: 4, z: -2, top: 40 },
-  cartevivante: { n: 2, name: 'Carte vivante', line: 'La France en direct : trains, avions, météo', x: -190, z: 0, rx: 46, rz: 34, h: 8, s: 1.3, top: 34,
+  insula: { n: 1, name: 'Insula', to: 'Insula', line: 'Choisir où acheter, entre amis', x: 4, z: -2, top: 40 },
+  cartevivante: { n: 2, name: 'Carte vivante', to: 'la Carte vivante', line: 'La France en direct : trains, avions, météo', x: -190, z: 0, rx: 46, rz: 34, h: 8, s: 1.3, top: 34,
     view: { ty: 8, yaw: 0.12, pitch: 0.5, dist: 95 }, code: 'https://github.com/LM28000/openstreetmap' },
-  serveur: { n: 3, name: 'Le serveur', line: 'Mon serveur maison : une trentaine de services', x: 190, z: -24, rx: 40, rz: 30, h: 10, s: 4.1, top: 36,
+  serveur: { n: 3, name: 'Le serveur', to: 'le serveur', line: 'Mon serveur maison : une trentaine de services', x: 190, z: -24, rx: 40, rz: 30, h: 10, s: 4.1, top: 36,
     view: { ty: 8, yaw: -0.08, pitch: 0.2, dist: 44 } }
 };
 Object.assign(PR_RADIO, {
@@ -101,7 +101,7 @@ Object.assign(Component.prototype, {
     const app = { x: B.x, z: B.z + 24 }; this.plan(s0, app).forEach((p) => pts.push(p)); pts.push(B);
     this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.isleK = null;
     this.setState({ phase: 'mer', auto: true, focus: null, showApp: false, showCard: false, ask: null });
-    this.say('Cap sur ' + PR_ISLES[k].name + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
+    this.say('Cap sur ' + PR_ISLES[k].to + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
   },
   flyTo(k) {
     if (k === 'insula') { if (!this.D) return; this.setState({ showMap: false }); const u = this.jetty.u; Object.assign(this.b, { x: this.D.x, z: this.D.z, h: Math.atan2(u.z, -u.x), v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
