@@ -54,7 +54,7 @@ Object.assign(Component.prototype, {
   },
   markerStep(T, t, ph) {
     if (!this.marker) return; const atSea = ph === 'mer' || ph === 'approche';
-    this.marker.visible = atSea && !this.cruiseP && !this.st().auto;
+    this.marker.visible = false;
     const k = 1 + 0.05 * Math.sin(t * 3); this.marker.scale.set(30 * k, 30 * k * 170 / 640, 1);
     if ((ph === 'mer' || ph === 'approche') && this.mouse && this.island && (this.seaHov = (this.seaHov || 0) + 1) % 6 === 0) {
       const r0 = this.renderer.domElement.getBoundingClientRect(); const rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((this.mouse.x - r0.left) / r0.width) * 2 - 1, -((this.mouse.y - r0.top) / r0.height) * 2 + 1), this.cam);
