@@ -135,11 +135,20 @@ Object.assign(Component.prototype, {
   cabFocus(k, i) {
     const C = this.cabin; if (!C) return;
     if (k === 'bouteilles') { C.sel = i == null ? (C.sel >= 0 ? (C.sel + 1) % C.bottles.length : 0) : i; C.prog.bouteilles = 0; this.cabScroll(); }
-    C.focus = k; this.cabSetView(k); this.seen(PR_CAB_SEEN[k]); this.setState({ cabFocus: k, v: Date.now() });
+    C.focus = k; this.cabSetView(k, this.reduced); this.setState({ objText: this.cabText(k) }); this.seen(PR_CAB_SEEN[k]); this.setState({ cabFocus: k, v: Date.now() });
     if (k === 'livre' && C.pages) { C.pages.material.map = this.bookSpread(this.bookPage || 0); C.pages.material.needsUpdate = true; }
     this.say(PR_CAB_RADIO2[k], 'LOUIS-MARIE · CABINE');
   },
-  cabUnfocus(instant) { const C = this.cabin; if (!C) return; C.focus = null; this.cabSetView('idle', instant); this.setState({ cabFocus: null }); if (instant) { C.prog = {}; C.sel = -1; } },
+  cabText(k) {
+    if (k === 'carte') return "Carte du parcours. 1 : 2020 à 2023, Précigné, Académie musicale de Liesse, bac mention Bien, 1er prix national des très jeunes altistes. 2 : depuis 2023, Nantes, prépa Clemenceau puis ESILV, et DeVinci Junior. 3 : depuis septembre 2025, Levallois, Devoteam Group IT, alternance en IA agentique et RSE. 4 : 2026, Insula. 5 : 2028, le diplôme d'ingénieur.";
+    if (k === 'coffre') return 'Le coffre contient mon CV. Bouton : Télécharger mon CV.';
+    if (k === 'livre') return 'Livre de bord : les escales de ta traversée, et le mot du skipper en tournant la page.';
+    if (k === 'bouteilles') { const b = PR_BOTTLES[this.cabin.sel]; return b ? 'Message en bouteille, ' + b[0] + ' : ' + b[1] : ''; }
+    if (k === 'photo') return 'Au dos de la photo : ' + PR_PHOTO_BACK.filter(Boolean).join(' ');
+    if (k === 'vhf') return 'VHF, canal 16. Canaux : e-mail louis-marie@du-cray.com, LinkedIn, GitHub, dans la radio en bas à gauche.';
+    return '';
+  },
+  cabUnfocus(instant) { const C = this.cabin; if (!C) return; C.focus = null; this.cabSetView('idle', instant || this.reduced); this.setState({ objText: '' }); this.setState({ cabFocus: null }); if (instant) { C.prog = {}; C.sel = -1; } },
   cabScroll() {
     const C = this.cabin, b = PR_BOTTLES[C.sel]; if (!b) return;
     C.scroll.material.map = this.paperTex(840, 1120, (g, w, h) => { g.fillStyle = '#4a2a16'; g.font = '700 72px Caveat, cursive'; g.fillText(b[0], 70, 130); g.font = '54px Caveat, cursive'; this.wrap(g, b[1], w - 140).forEach((l, i) => g.fillText(l, 70, 230 + i * 66)); g.font = '46px Caveat, cursive'; g.fillText('— L.-M.', w - 260, h - 90); });
@@ -167,7 +176,7 @@ Object.assign(Component.prototype, {
     const look = C.look.clone(); if (!C.focus && C.camT >= 1 && this.mouse) { const mx = this.mouse.x / innerWidth - 0.5, my = this.mouse.y / innerHeight - 0.5; look.z += mx * 1.6; look.y -= my * 0.8; }
     C.cam.lookAt(look);
     // progressions des animations (0 → 1 quand l'objet est actif, retour sinon)
-    for (const k of ['coffre', 'photo', 'vhf', 'bouteilles', 'carte']) { const on = C.focus === k && C.camT > 0.55; C.prog[k] = Math.max(0, Math.min(1, (C.prog[k] || 0) + (on ? dt / 1.1 : -dt / 0.7))); }
+    for (const k of ['coffre', 'photo', 'vhf', 'bouteilles', 'carte']) { const on = C.focus === k && C.camT > 0.55; C.prog[k] = this.reduced ? (on ? 1 : 0) : Math.max(0, Math.min(1, (C.prog[k] || 0) + (on ? dt / 1.1 : -dt / 0.7))); }
     const P = (k) => ease(C.prog[k] || 0);
     if (C.lidPivot) { C.lidPivot.rotation.z = -1.75 * P('coffre'); C.L.coffre.intensity = 1.6 * P('coffre'); }
     if (C.framePivot) { const e = P('photo'); C.framePivot.position.copy(C.framePos).add(new T.Vector3(-0.28 * Math.min(1, e * 2), 0.02 * Math.min(1, e * 2), 0)); C.framePivot.rotation.y = Math.PI * Math.max(0, (e - 0.35) / 0.65); }
@@ -187,7 +196,7 @@ Object.assign(Component.prototype, {
     // repères, lanterne qui vacille, roulis
     C.dots.forEach((d, i) => { d.visible = !C.focus; d.material.opacity = 0.55 + 0.45 * Math.sin(t * 3 + i); d.scale.setScalar(1 + 0.25 * Math.sin(t * 3 + i)); });
     C.L.table.intensity = 1.85 + 0.15 * Math.sin(t * 9) * Math.sin(t * 2.3);
-    C.root.rotation.x = 0.012 * Math.sin(t * 0.7);
+    C.root.rotation.x = this.reduced ? 0 : 0.012 * Math.sin(t * 0.7);
     // survol
     if (this.mouse && (this.cabHov = (this.cabHov || 0) + 1) % 5 === 0) {
       const k = this.cabinPick(this.mouse.x, this.mouse.y), r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'default';

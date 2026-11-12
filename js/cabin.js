@@ -48,7 +48,7 @@ const PR_STOPS = [
   { k: 'contact', n: '4f', t: 'La VHF', d: 'Me contacter', x: 92, y: 46, sub: true }
 ];
 Object.assign(Component.prototype, {
-  seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; this.setState({ v: Date.now() }); } },
+  seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; try { localStorage.setItem('elba-escales', JSON.stringify(this.visitedSet)); } catch (e) {} this.setState({ v: Date.now() }); } },
   // ---------- repère au-dessus de l'île, visible en mer
   buildMarker(T) {
     const c = document.createElement('canvas'); c.width = 640; c.height = 170; const g = c.getContext('2d');

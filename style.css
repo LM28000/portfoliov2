@@ -9,19 +9,28 @@ html, body { margin: 0; height: 100%; background: var(--night); color: #F4EFE6; 
 .layer { position: absolute; inset: 0; pointer-events: none; }
 
 .brand { position: absolute; left: 24px; top: 20px; pointer-events: none; max-width: calc(100% - 210px); }
+.ident { display: none; max-width: 520px; margin-bottom: 10px; padding: 16px 18px; border-radius: 14px; background: rgba(11,22,38,.78); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+.ident h1 { margin: 0 0 6px; font: 700 30px/1.1 Fraunces, serif; color: #fff; }
+.ident p { margin: 0; font-size: 15px; line-height: 1.5; color: #E6DED0; }
+body.ph-ponton .ident { display: block; }
+body.ph-ponton .kicker { display: none; }
+.kicker, .hint { display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(11,22,38,.55); }
+.hint { display: block; width: fit-content; }
 .kicker { margin: 0; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--sun); text-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .hint { margin: 6px 0 0; font-size: 13.5px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 
 .chart { position: absolute; right: 20px; top: 18px; width: 150px; height: 150px; padding: 0; border-radius: 50%; background: rgba(233,224,200,.92); border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,0,0,.3); overflow: hidden; cursor: pointer; }
 .chart:hover { box-shadow: 0 0 0 4px var(--sun), 0 8px 24px rgba(0,0,0,.3); }
-.map-btn { position: absolute; right: 20px; top: 176px; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--sun); color: var(--ink); font: 700 12px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.map-btn { position: absolute; right: 20px; top: 176px; min-height: 44px; padding: 8px 14px; border: 0; border-radius: 999px; background: var(--sun); color: var(--ink); font: 700 12px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
 .chart-in { position: absolute; inset: 0; }
 .chart-n { position: absolute; left: 0; right: 0; top: 5px; text-align: center; font: 700 10px 'JetBrains Mono', monospace; color: var(--ink); }
 
 .vhf { position: absolute; left: 20px; bottom: 20px; width: 470px; max-width: calc(100% - 40px); padding: 14px 16px; border-radius: 14px; background: rgba(11,22,38,.86); border: 1px solid rgba(127,230,255,.35); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
 .vhf-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .vhf-chip { padding: 2px 7px; border-radius: 5px; background: var(--cyan); color: var(--night); font: 700 11px 'JetBrains Mono', monospace; }
-.vhf-from { font: 700 12px 'JetBrains Mono', monospace; color: var(--cyan); }
+.vhf-from { flex: 1; font: 700 12px 'JetBrains Mono', monospace; color: var(--cyan); }
+.vhf-prev { width: 34px; height: 34px; border: 1px solid rgba(127,230,255,.5); border-radius: 50%; background: transparent; color: var(--cyan); font-size: 16px; cursor: pointer; }
+.vhf-prev:hover { background: rgba(127,230,255,.15); }
 .vhf-msg { margin: 0; font-family: Fraunces, serif; font-size: 17px; line-height: 1.45; min-height: 50px; }
 
 .vhf-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -72,7 +81,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .ld-t { margin: 0; font: 700 30px Fraunces, serif; }
 .ld-m { margin: 10px 0 0; font: 400 13px 'JetBrains Mono', monospace; color: var(--cyan); }
 
-.credits-btn { position: absolute; right: 20px; top: 214px; padding: 4px 10px; border: 0; border-radius: 999px; background: rgba(11,22,38,.5); color: rgba(255,255,255,.8); font: 600 11px Inter, sans-serif; cursor: pointer; }
+
 .credits { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; background: rgba(11,22,38,.7); }
 .credits-in { width: min(560px, calc(100% - 32px)); padding: 22px 24px; border-radius: 14px; background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.55; }
 .credits-in ul { padding-left: 18px; }
@@ -100,17 +109,22 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .voy-map { position: relative; margin: 10px 0; height: 330px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
 .voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 32px 32px; }
 .voy-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#voyPath { stroke-width: 1.4; }
 .voy-isle { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, #b9c98e 0%, #9fb57a 60%, #d8c99a 92%, transparent 94%); }
 .voy-next { position: absolute; padding: 4px 8px; border: 1.5px dashed rgba(20,37,58,.4); border-radius: 8px; font: 600 11px Inter, sans-serif; color: rgba(20,37,58,.6); }
 .stop { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 7px; padding: 5px 9px 5px 5px; border: 0; border-radius: 999px; background: #FBF7EE; color: var(--ink); box-shadow: 0 3px 10px rgba(0,0,0,.2); cursor: pointer; text-align: left; white-space: nowrap; }
 .stop:hover { background: #fff; box-shadow: 0 0 0 3px var(--sun), 0 3px 10px rgba(0,0,0,.2); }
 .stop .num { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 999px; background: var(--rust); color: #fff; font: 700 12px 'JetBrains Mono', monospace; }
 .stop b { display: block; font: 700 12px Inter, sans-serif; } .stop small { display: block; font: 400 10.5px Inter, sans-serif; color: #3B4D63; }
-.stop.sub { padding: 4px 9px 4px 4px; } .stop.sub .num { min-width: 22px; height: 22px; background: #14253A; font-size: 10.5px; } .stop.sub small { display: none; }
+.stop.sub { padding: 4px 9px 4px 4px; }
+.stop::before { content: ''; position: absolute; inset: -7px -4px; }
+.stop { position: absolute; } .stop.sub .num { min-width: 22px; height: 22px; background: #14253A; font-size: 10.5px; } .stop.sub small { display: none; }
 .stop.big .num { min-width: 32px; height: 32px; font-size: 14px; }
 .stop.done .num::after { content: ' ✓'; }
 .stop.here { box-shadow: 0 0 0 3px var(--cyan), 0 3px 10px rgba(0,0,0,.2); }
-.voy-foot { display: flex; justify-content: flex-end; }
+.voy-foot { display: flex; gap: 8px; align-items: center; }
+.voy-sp { flex: 1; }
+.voy-foot .pr-btn2 { min-height: 40px; }
 .voy-foot .pr-btn { padding: 9px 14px; font-size: 13px; }
 
 @media (max-width: 760px) {
@@ -140,4 +154,26 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
   .archi-2 { grid-template-columns: 1fr; }
   .scope { width: 100%; height: 100%; border-radius: 0; border-width: 3px; }
   .scope-k { display: none; }
+}
+
+/* version texte : lue par les lecteurs d'écran et les moteurs ; affichée si la 3D est impossible */
+.sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+body.no3d #texte { position: absolute !important; inset: 0; width: auto; height: auto; overflow: auto; clip: auto; white-space: normal; z-index: 20; padding: 40px max(20px, calc(50% - 360px)); background: var(--cream); color: var(--ink); font: 400 17px/1.6 Fraunces, serif; }
+body.no3d #texte h2 { font: 700 26px Fraunces, serif; margin: 28px 0 8px; }
+body.no3d #texte a { color: var(--rust); }
+body.no3d #texte .texte-note { display: block !important; padding: 10px 14px; border-radius: 10px; background: #fff3cf; font: 600 14px Inter, sans-serif; }
+body.no3d .loading { display: none; }
+/* la carte marine pulse tant qu'on ne l'a pas ouverte (téléphone) */
+.chart.pulse { animation: chartPulse 1.6s ease-in-out infinite; }
+@keyframes chartPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,201,74,.0), 0 8px 24px rgba(0,0,0,.3); } 50% { box-shadow: 0 0 0 10px rgba(255,201,74,.55), 0 8px 24px rgba(0,0,0,.3); } }
+/* moins de mouvement si le système le demande */
+@media (prefers-reduced-motion: reduce) {
+  .voyage, .chart.pulse { animation: none !important; }
+  .loading { transition: none; }
+}
+@media (max-width: 760px) {
+  .ident { max-width: none; padding: 12px 14px; } .ident h1 { font-size: 22px; } .ident p { font-size: 13.5px; }
+  .map-btn { display: none; }
+  body.hint-on .brand .hint { display: block; }
+  .pr-btn, .pr-btn2 { min-height: 44px; }
 }

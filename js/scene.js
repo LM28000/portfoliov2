@@ -38,7 +38,7 @@ const PR_VIS = {
  antenne: { radio: "L'antenne parle aux IA : on demande « quoi de neuf à Tours ? » et on reçoit le calcul et les liens des annonces.", cart: ['7 · SERVEUR MCP', '10 outils (Node)', 'fiche_annonce · nouveautes', 'simuler_bien · nos_biens…', 'même moteur que la page'] }
 };
 const PR_RADIO = {
- ponton: "Elba, Elba, ici Louis-Marie. Bienvenue à bord ! C'est toi qui barres, moi je te guide à la radio. Quand tu es prêt, largue les amarres.",
+ ponton: "Elba, Elba, ici Louis-Marie. Bienvenue à bord ! C'est toi qui barres, moi je te guide à la radio. La carte marine, en haut à droite, montre tout le voyage. Quand tu es prêt, largue les amarres.",
  mer: "Cap au nord : l'île droit devant, c'est Insula, mon premier projet. Barre avec les flèches (ou ZQSD), ou clique sur l'eau pour y aller.",
  approche: "Tu vois le quai, sur la gauche de l'île ? Approche doucement, je t'aide à accoster.",
  accoste: "Bien accosté ! Je voulais acheter un appartement avec des amis : il fallait comparer des villes, des quartiers, des annonces, avec des critères qui comptent vraiment. Alors j'ai construit Insula. Va voir la démo au cinéma en plein air, puis essaie l'app avec la longue-vue.",
@@ -55,13 +55,17 @@ const PR_CARNET = { kicker: 'CARNET DU PROJET · ÎLE N° 1', title: 'Insula',
  foot: "22 villes · ~15 sources publiques · relevé chaque soir · 15 ans de calcul" };
 const B2T = (x, y, z) => [x, z, -y];
 class Component extends DCLogic {
-componentDidMount() { this.setState({ loading: true, loadMsg: 'chargement des modèles…', phase: 'ponton', radio: '', radioFrom: 'LOUIS-MARIE', showCard: false, plan: false, auto: false }); this.say(PR_RADIO.ponton); this.init(); }
+componentDidMount() { this.reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; this.narrow = innerWidth <= 760; try { this.visitedSet = JSON.parse(localStorage.getItem('elba-escales') || '{}'); } catch (e) { this.visitedSet = {}; } this.setState({ loading: true, loadMsg: 'chargement des modèles…', phase: 'ponton', radio: '', radioFrom: 'LOUIS-MARIE', showCard: false, plan: false, auto: false }); this.say(PR_RADIO.ponton); this.init(); }
 componentWillUnmount() { clearTimeout(this.retry); clearInterval(this.typer); cancelAnimationFrame(this.raf); if (this.ro) this.ro.disconnect(); if (this.kd) { window.removeEventListener('keydown', this.kd); window.removeEventListener('keyup', this.ku); } if (this.renderer) { this.renderer.dispose(); const c = this.renderer.domElement; if (c.parentNode) c.parentNode.removeChild(c); } }
 st() { return this.state || {}; }
-say(text, from) {
- clearInterval(this.typer); let i = 0; this.setState({ radio: '', radioFrom: from || 'LOUIS-MARIE' });
+say(text, from, noLog) {
+ if (!noLog) { this.radioLog = (this.radioLog || []).concat([[text, from || 'LOUIS-MARIE']]).slice(-6); this.radioIdx = this.radioLog.length - 1; }
+ clearInterval(this.typer); let i = 0;
+ if (this.reduced) { this.setState({ radio: text, radioFrom: from || 'LOUIS-MARIE' }); return; }
+ this.setState({ radio: '', radioFrom: from || 'LOUIS-MARIE' });
  this.typer = setInterval(() => { i += 2; this.setState({ radio: text.slice(0, i) }); if (i >= text.length) clearInterval(this.typer); }, 28);
 }
+radioPrev() { const L = this.radioLog || []; if (!L.length) return; this.radioIdx = ((this.radioIdx == null ? L.length - 1 : this.radioIdx) - 1 + L.length) % L.length; const [t, f] = L[this.radioIdx]; clearInterval(this.typer); this.setState({ radio: t, radioFrom: f + ' · ' + (this.radioIdx + 1) + '/' + L.length }); }
 b64(s) { const bin = atob(s); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
 init() {
  const T = window.THREE;
@@ -106,7 +110,7 @@ init() {
   const boat = new T.Group(); const m = g.scene; boat.add(m); scene.add(boat); this.boat = boat;
   m.traverse((o) => { if (o.isMesh && o.material && o.material.name && o.material.name.startsWith('feu')) o.material.emissiveIntensity = 2; });
   this.setState({ loadMsg: "l'île d'Insula…" });
-  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.seen('ponton'); this.setState({ loading: false, showMap: true }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
+  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.seen('ponton'); this.setState({ loading: false, showMap: !this.narrow }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
  }, undefined, (e) => this.setState({ loadMsg: 'erreur bateau : ' + e }));
  // état du bateau
  this.P0 = P0; this.b = { x: P0.x + 3.0, z: P0.z - 4, h: Math.PI / 2, v: 0, turn: 0, thr: 0, auto: null }; this.route = []; this.path = null; this.camDist = 16;
@@ -216,7 +220,7 @@ buildLife(T) {
  for (const sx of [-W0 / 2 + 1, 0, W0 / 2 - 1]) { const post = new T.Mesh(new T.BoxGeometry(0.35, lift + H0, 0.35), wood); post.position.set(sx, (lift + H0) / 2 - 0.6, -0.4); cin.add(post); }
  const poster = tl.load('assets/demo-poster.jpg'); poster.encoding = T.sRGBEncoding;
  const scr = new T.Mesh(new T.PlaneGeometry(W0, H0), new T.MeshBasicMaterial({ map: poster, toneMapped: false })); scr.position.set(0, lift + H0 / 2, 0.17); cin.add(scr);
- const v = document.createElement('video'); v.src = 'assets/demo-insula.webm'; v.muted = true; v.loop = true; v.playsInline = true; this.video = v;
+ const v = document.createElement('video'); v.preload = 'none'; v.muted = true; v.loop = true; v.playsInline = true; this.video = v;
  v.addEventListener('playing', () => { const vt = new T.VideoTexture(v); vt.encoding = T.sRGBEncoding; scr.material.map = vt; scr.material.needsUpdate = true; }, { once: true });
  life.add(cin); clearTrees(cx, cz, W0 * 0.8);
  // bancs face à l'écran
@@ -245,7 +249,7 @@ focus(k) {
  const f = this.focusPts[k]; if (!f) return;
  Object.assign(this.orbW, { tx: f.x, tz: f.z, ty: f.y, yaw: f.yaw != null ? f.yaw : -0.59, pitch: f.pitch != null ? f.pitch : 0.2, dist: f.d });
  this.focused = k; this.seen(k); this.say(PR_RADIO[k], 'LOUIS-MARIE');
- if (k === 'cinema' && this.video) { this.video.currentTime = 0; this.video.play().catch(() => {}); }
+ if (k === 'cinema' && this.video) { if (!this.video.src) this.video.src = 'assets/demo-insula.webm'; try { this.video.currentTime = 0; } catch (e) {} this.video.play().catch(() => {}); }
  this.setState({ focus: k });
  if (k === 'longuevue') { clearTimeout(this.appT); this.appT = setTimeout(() => this.setState({ showApp: true }), 1400); }
 }
@@ -317,6 +321,7 @@ step(T, dt) {
  const s = this.st(), b = this.b, k = this.keys; const t = this.clock.elapsedTime;
  this.sea.material.uniforms.t.value = t;
  const ph = s.phase;
+ if (ph !== this.lastPh) { this.lastPh = ph; if (this.narrow && ph) { this.setState({ hintOn: true }); clearTimeout(this.hintT); this.hintT = setTimeout(() => this.setState({ hintOn: false }), 6000); } }
  if (this.cruiseP && (ph === 'mer' || ph === 'approche' || ph === 'accostage')) {
   const C = this.cruiseP, rest = C.len - C.s;
   const manual = k['arrowleft'] || k['arrowright'] || k['arrowup'] || k['arrowdown'] || k['q'] || k['a'] || k['d'] || k['z'] || k['w'] || k['s'] || this.pad;
@@ -349,14 +354,14 @@ step(T, dt) {
  if (this.boat) { const bo = this.boat; bo.position.set(b.x, 0.05 * Math.sin(t * 1.3) - 0.05, b.z); bo.rotation.set(0, 0, 0); bo.rotateY(b.h); bo.rotateX(0.14 * Math.min(1, b.v / 8) + b.turn * 0.04 + 0.02 * Math.sin(t * 1.1)); bo.rotateZ(0.015 * Math.sin(t * 0.9)); }
  // caméra : derrière le bateau ; en montant, elle regarde le bateau lui-même
  const cam = this.cam;
- if (ph === 'accoste' || ph === 'nuit') { const O = this.orb, W2 = this.orbW, k2 = Math.min(1, dt * 2.2); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
+ if (ph === 'accoste' || ph === 'nuit') { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * 2.2); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
   for (const key of ['tx', 'tz', 'ty', 'pitch', 'dist']) O[key] += (W2[key] - O[key]) * k2; let dy = W2.yaw - O.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; O.yaw += dy * k2;
   this.placeCam(); }
  else {
   const back = this.camDist + b.v * 0.5; const a = b.h + Math.PI + this.camYaw; const pc = this.camPitch;
   const tgt = new T.Vector3(b.x + Math.cos(a) * back * Math.cos(pc), 1.5 + back * Math.sin(pc), b.z - Math.sin(a) * back * Math.cos(pc));
   if (ph === 'ponton') tgt.set(b.x + 17, 7, b.z + 20);
-  cam.position.lerp(tgt, Math.min(1, dt * (this.autoDock ? 4 : 2.5)));
+  cam.position.lerp(tgt, this.reduced ? 1 : Math.min(1, dt * (this.autoDock ? 4 : 2.5)));
   const f = Math.min(1, Math.max(0, (pc - 0.35) / 0.8));
   const ahead = new T.Vector3(b.x + Math.cos(b.h) * 8, 3, b.z - Math.sin(b.h) * 8), onBoat = new T.Vector3(b.x, 1, b.z);
   this.look = ahead.lerp(onBoat, f);
@@ -376,7 +381,7 @@ step(T, dt) {
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
 whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; return null; }
-docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); if (this.video) this.video.play().catch(() => {}); }
+docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
  const acts = [];
@@ -391,7 +396,7 @@ renderVals() {
   if (f === 'coffre') acts.push({ label: '⬇ Télécharger mon CV', cls: 'pr-btn', go: () => window.open(PR_CV_URL, '_blank', 'noopener') });
   if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
   if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
-  if (!f) { acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => location.reload() }); } }
+  if (!f) { acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => this.goTo('ponton') }); } }
  if (ph === 'mer' && !s.auto && this.visited) acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn2', go: () => this.startNight() });
  const hint = ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · pincez ou molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
@@ -408,7 +413,11 @@ renderVals() {
   showPads: touch && (ph === 'mer' || ph === 'approche'),
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askGo: () => this.autopilot(), askNo: () => this.setState({ ask: null }),
   showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
-  showMap: !!s.showMap, openMap: () => this.setState({ showMap: true }), closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => Object.assign({ done: !!(this.visitedSet && this.visitedSet[x.k]), here: x.k === this.whereAmI() }, x)),
+  showMap: !!s.showMap, openMap: () => { this.mapOpened = true; this.setState({ showMap: true }); }, closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => { const v = this.visitedSet || {}, here = this.whereAmI(); const parent = ['cinema', 'longuevue', 'archi'].includes(x.k) ? 'insula' : (['carte', 'coffre', 'recap', 'bouteilles', 'apropos', 'contact'].includes(x.k) ? 'cabine' : null);
+   const show = !x.sub || s.showAll || !!v[parent] || here === parent || !!v[x.k]; return Object.assign({ done: !!v[x.k], here: x.k === here, show }, x); }),
+  showAll: !!s.showAll, toggleAll: () => this.setState({ showAll: !s.showAll }),
+  progress: PR_STOPS.filter((x) => (this.visitedSet || {})[x.k]).length + '/' + PR_STOPS.length,
+  pulseChart: this.narrow && !s.showMap && !this.mapOpened, phase: ph, hintOn: !!s.hintOn, objText: s.objText || '', radioPrev: () => this.radioPrev(),
   showArchi: !!s.plan && ph === 'accoste', panel: null,
   padL: () => { this.pad = 'L'; }, padR: () => { this.pad = 'R'; }, padU: () => { this.pad = 'U'; }, padOff: () => { this.pad = null; }
  };

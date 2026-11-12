@@ -21,15 +21,19 @@
   <div id="layer" class="layer"></div>
 
   <header class="brand">
+    <div class="ident">
+      <h1>Louis-Marie Perret du Cray</h1>
+      <p>Élève-ingénieur à l'ESILV, en alternance chez Devoteam (IA agentique &amp; RSE). Ce site est une traversée : chaque île est un de mes projets.</p>
+    </div>
     <p class="kicker">LOUIS-MARIE PERRET DU CRAY · À BORD D'ELBA</p>
     <p id="hint" class="hint"></p>
   </header>
 
   <button id="chartBtn" class="chart" title="Ouvrir la carte du voyage" aria-label="Ouvrir la carte du voyage"><div id="chart" class="chart-in"></div><span class="chart-n">N · CARTE MARINE</span></button>
-  <button id="mapBtn" class="map-btn">🗺 Carte du voyage</button>
+  <button id="mapBtn" class="map-btn">🗺 Carte du voyage <span id="mapCount"></span></button>
 
   <section class="vhf" aria-live="polite">
-    <div class="vhf-top"><span class="vhf-chip">VHF 16</span><span id="radioFrom" class="vhf-from"></span></div>
+    <div class="vhf-top"><span class="vhf-chip">VHF 16</span><span id="radioFrom" class="vhf-from"></span><button id="radioPrev" class="vhf-prev" title="Relire le message précédent" aria-label="Relire le message précédent">↺</button></div>
     <p id="radio" class="vhf-msg"></p>
     <div id="radioLinks" class="vhf-links"></div>
   </section>
@@ -91,7 +95,7 @@
         <div class="voy-isle" style="left:24%;top:12%;width:42%;height:40%"></div>
         <div class="voy-next" style="left:2%;top:4%">Prochaines îles · bientôt</div>
       </div>
-      <div class="voy-foot"><button id="voyStart" class="pr-btn">Suivre le parcours depuis le début</button></div>
+      <div class="voy-foot"><button id="voyAll" class="pr-btn2 dark sm"></button><button id="creditsBtn" class="pr-btn2 dark sm">Crédits</button><span class="voy-sp"></span><button id="voyStart" class="pr-btn">Suivre le parcours depuis le début</button></div>
     </div>
   </div>
 
@@ -99,7 +103,6 @@
     <div><p class="ld-t"><i>Elba</i> se prépare…</p><p id="loadMsg" class="ld-m"></p></div>
   </div>
 
-  <button id="creditsBtn" class="credits-btn">Crédits</button>
   <div id="credits" class="credits" hidden>
     <div class="credits-in">
       <p class="archi-k" style="color:#B4412E">CRÉDITS</p>
@@ -116,10 +119,37 @@
     </div>
   </div>
 
+  <p id="objText" class="sr-only" aria-live="polite"></p>
+  <article id="texte" class="texte sr-only" aria-label="Version texte du site">
+    <h2>Louis-Marie Perret du Cray</h2>
+    <p>Élève-ingénieur à l'ESILV (cycle ingénieur, 2024 – 2028), en alternance chez Devoteam, Group IT : IA agentique et RSE. Je construis les outils qui me manquent. Musicien (alto, violon) et marin sur Elba, un Flirt de 1977.</p>
+    <p class="texte-note" hidden>Votre navigateur n'affiche pas la 3D : voici la traversée en version texte.</p>
+    <h2>Île n° 1 · Insula</h2>
+    <p>Un outil pour choisir où acheter un appartement entre amis : 22 villes de l'Ouest comparées, les annonces relevées chaque soir, le rendement calculé sur 15 ans, et un serveur MCP pour l'interroger depuis une IA. <a href="https://insula.du-cray.eu/">Essayer Insula</a> · <a href="https://github.com/LM28000/immobilier-tool">le code</a></p>
+    <h2>Mon parcours</h2>
+    <ol>
+      <li>2020 – 2023 · Précigné : Académie musicale de Liesse, bac mention Bien (maths, NSI), 1er prix national des très jeunes altistes.</li>
+      <li>Depuis 2023 · Nantes : prépa Clemenceau, puis ESILV (2024 – 2028) ; DeVinci Junior, développement commercial (2024 – 2025).</li>
+      <li>Depuis septembre 2025 · Levallois-Perret : Devoteam, Group IT, alternance en IA agentique et RSE.</li>
+      <li>2026 · Insula, mon premier projet personnel publié.</li>
+      <li>2028 · le diplôme d'ingénieur.</li>
+    </ol>
+    <h2>Messages en bouteille</h2>
+    <ul>
+      <li><b>Premier prix.</b> À l'Académie musicale de Liesse, j'ai remporté le premier prix du concours national des très jeunes altistes. Le travail qui va avec : reprendre le même passage, encore et encore, jusqu'à ce qu'il sonne juste.</li>
+      <li><b>Le quatuor.</b> J'ai été responsable du quatuor à cordes de l'Académie, et j'ai organisé des concerts et des spectacles. Mettre quatre musiciens d'accord, c'était déjà de la gestion de projet.</li>
+      <li><b>Dix jeunes.</b> J'ai encadré une équipe de dix jeunes, de 8 à 17 ans. Expliquer simplement et donner à chacun sa place : ça me sert tous les jours.</li>
+      <li><b>Six pattes.</b> À l'ESILV, j'ai conçu un robot hexapode, et construit la maquette d'un immeuble qui résiste aux séismes. Dans les deux cas, tout est une question d'équilibre.</li>
+      <li><b>Insula.</b> Insula est née d'une vraie question : acheter un appartement avec des amis. Mes meilleurs projets sont ceux dont j'ai besoin moi-même.</li>
+    </ul>
+    <h2>Me contacter</h2>
+    <p><a href="mailto:louis-marie@du-cray.com">louis-marie@du-cray.com</a> · <a href="https://www.linkedin.com/in/louismarie-perret-du-cray/">LinkedIn</a> · <a href="https://github.com/LM28000">GitHub</a> · <a href="assets/cv-louis-marie-perret-du-cray.pdf">Mon CV (PDF)</a></p>
+  </article>
+
   <noscript>
     <div class="nojs">
       <h1>Louis-Marie Perret du Cray</h1>
-      <p>Ce site est un monde marin en 3D : il a besoin de JavaScript. Première escale : <a href="https://insula.du-cray.eu/">Insula</a>, un outil pour choisir où acheter un appartement entre amis.</p>
+      <p>Ce site est un monde marin en 3D : il a besoin de JavaScript. Première escale : <a href="https://insula.du-cray.eu/">Insula</a>, un outil pour choisir où acheter un appartement entre amis. <a href="assets/cv-louis-marie-perret-du-cray.pdf">Mon CV (PDF)</a> · <a href="mailto:louis-marie@du-cray.com">louis-marie@du-cray.com</a></p>
       <p><a href="https://github.com/LM28000">GitHub</a> · <a href="https://www.linkedin.com/in/louismarie-perret-du-cray/">LinkedIn</a></p>
     </div>
   </noscript>
