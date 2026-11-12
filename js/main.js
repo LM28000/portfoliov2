@@ -23,13 +23,14 @@
     $('mapCount').textContent = '· ' + vals.progress; $('chartBtn').classList.toggle('pulse', !!vals.pulseChart);
     $('objText').textContent = vals.objText || '';
     const son = C.soundOn(); $('soundBtn').textContent = son ? '🔊' : '🔇'; $('soundBtn').title = son ? 'Couper le son' : 'Activer le son'; $('soundBtn').setAttribute('aria-label', $('soundBtn').title);
+    const vo = C.voiceOn(); $('voiceBtn').classList.toggle('off', !vo); $('voiceBtn').title = vo ? 'Faire taire la radio' : 'Faire parler la radio'; $('voiceBtn').setAttribute('aria-label', $('voiceBtn').title); $('voiceBtn').setAttribute('aria-pressed', vo ? 'true' : 'false');
     const sig = vals.actions.map((a) => a.label + '|' + a.cls).join('§');
     if (sig !== actSig) {
       actSig = sig; const nav = $('actions'); nav.innerHTML = '';
       vals.actions.forEach((a, i) => { const b = document.createElement('button'); b.className = a.cls; b.textContent = a.label; b.onclick = () => vals.actions[i] && vals.actions[i].go(); nav.appendChild(b); });
     }
     $('pads').hidden = !vals.showPads;
-    const ask = $('ask'); ask.hidden = !vals.ask; if (vals.ask) { ask.style.left = vals.askX + 'px'; ask.style.top = vals.askY + 'px'; }
+    const ask = $('ask'); ask.hidden = !vals.ask; if (vals.ask) { $('askT').textContent = vals.askText; ask.style.left = vals.askX + 'px'; ask.style.top = vals.askY + 'px'; }
     $('archi').hidden = !vals.showArchi;
     document.body.classList.toggle('texte-open', !!vals.showText); $('texteClose').hidden = !vals.showText;
     const app = $('appview'); app.hidden = !vals.showApp;
@@ -54,7 +55,7 @@
     const k = b.dataset.pad; const on = () => (k === 'L' ? vals.padL : k === 'R' ? vals.padR : vals.padU)(); const off = () => vals.padOff();
     b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
   });
-  $('radioPrev').onclick = () => vals.radioPrev(); $('soundBtn').onclick = () => { C.setSound(!C.soundOn()); render(); };
+  $('radioPrev').onclick = () => vals.radioPrev(); $('soundBtn').onclick = () => { C.setSound(!C.soundOn()); render(); }; $('voiceBtn').onclick = () => { C.setVoice(!C.voiceOn()); render(); };
   setTimeout(() => { if (vals.loading) { window.__slow = true; $('loadMsg').innerHTML = 'C\u2019est long… <button class="pr-btn2 sm" id="goText">Voir la version texte</button>'; const g = $('goText'); if (g) g.onclick = no3d; } }, 30000);
   $('chartBtn').onclick = () => vals.openMap(); $('mapBtn').onclick = () => vals.openMap(); $('voyClose').onclick = () => vals.closeMap(); $('voyStart').onclick = () => vals.goTo('ponton'); $('voyArch').onclick = () => vals.goArch(); $('voyText').onclick = () => vals.openText(); $('texteClose').onclick = () => vals.closeText();
   $('creditsBtn').onclick = () => { $('credits').hidden = false; };

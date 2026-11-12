@@ -197,3 +197,4 @@ body.texte-open #texte h3, body.no3d #texte h3 { font: 700 20px Fraunces, serif;
 body.texte-open .texte-k { display: block; margin: 0; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--rust); }
 .texte-close { position: sticky; top: 0; float: right; z-index: 2; }
 @media (max-width: 760px) { body.ph-archipel .ident p { display: none; } body.ph-archipel .ident { margin-bottom: 0; } .isle-lbl { min-width: 120px; max-width: 150px; padding: 7px 9px; } .isle-lbl b { font-size: 16px; } .isle-lbl small { display: none; } .isle-lbl { transform: translate(34px, -50%); } .isle-lbl::after { left: -9px; top: 50%; bottom: auto; margin: -9px 0 0; border: 9px solid transparent; border-left: 0; border-right-color: rgba(11,22,38,.9); } }
+.vhf-voice.off { opacity: .45; text-decoration: line-through; }

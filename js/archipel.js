@@ -7,6 +7,7 @@ const PR_ISLES = {
     view: { ty: 8, yaw: -0.08, pitch: 0.2, dist: 44 } }
 };
 Object.assign(PR_RADIO, {
+  approche2: "Tu vois le petit ponton, au sud de l'île ? Approche doucement, je t'aide à accoster.",
   archipel: "Ici Louis-Marie, bienvenue ! Voici l'archipel : chaque île est un de mes projets. Clique sur une île pour la survoler. Ou embarque à bord d'Elba : tu barres, et je te guide à la radio.",
   cartevivante: "La Carte vivante : la France en 3D et en temps réel. On voit les trains voiture par voiture, les avions, les bateaux, la météo, l'énergie, les séismes. Une frise remonte sept jours en arrière, et tout est rejoué. Derrière, il y a un serveur en Rust qui archive le temps réel, et un site en TypeScript (MapLibre, deck.gl). Elle tourne en permanence sur mon serveur maison, l'île d'en face.",
   serveur: "La salle des machines : un serveur chez moi, sous Debian, avec une trentaine de services dans Docker. Chacun est décrit dans un fichier versionné dans git. Il y a un cloud privé, une IA locale, une messagerie, un VPN, de la supervision, et des sauvegardes chiffrées chaque nuit. C'est lui qui fait tourner la Carte vivante."
@@ -93,22 +94,31 @@ Object.assign(Component.prototype, {
   berth(k) { const I = PR_ISLES[k]; return { x: I.x - 6 + 3.2, z: I.z + I.rz + 6, h: Math.PI / 2 }; },
   berthed(k) { if (!PR_ISLES[k] || !PR_ISLES[k].rx) return false; const B = this.berth(k); return Math.hypot(this.b.x - B.x, this.b.z - B.z) < 6; },
   // le pilote auto emmène Elba jusqu'au ponton de l'île suivante
+  // la même règle partout : le pilote auto emmène Elba à l'île choisie
+  goSail(k) { if (k === 'insula') this.autopilot(); else this.sailTo(k); },
+  // à l'approche d'une île barrée à la main, on propose d'accoster
+  approachStep(ph, b) { if (!this.A) return; const pts = { insula: this.A }; ['cartevivante', 'serveur'].forEach((k) => { const B = this.berth(k); pts[k] = { x: B.x, z: B.z + 24 }; });
+    const best = this.sailDest || 'insula', bd = Math.hypot(b.x - pts[best].x, b.z - pts[best].z);
+    if (ph === 'mer' && bd < 45) { this.approachK = best; this.setState({ phase: 'approche' }); this.say(best === 'insula' ? PR_RADIO.approche : PR_RADIO.approche2); }
+    else if (ph === 'approche' && (bd > 60 || best !== this.approachK)) this.setState({ phase: 'mer' }); },
   sailTo(k) {
+    if (k === 'insula') { this.autopilot(); return; }
     const st = this.st(); if (st.plan) this.setPlan(false); this.focused = null; clearTimeout(this.appT);
     const b = { x: this.b.x, z: this.b.z }, B = this.berth(k), pts = [b]; let s0 = b;
     if (st.phase === 'accoste' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
     else if (st.phase === 'escale') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
+    else { const P = this.P0; let e = null; if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) e = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; else e = this.escape(b); if (e) { pts.push(e); s0 = e; } }
     const app = { x: B.x, z: B.z + 24 }; this.plan(s0, app).forEach((p) => pts.push(p)); pts.push(B);
-    this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.isleK = null;
+    this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.sailDest = k; this.isleK = null;
     this.setState({ phase: 'mer', auto: true, focus: null, showApp: false, showCard: false, ask: null });
     this.say('Cap sur ' + PR_ISLES[k].to + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
   },
   flyTo(k) {
     if (k === 'insula') { if (!this.D) return; this.setState({ showMap: false }); const u = this.jetty.u; Object.assign(this.b, { x: this.D.x, z: this.D.z, h: Math.atan2(u.z, -u.x), v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
       this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); return; }
-    const I = PR_ISLES[k]; if (!I) return; this.isleK = k; this.seen(k); const v = I.view, narrow = this.host.clientWidth < this.host.clientHeight;
+    const I = PR_ISLES[k]; if (!I) return; this.isleK = k; this.seen(k); const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.sailK = null; this.autoDock = false; const v = I.view, narrow = this.host.clientWidth < this.host.clientHeight;
     Object.assign(this.orbW, { tx: I.x, tz: I.z, ty: v.ty, yaw: v.yaw, pitch: v.pitch, dist: v.dist * (narrow ? 1.7 : 1) });
-    this.setState({ phase: 'escale', showMap: false, ask: null }); this.say(PR_RADIO[k], 'LOUIS-MARIE · ' + I.name.toUpperCase());
+    this.setState({ phase: 'escale', showMap: false, ask: null, auto: false }); this.say(PR_RADIO[k], 'LOUIS-MARIE · ' + I.name.toUpperCase());
   },
   // embarquer : la caméra plonge de l'archipel vers le ponton
   embark() { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;

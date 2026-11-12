@@ -2,6 +2,8 @@
 const PR_AUDIO = { music: { mer: 'assets/audio/musique-mer.m4a', cabine: 'assets/audio/musique-cabine.m4a' }, voix: 'assets/audio/voix/' };
 const prHash = (s) => { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x * 33) ^ s.charCodeAt(i)) >>> 0; return x.toString(36); };
 Object.assign(Component.prototype, {
+  voiceOn() { try { return localStorage.getItem('elba-voix') === 'on'; } catch (e) { return false; } },
+  setVoice(on) { try { localStorage.setItem('elba-voix', on ? 'on' : 'off'); } catch (e) {} if (!on && this.voiceSrc) { try { this.voiceSrc.stop(); } catch (e) {} this.voiceSrc = null; } if (on) { if (!this.soundOn()) this.setSound(true); const L = this.radioLog || []; if (L.length) this.speak(L[L.length - 1][0]); } this.setState({ voice: on }); },
   soundOn() { try { return localStorage.getItem('elba-son') !== 'off'; } catch (e) { return true; } },
   audioInit() {
     if (this.au) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -28,7 +30,7 @@ Object.assign(Component.prototype, {
   // petit grésillement et bip de la VHF
   squelch(at, long) { const A = this.au, ctx = A.ctx; const s = ctx.createBufferSource(); s.buffer = A.white; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200; f.Q.value = 0.6; const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.5, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + (long ? 0.22 : 0.12)); s.connect(f); f.connect(g); g.connect(A.voiceBus); s.start(at, Math.random() * 3, 0.3); },
   speak(text) {
-    const A = this.au; if (!A || !text || !this.soundOn()) return; if (!A.have) { this.pendingVoice = text; return; }
+    const A = this.au; if (!A || !text || !this.soundOn() || !this.voiceOn()) return; if (!A.have) { this.pendingVoice = text; return; }
     const k = prHash(text); if (!A.have.has(k)) return; const ctx = A.ctx, my = (this.voiceId = (this.voiceId || 0) + 1);
     if (this.voiceSrc) { try { this.voiceSrc.stop(); } catch (e) {} this.voiceSrc = null; }
     this.load(PR_AUDIO.voix + k + '.m4a').then((b) => { if (my !== this.voiceId) return; const t = ctx.currentTime + 0.05; this.squelch(t); const s = ctx.createBufferSource(); s.buffer = b; s.connect(A.vIn); s.start(t + 0.16); this.voiceSrc = s; this.voiceEnd = t + 0.16 + b.duration;
