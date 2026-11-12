@@ -101,6 +101,16 @@ Object.assign(Component.prototype, {
     const best = this.sailDest || 'insula', bd = Math.hypot(b.x - pts[best].x, b.z - pts[best].z);
     if (ph === 'mer' && bd < 45) { this.approachK = best; this.setState({ phase: 'approche' }); this.say(best === 'insula' ? PR_RADIO.approche : PR_RADIO.approche2); }
     else if (ph === 'approche' && (bd > 60 || best !== this.approachK)) this.setState({ phase: 'mer' }); },
+  // accoster depuis l'approche : on part d'où l'on est, sans revenir au point d'approche (plus de demi-tour)
+  finalApproach(k) {
+    const b = this.b, here = { x: b.x, z: b.z }; let T, pre;
+    if (k === 'insula') { T = this.D; pre = [this.A, this.Dapp]; } else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }, { x: T.x, z: T.z + 9 }]; }
+    const dT = Math.hypot(T.x - b.x, T.z - b.z), L = Math.max(3, Math.min(8, dT / 4)), lead = { x: b.x + Math.cos(b.h) * L, z: b.z - Math.sin(b.h) * L };
+    const ahead = pre.filter((p) => Math.hypot(p.x - T.x, p.z - T.z) < dT - 6);
+    const pts = [here, lead]; let s0 = lead; ahead.forEach((p) => { this.plan(s0, p).forEach((q) => pts.push(q)); s0 = p; }); pts.push(T);
+    this.b.v = Math.max(this.b.v, 1); this.cruise(pts, true, k === 'insula' ? 10 : 12); this.autoDock = true; this.sailK = k === 'insula' ? null : k; this.sailDest = k; this.isleK = null;
+    this.setState({ phase: 'mer', auto: true, ask: null }); this.say('Je prends la barre pour la manœuvre, on accoste.');
+  },
   sailTo(k) {
     if (k === 'insula') { this.autopilot(); return; }
     const st = this.st(); if (st.plan) this.setPlan(false); this.focused = null; clearTimeout(this.appT);
