@@ -132,7 +132,7 @@ Object.assign(Component.prototype, {
     else if (k === 'ponton') { T = { x: this.P0.x + 3, z: this.P0.z - 4 }; pre = [{ x: T.x + 4, z: T.z + 26 }, { x: T.x, z: T.z + 10 }]; }
     else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }]; }
     let a = s0; pre.forEach((p) => { this.plan(a, p).forEach((q) => pts.push(q)); a = p; }); pts.push(T);
-    this.cruise(pts, true, 30); const C = this.cruiseP; C.transit = true; C.vmax = Math.max(35, Math.min(120, C.len / 4)); C.v = 4;
+    this.cruise(pts, true, 30); const C = this.cruiseP; C.transit = true; C.vmax = Math.max(60, Math.min(240, C.len / 2)); C.v = 4;
     if (this.wake) { this.wake.userData.n = 0; this.wake.geometry.setDrawRange(0, 0); } this.transitK = k; this.transitThen = then || null; this.transitT = T; this.autoDock = true; this.sailK = null; this.sailDest = k === 'ponton' ? 'insula' : k; this.isleK = null;
     this.orbW.pitch = Math.max(0.95, this.orb.pitch); this.transitFrame(1);
     this.setState({ phase: 'transit', auto: true, focus: null, showApp: false, showCard: false, showMap: false, panel: null, ask: null });

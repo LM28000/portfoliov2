@@ -332,7 +332,7 @@ step(T, dt) {
   const manual = k['arrowleft'] || k['arrowright'] || k['arrowup'] || k['arrowdown'] || k['q'] || k['a'] || k['d'] || k['z'] || k['w'] || k['s'] || this.pad;
   if (manual && ph !== 'accostage' && !C.transit) { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.sailK = null; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
   else {
-   if (C.transit) { const vt = Math.max(2.5, C.vmax * Math.min(1, (C.s + 4) / (0.18 * C.len), Math.sqrt(rest / (0.3 * C.len)))); C.v += (vt - C.v) * Math.min(1, dt * 6); this.transitFrame(dt); } else { const vt = C.dock ? Math.max(1.8, Math.min(C.vmax, Math.sqrt(2 * 1.6 * rest) + 0.5)) : C.vmax; C.v += Math.max(-4 * dt, Math.min(3.2 * dt, vt - C.v)); } C.s = Math.min(C.len, C.s + C.v * dt);
+   if (C.transit) { const vt = Math.max(2.5, C.vmax * Math.min(1, (C.s + 4) / (0.12 * C.len), Math.sqrt(rest / (0.22 * C.len)))); C.v += (vt - C.v) * Math.min(1, dt * 6); this.transitFrame(dt); } else { const bo = C.boost ? 1 : 0, vm = C.vmax * (bo ? 3.5 : 1), dec = bo ? 14 : 1.6; const vt = C.dock ? Math.max(1.8, Math.min(vm, Math.sqrt(2 * dec * rest) + 0.5)) : vm; C.v += Math.max(-(bo ? 30 : 4) * dt, Math.min((bo ? 14 : 3.2) * dt, vt - C.v)); } C.s = Math.min(C.len, C.s + C.v * dt);
    const f = C.s / C.len, pnt = C.curve.getPointAt(f), tg = C.curve.getTangentAt(Math.min(0.999, f));
    let want = Math.atan2(-tg.z, tg.x), dh = want - b.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
    const rate = 0.9 + C.v * 0.05; const turn = Math.max(-rate * dt, Math.min(rate * dt, dh)); b.h += turn; b.turn += (Math.sign(dh) * Math.min(1, Math.abs(dh) * 2) - b.turn) * dt * 2;
@@ -359,7 +359,7 @@ step(T, dt) {
  if (this.boat) { const bo = this.boat; bo.position.set(b.x, 0.05 * Math.sin(t * 1.3) - 0.05, b.z); bo.rotation.set(0, 0, 0); bo.rotateY(b.h); bo.rotateX(0.14 * Math.min(1, b.v / 8) + b.turn * 0.04 + 0.02 * Math.sin(t * 1.1)); bo.rotateZ(0.015 * Math.sin(t * 0.9)); }
  // caméra : derrière le bateau ; en montant, elle regarde le bateau lui-même
  const cam = this.cam;
- if (this.orbitPh(ph)) { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * 2.2); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
+ if (this.orbitPh(ph)) { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * (ph === 'transit' ? 4 : 2.2)); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
   for (const key of ['tx', 'tz', 'ty', 'pitch', 'dist']) O[key] += (W2[key] - O[key]) * k2; let dy = W2.yaw - O.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; O.yaw += dy * k2;
   this.placeCam(); }
  else {
@@ -396,6 +396,7 @@ renderVals() {
   { if (k === 'cartevivante') acts.push({ label: '⛵ Île suivante : Le serveur', cls: 'pr-btn', go: () => this.sailTo('serveur') }); else acts.push({ label: '⌂ Descendre dans la cabine', cls: 'pr-btn', go: () => this.goTo('cabine') }); } }
  if (ph === 'transit') acts.push({ label: '⏭ Arriver tout de suite', cls: 'pr-btn2', go: () => this.skipTransit() });
  if (ph === 'ponton') { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); acts.push({ label: '⚓ Larguer les amarres', cls: 'pr-btn', go: () => this.leave() }); }
+ if ((ph === 'mer' || ph === 'approche' || ph === 'accostage') && this.cruiseP && !this.cruiseP.transit && !this.cruiseP.boost) acts.push({ label: '⏩ Arriver plus vite', cls: 'pr-btn2', go: () => { if (this.cruiseP) this.cruiseP.boost = true; this.setState({ v: Date.now() }); } });
  if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.cruiseP = null; this.route = []; this.autoDock = false; this.sailK = null; this.setState({ auto: false }); } });
  if ((ph === 'mer' || ph === 'approche') && !s.auto) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() });
  if (ph === 'mer' && !s.auto) { const d = this.sailDest || 'insula'; acts.push({ label: '⛵ Pilote auto → ' + PR_ISLES[d].name, cls: 'pr-btn', go: () => this.goSail(d) }); }
