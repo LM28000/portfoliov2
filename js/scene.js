@@ -136,12 +136,13 @@ init() {
  r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const ph = this.st().phase; const isle = this.orbitPh(ph);
   const pad = !e.ctrlKey && e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || (Math.abs(e.deltaY) < 40 && e.deltaY % 1 !== 0));
   if (pad) { // deux doigts sur le trackpad : pivoter, comme en glissant
-   const dx = -e.deltaX, dy = -e.deltaY;
+   const dx = e.deltaX, dy = e.deltaY;
    if (isle) { const O = this.orb, o = this.orbW; o.yaw = O.yaw = O.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, O.pitch + dy * 0.004)); this.placeCam(); }
    else { this.camYaw -= dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, this.camPitch + dy * 0.004)); }
    return; }
   const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))); const f = Math.exp(d * 0.0012);
-  if (isle) { const L = this.distLim(ph); this.orbW.dist = Math.max(L[0], Math.min(L[1], this.orbW.dist * f)); } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
+  if (isle) { const L = this.distLim(ph); const want = this.orbW.dist * f; this.orbW.dist = Math.max(L[0], Math.min(L[1], want));
+   if ((ph === 'accoste' || ph === 'escale') && want > L[1]) { this.zAcc = (this.zAcc || 0) + d; if (this.zAcc > 120) { this.zAcc = 0; this.archipel(); } } else if (ph === 'archipel' && want < L[0]) { this.zAcc = (this.zAcc || 0) - d; const k = this.islesHit(e.clientX, e.clientY); if (k && this.zAcc > 120) { this.zAcc = 0; this.flyTo(k); } } else this.zAcc = 0; } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
   if (ph === 'archipel') { const k = this.islesHit(e.clientX, e.clientY); if (k) this.flyTo(k); return; }
@@ -303,7 +304,7 @@ autopilot() {
  if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) esc = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; // sortir du ponton tout droit
  else esc = this.escape(b);
  const s0 = esc || b; const pts = [b].concat(esc ? [esc] : [], this.plan(s0, this.A), [this.Dapp, this.D]);
- this.cruise(pts, true); this.autoDock = true; this.setState({ auto: true });
+ this.cruise(pts, true); this.autoDock = true; this.sailK = null; this.setState({ auto: true });
  this.say("Je prends la barre et je t'emmène au quai d'Insula. Regarde la carte marine : la route est en pointillés.");
 }
 dock() { this.autopilot(); }
@@ -329,7 +330,7 @@ step(T, dt) {
  if (this.cruiseP && (ph === 'mer' || ph === 'approche' || ph === 'accostage')) {
   const C = this.cruiseP, rest = C.len - C.s;
   const manual = k['arrowleft'] || k['arrowright'] || k['arrowup'] || k['arrowdown'] || k['q'] || k['a'] || k['d'] || k['z'] || k['w'] || k['s'] || this.pad;
-  if (manual && ph !== 'accostage') { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
+  if (manual && ph !== 'accostage') { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.sailK = null; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
   else {
    const vt = C.dock ? Math.max(1.8, Math.min(C.vmax, Math.sqrt(2 * 1.6 * rest) + 0.5)) : C.vmax; C.v += Math.max(-4 * dt, Math.min(3.2 * dt, vt - C.v)); C.s = Math.min(C.len, C.s + C.v * dt);
    const f = C.s / C.len, pnt = C.curve.getPointAt(f), tg = C.curve.getTangentAt(Math.min(0.999, f));
@@ -386,27 +387,27 @@ step(T, dt) {
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
 whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; if (ph === 'escale') return this.isleK; if (ph === 'archipel') return 'archipel'; return null; }
-docked() { const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); }
+docked() { if (this.sailK) { const k = this.sailK; this.sailK = null; const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.orbFromCam(); this.flyTo(k); return; } const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
  const acts = [];
  if (ph === 'archipel') { acts.push({ label: '☰ Tout voir en 1 minute', cls: 'pr-btn2', go: () => this.setState({ showText: true }) }); acts.push({ label: "⛵ Embarquer à bord d'Elba", cls: 'pr-btn', go: () => this.embark() }); }
  if (ph === 'escale') { const k = this.isleK; acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (PR_ISLES[k] && PR_ISLES[k].code) acts.push({ label: 'Voir le code ↗', cls: 'pr-btn2', go: () => window.open(PR_ISLES[k].code, '_blank', 'noopener') });
-  const nx = k === 'cartevivante' ? 'serveur' : 'insula'; acts.push({ label: 'Île suivante : ' + PR_ISLES[nx].name + ' →', cls: 'pr-btn2', go: () => this.flyTo(nx) }); acts.push({ label: "⛵ Embarquer à bord d'Elba", cls: 'pr-btn', go: () => this.embark() }); }
+  if (this.berthed(k)) { if (k === 'cartevivante') acts.push({ label: '⛵ Île suivante : Le serveur', cls: 'pr-btn', go: () => this.sailTo('serveur') }); else acts.push({ label: '⌂ Descendre dans la cabine', cls: 'pr-btn', go: () => this.goTo('cabine') }); }
+  else { const nx = k === 'cartevivante' ? 'serveur' : 'insula'; acts.push({ label: 'Île suivante : ' + PR_ISLES[nx].name + ' →', cls: 'pr-btn2', go: () => this.flyTo(nx) }); acts.push({ label: "⛵ Embarquer à bord d'Elba", cls: 'pr-btn', go: () => this.embark() }); } }
  if (ph === 'ponton') { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); acts.push({ label: 'Larguer les amarres ⚓', cls: 'pr-btn', go: () => this.leave() }); }
- if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.cruiseP = null; this.route = []; this.autoDock = false; this.setState({ auto: false }); } });
+ if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.cruiseP = null; this.route = []; this.autoDock = false; this.sailK = null; this.setState({ auto: false }); } });
  if (ph === 'mer' && !s.auto) acts.push({ label: 'Pilote auto → Insula', cls: 'pr-btn', go: () => this.autopilot() });
  if (ph === 'approche' && !s.auto) acts.push({ label: 'Accoster', cls: 'pr-btn', go: () => this.dock() });
- if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!s.focus && !plan) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: 'Reprendre la mer', cls: 'pr-btn2', go: () => { if (plan) this.setPlan(false); this.focused = null; this.setState({ phase: 'mer', showCard: false, auto: false, focus: null, showApp: false }); this.leaveIsland(); this.say("Bon vent ! La Carte vivante est à l'ouest, le serveur à l'est : clique sur une île pour la survoler."); } }); acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn', go: () => { if (plan) this.setPlan(false); this.startNight(); } }); }
- if (ph === 'nuit') { acts.push({ label: '↶ Annuler, repartir', cls: 'pr-btn2', go: () => this.cancelNight() }); acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
+ if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!s.focus && !plan) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: '⛵ Île suivante : Carte vivante', cls: 'pr-btn', go: () => this.sailTo('cartevivante') }); }
+ if (ph === 'nuit') { acts.push({ label: '☀ Revenir au jour', cls: 'pr-btn2', go: () => this.cancelNight() }); acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
  if (ph === 'cabine') { const f = s.cabFocus;
   if (f) acts.push({ label: '← Revenir', cls: 'pr-btn2', go: () => this.cabUnfocus() });
   if (f === 'coffre') acts.push({ label: '⬇ Télécharger mon CV', cls: 'pr-btn', go: () => window.open(PR_CV_URL, '_blank', 'noopener') });
   if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
   if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
   if (!f) { acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => this.goTo('ponton') }); } }
- if (ph === 'mer' && !s.auto && this.visited) acts.push({ label: '☾ Finir la traversée', cls: 'pr-btn2', go: () => this.startNight() });
- const hint = ph === 'archipel' ? 'Cliquez sur une île pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · pincez ou molette pour zoomer · « ← L'archipel » pour revenir" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · pincez ou molette pour zoomer · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
+ const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });
@@ -422,7 +423,7 @@ renderVals() {
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askGo: () => this.autopilot(), askNo: () => this.setState({ ask: null }),
   showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
   showMap: !!s.showMap, openMap: () => { this.mapOpened = true; this.setState({ showMap: true }); }, closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => { const v = this.visitedSet || {}, here = this.whereAmI(); const parent = ['cinema', 'longuevue', 'archi'].includes(x.k) ? 'insula' : (['carte', 'coffre', 'recap', 'bouteilles', 'apropos', 'contact'].includes(x.k) ? 'cabine' : null);
-   const show = !x.sub || s.showAll || !!v[parent] || here === parent || !!v[x.k]; return Object.assign({ done: !!v[x.k], here: x.k === here, show }, x); }),
+   const show = !x.sub || s.showAll || !!v[parent] || here === parent || !!v[x.k]; const hh = ['cinema', 'longuevue', 'archi'].includes(here) ? 'insula' : (ph === 'cabine' ? 'cabine' : here); return Object.assign({ done: !!v[x.k], here: x.k === hh, show }, x); }),
   showText: !!s.showText, closeText: () => this.setState({ showText: false }), openText: () => this.setState({ showText: true, showMap: false }), goArch: () => this.goTo('archipel'),
   showAll: !!s.showAll, toggleAll: () => this.setState({ showAll: !s.showAll }),
   progress: PR_STOPS.filter((x) => (this.visitedSet || {})[x.k]).length + '/' + PR_STOPS.length,

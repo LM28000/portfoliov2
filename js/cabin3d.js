@@ -53,7 +53,7 @@ Object.assign(Component.prototype, {
   wrap(g, text, maxW) { const words = text.split(' '), lines = []; let cur = ''; words.forEach((w) => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; },
   bookSpread(n) { const t = this.bookSpread0(n); t.flipY = false; return t; },
   bookSpread0(n) {
-    const v = this.visitedSet || {}; const log = [['ponton', 'Appareillé du ponton.'], ['insula', 'Accosté à Insula.'], ['cinema', 'Vu la démo au cinéma.'], ['longuevue', "Essayé l'app à la longue-vue."], ['archi', 'Visité les coulisses.'], ['cartevivante', 'Survolé la Carte vivante.'], ['serveur', 'Visité la salle des machines.'], ['nuit', 'La nuit est tombée.'], ['cabine', 'Descendu dans la cabine.'], ['carte', 'Lu la carte du parcours.'], ['coffre', 'Ouvert le coffre.'], ['bouteilles', 'Débouché une bouteille.'], ['apropos', 'Retourné la photo.'], ['contact', 'Allumé la VHF.']].filter(([k]) => v[k] || k === 'cabine');
+    const v = this.visitedSet || {}; const log = [['ponton', 'Appareillé du ponton.'], ['insula', 'Accosté à Insula.'], ['cinema', 'Vu la démo au cinéma.'], ['longuevue', "Essayé l'app à la longue-vue."], ['archi', 'Visité les coulisses.'], ['cartevivante', 'Survolé la Carte vivante.'], ['serveur', 'Visité la salle des machines.'], ['cabine', 'Descendu dans la cabine.'], ['carte', 'Lu la carte du parcours.'], ['coffre', 'Ouvert le coffre.'], ['bouteilles', 'Débouché une bouteille.'], ['apropos', 'Retourné la photo.'], ['contact', 'Allumé la VHF.']].filter(([k]) => v[k] || k === 'cabine');
     return this.paperTex(2048, 1400, (g, W, H) => {
       g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(W / 2 - 6, 0, 12, H);
       g.strokeStyle = 'rgba(90,120,160,0.35)'; g.lineWidth = 2; for (const x0 of [110, W / 2 + 90]) for (let k = 0; k < 17; k++) { g.beginPath(); g.moveTo(x0, 300 + k * 62); g.lineTo(x0 + W / 2 - 200, 300 + k * 62); g.stroke(); }
@@ -126,7 +126,7 @@ Object.assign(Component.prototype, {
     const go = () => this.fade(() => { const C = this.cabin; C.cam.aspect = this.host.clientWidth / this.host.clientHeight; C.cam.updateProjectionMatrix(); this.cabUnfocus(true); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null, loading: false }); this.say(PR_CAB_RADIO2.enter); });
     if (this.cabin) go(); else { this.setState({ loading: true, loadMsg: 'la cabine…' }); this.loadCabin(go); }
   },
-  leaveCabin() { this.fade(() => { this.cabUnfocus(true); this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
+  leaveCabin() { this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
   cabSetView(name, instant) {
     const C = this.cabin, T = window.THREE, v = PR_CAB_VIEWS[name] || PR_CAB_VIEWS.idle;
     C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) }; C.camT = instant ? 1 : 0;

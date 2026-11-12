@@ -18,7 +18,7 @@ Object.assign(Component.prototype, {
   clampPan(tx, tz) { const ph = this.st().phase; let c = { x: 0, z: 0, rx: 85, rz: 55 };
     if (ph === 'archipel') c = { x: 0, z: 10, rx: 380, rz: 260 }; else if (ph === 'escale') { const I = PR_ISLES[this.isleK]; c = { x: I.x, z: I.z, rx: 80, rz: 60 }; }
     const rr = Math.hypot((tx - c.x) / c.rx, (tz - c.z) / c.rz); if (rr > 1) { tx = c.x + (tx - c.x) / rr; tz = c.z + (tz - c.z) / rr; } return [tx, tz]; },
-  distLim(ph) { return ph === 'archipel' ? [150, 1300] : ph === 'escale' ? [18, 260] : [10, 220]; },
+  distLim(ph) { return ph === 'archipel' ? [300, 1300] : ph === 'escale' ? [18, 260] : [10, 220]; },
   isleH(I, x, z) { const lx = x - I.x, lz = z - I.z, r = Math.hypot(lx / I.rx, lz / I.rz); const n = Math.sin(lx * 0.11 + I.s) * Math.cos(lz * 0.13 + I.s * 2) * 0.6 + Math.sin(lx * 0.05 - lz * 0.07 + I.s) * 0.4;
     if (r >= 1) return 0.6 - (r - 1) * 16; let y = I.h * Math.pow(1 - r * r, 0.7) * (0.82 + 0.18 * n) + 0.6; const flat = I.h * 0.72; if (r < 0.42) y = flat + (y - flat) * Math.pow(r / 0.42, 3) * 0.2; return y; },
   buildIsles(T) {
@@ -72,9 +72,9 @@ Object.assign(Component.prototype, {
         g.add(im); this.srvIM = im;
         const mast = new T.Mesh(new T.CylinderGeometry(0.15, 0.3, 14, 6), new T.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.6 })); mast.position.set(I.x + 10, by + bh + 7, I.z - 8); g.add(mast);
         this.srvBeacon = new T.Mesh(new T.SphereGeometry(0.6, 12, 8), new T.MeshBasicMaterial({ color: 0xff3a2a, toneMapped: false })); this.srvBeacon.position.set(I.x + 10, by + bh + 14.3, I.z - 8); g.add(this.srvBeacon);
-        // un petit quai devant
-        const pier = new T.Mesh(new T.BoxGeometry(3, 0.4, 16), wood); pier.position.set(I.x - 6, 0.6, I.z + I.rz * 0.95); g.add(pier);
       }
+      const pier = new T.Mesh(new T.BoxGeometry(3, 0.4, 18), wood); pier.position.set(I.x - 6, 0.55, I.z + I.rz + 3); g.add(pier);
+      for (let i = -1; i <= 2; i++) for (const sx of [-1.3, 1.3]) { const pile = new T.Mesh(new T.CylinderGeometry(0.14, 0.14, 4, 8), wood); pile.position.set(I.x - 6 + sx, -1.4, I.z + I.rz + 3 + i * 4); g.add(pile); }
     });
     // étiquettes des îles (vue de l'archipel)
     this.isleLbl = {}; Object.keys(PR_ISLES).forEach((k) => { const I = PR_ISLES[k]; const el = document.createElement('button'); el.className = 'isle-lbl'; el.innerHTML = '<span class="il-k"></span><b></b><small></small><span class="il-go">survoler →</span>';
@@ -85,9 +85,24 @@ Object.assign(Component.prototype, {
     else Object.assign(this.orbW, { tx: 0, tz: 8, ty: 0, yaw: 0, pitch: 0.75, dist: Math.min(1300, Math.max(400, 270 / (t25 * asp))) });
     if (instant) Object.assign(this.orb, this.orbW); },
   archipel(instant) { const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; this.isleK = null;
-    if (this.nightTarget) this.setNightNow(0); if (this.boat && this.b && (Math.hypot(this.b.x - this.P0.x, this.b.z - this.P0.z) > 30)) Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 });
-    if (!instant) { const O = this.orb, c = this.cam.position; if (!this.orbitPh(st.phase)) { O.tx = this.look ? this.look.x : 0; O.tz = this.look ? this.look.z : 0; O.ty = 0; O.dist = Math.hypot(c.x - O.tx, c.y, c.z - O.tz); O.yaw = Math.atan2(c.x - O.tx, c.z - O.tz); O.pitch = Math.asin(Math.min(1, c.y / O.dist)); } }
+    if (this.nightTarget) this.setNightNow(0); this.sailK = null;
+    if (!instant && !this.orbitPh(st.phase)) this.orbFromCam();
     this.archView(instant); this.setState({ phase: 'archipel', focus: null, showApp: false, ask: null, auto: false }); this.say(PR_RADIO.archipel); },
+  // l'orbite repart de la caméra actuelle (pas de saut)
+  orbFromCam() { const O = this.orb, c = this.cam.position; O.tx = this.look ? this.look.x : this.b.x; O.tz = this.look ? this.look.z : this.b.z; O.ty = 0; O.dist = Math.max(5, Math.hypot(c.x - O.tx, c.y, c.z - O.tz)); O.yaw = Math.atan2(c.x - O.tx, c.z - O.tz); O.pitch = Math.asin(Math.min(1, c.y / O.dist)); },
+  berth(k) { const I = PR_ISLES[k]; return { x: I.x - 6 + 3.2, z: I.z + I.rz + 6, h: Math.PI / 2 }; },
+  berthed(k) { if (!PR_ISLES[k] || !PR_ISLES[k].rx) return false; const B = this.berth(k); return Math.hypot(this.b.x - B.x, this.b.z - B.z) < 6; },
+  // le pilote auto emmène Elba jusqu'au ponton de l'île suivante
+  sailTo(k) {
+    const st = this.st(); if (st.plan) this.setPlan(false); this.focused = null; clearTimeout(this.appT);
+    const b = { x: this.b.x, z: this.b.z }, B = this.berth(k), pts = [b]; let s0 = b;
+    if (st.phase === 'accoste' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
+    else if (st.phase === 'escale') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
+    const app = { x: B.x, z: B.z + 24 }; this.plan(s0, app).forEach((p) => pts.push(p)); pts.push(B);
+    this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.isleK = null;
+    this.setState({ phase: 'mer', auto: true, focus: null, showApp: false, showCard: false, ask: null });
+    this.say('Cap sur ' + PR_ISLES[k].name + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
+  },
   flyTo(k) {
     if (k === 'insula') { if (!this.D) return; this.setState({ showMap: false }); const u = this.jetty.u; Object.assign(this.b, { x: this.D.x, z: this.D.z, h: Math.atan2(u.z, -u.x), v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
       this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); return; }

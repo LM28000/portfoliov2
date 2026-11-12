@@ -106,7 +106,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .voy-t { margin: 0 0 4px; font: 700 22px Fraunces, serif; }
 .voy-s { margin: 0; font-size: 12.5px; line-height: 1.45; color: #3B4D63; }
 .pr-btn2.dark { color: var(--ink); border-color: rgba(20,37,58,.5); background: transparent; }
-.voy-map { position: relative; margin: 10px 0; height: 360px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
+.voy-map { position: relative; margin: 10px 0; height: 250px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
 .voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 32px 32px; }
 .voy-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 #voyPath { stroke-width: 1.4; }

@@ -22,7 +22,6 @@
     document.body.classList.toggle('hint-on', !!vals.hintOn);
     $('mapCount').textContent = '· ' + vals.progress; $('chartBtn').classList.toggle('pulse', !!vals.pulseChart);
     $('objText').textContent = vals.objText || '';
-    $('voyAll').textContent = vals.showAll ? 'Voir l\u2019essentiel' : 'Tout afficher (' + vals.stops.length + ')';
     const sig = vals.actions.map((a) => a.label + '|' + a.cls).join('§');
     if (sig !== actSig) {
       actSig = sig; const nav = $('actions'); nav.innerHTML = '';
@@ -39,7 +38,7 @@
       if (m.dataset.sig !== sig2) { m.dataset.sig = sig2; m.querySelectorAll('.stop').forEach((e) => e.remove());
         vals.stops.filter((x) => x.show).forEach((x) => { const bt = document.createElement('button'); bt.className = 'stop' + (x.sub ? ' sub' : '') + (x.big ? ' big' : '') + (x.done ? ' done' : '') + (x.here ? ' here' : ''); bt.style.left = x.x + '%'; bt.style.top = x.y + '%';
           bt.innerHTML = '<span class="num"></span><span><b></b><small></small></span>'; bt.querySelector('.num').textContent = x.n; bt.querySelector('b').textContent = x.t; bt.querySelector('small').textContent = x.d; bt.title = x.t + ' — ' + x.d; bt.onclick = () => vals.goTo(x.k); m.appendChild(bt); });
-        const main = ['ponton', 'insula', 'nuit', 'cabine'].map((k) => vals.stops.find((x) => x.k === k)); $('voyPath').setAttribute('d', 'M ' + main.map((x) => x.x + ' ' + x.y).join(' L ')); } }
+        const main = ['ponton', 'insula', 'cartevivante', 'serveur', 'cabine'].map((k) => vals.stops.find((x) => x.k === k)); $('voyPath').setAttribute('d', 'M ' + main.map((x) => x.x + ' ' + x.y).join(' L ')); } }
     const P = vals.panel, pe = $('panel'); pe.hidden = !P;
     if (P && pe.dataset.k !== P.title) { pe.dataset.k = P.title; $('pKicker').textContent = P.kicker; $('pTitle').textContent = P.title;
       $('pList').innerHTML = ''; (P.list || []).forEach(([h, t]) => { const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = h; li.appendChild(b); li.appendChild(document.createTextNode(t)); $('pList').appendChild(li); }); $('pList').hidden = !(P.list && P.list.length);
@@ -54,7 +53,7 @@
     const k = b.dataset.pad; const on = () => (k === 'L' ? vals.padL : k === 'R' ? vals.padR : vals.padU)(); const off = () => vals.padOff();
     b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
   });
-  $('voyAll').onclick = () => vals.toggleAll(); $('radioPrev').onclick = () => vals.radioPrev();
+  $('radioPrev').onclick = () => vals.radioPrev();
   setTimeout(() => { if (vals.loading) { window.__slow = true; $('loadMsg').innerHTML = 'C\u2019est long… <button class="pr-btn2 sm" id="goText">Voir la version texte</button>'; const g = $('goText'); if (g) g.onclick = no3d; } }, 30000);
   $('chartBtn').onclick = () => vals.openMap(); $('mapBtn').onclick = () => vals.openMap(); $('voyClose').onclick = () => vals.closeMap(); $('voyStart').onclick = () => vals.goTo('ponton'); $('voyArch').onclick = () => vals.goArch(); $('voyText').onclick = () => vals.openText(); $('texteClose').onclick = () => vals.closeText();
   $('creditsBtn').onclick = () => { $('credits').hidden = false; };

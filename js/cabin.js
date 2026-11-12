@@ -33,21 +33,11 @@ const PR_CABIN_RADIO = {
 };
 
 const PR_STOPS = [
-  { k: 'insula', n: '1', t: 'Insula', d: 'Choisir où acheter, entre amis', x: 50, y: 13, big: true },
-  { k: 'cinema', n: '1a', t: 'Le cinéma', d: 'La démo, en une minute', x: 37, y: 31, sub: true },
-  { k: 'longuevue', n: '1b', t: 'La longue-vue', d: 'Essayer l\u2019app pour de vrai', x: 63, y: 31, sub: true },
-  { k: 'archi', n: '1c', t: 'Les coulisses', d: 'L\u2019architecture', x: 50, y: 44, sub: true },
-  { k: 'cartevivante', n: '2', t: 'Carte vivante', d: 'La France en direct', x: 15, y: 18, big: true },
-  { k: 'serveur', n: '3', t: 'Le serveur', d: 'Mon serveur maison', x: 85, y: 18, big: true },
-  { k: 'ponton', n: '⚓', t: 'Le ponton', d: 'Embarquer, barrer Elba', x: 14, y: 72 },
-  { k: 'nuit', n: '☾', t: 'La nuit tombe', d: 'Fin de la traversée', x: 40, y: 72 },
-  { k: 'cabine', n: '⌂', t: 'La cabine', d: 'Qui je suis · CV · contact', x: 70, y: 72, big: true },
-  { k: 'carte', n: 'a', t: 'La carte', d: 'Mon parcours', x: 10, y: 90, sub: true },
-  { k: 'coffre', n: 'b', t: 'Le coffre', d: 'Mon CV', x: 26, y: 90, sub: true },
-  { k: 'recap', n: 'c', t: 'Le livre', d: 'Ta traversée', x: 42, y: 90, sub: true },
-  { k: 'bouteilles', n: 'd', t: 'Bouteilles', d: 'Anecdotes', x: 58, y: 90, sub: true },
-  { k: 'apropos', n: 'e', t: 'La photo', d: 'À propos', x: 74, y: 90, sub: true },
-  { k: 'contact', n: 'f', t: 'La VHF', d: 'Me contacter', x: 90, y: 90, sub: true }
+  { k: 'cartevivante', n: '2', t: 'Carte vivante', d: 'La France en direct', x: 17, y: 26, big: true },
+  { k: 'insula', n: '1', t: 'Insula', d: 'Choisir où acheter, entre amis', x: 50, y: 24, big: true },
+  { k: 'serveur', n: '3', t: 'Le serveur', d: 'Mon serveur maison', x: 83, y: 26, big: true },
+  { k: 'ponton', n: '⚓', t: 'Le ponton', d: 'Embarquer, barrer Elba', x: 26, y: 80 },
+  { k: 'cabine', n: '⌂', t: 'La cabine', d: 'Qui je suis · CV · contact', x: 70, y: 80, big: true }
 ];
 Object.assign(Component.prototype, {
   seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; try { localStorage.setItem('elba-escales', JSON.stringify(this.visitedSet)); } catch (e) {} this.setState({ v: Date.now() }); } },
@@ -93,14 +83,14 @@ Object.assign(Component.prototype, {
     O.tx = b.x; O.tz = b.z; O.ty = 1.8; O.dist = Math.min(60, Math.max(18, Math.hypot(c.x - b.x, c.z - b.z))); O.yaw = Math.atan2(c.x - b.x, c.z - b.z); O.pitch = 0.3;
     Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1.8, yaw, pitch: pitch || 0.16, dist: dist || 19 }); },
   startNight() {
-    this.ensureNight(); const ph = this.st().phase; this.prevPhase = ph === 'accoste' ? 'accoste' : 'mer';
+    this.ensureNight(); const ph = this.st().phase; this.prevPhase = ph === 'accoste' || ph === 'escale' ? ph : 'mer'; this.nightIsle = this.isleK;
     this.cruiseP = null; this.route = []; this.autoDock = false; this.orbitBoat();
     this.seen('nuit'); this.nightTarget = 1; this.setState({ phase: 'nuit', auto: false, focus: null, showApp: false, ask: null });
     this.say("Le soleil se couche, on rentre. Descends dans la cabine : je t'y attends. (Tu peux aussi annuler et repartir.)"); this.loadCabin();
   },
   cancelNight() {
     this.nightTarget = 0; const back = this.prevPhase || 'accoste'; this.setState({ phase: back });
-    if (back === 'accoste') { this.overview(); this.say("Pas encore sommeil ? L'île est à toi."); } else this.say('On repart ! Le soleil remonte.');
+    if (back === 'accoste') { this.overview(); this.say("Pas encore sommeil ? L'île est à toi."); } else if (back === 'escale') { this.flyTo(this.nightIsle || 'serveur'); } else this.say('On repart ! Le soleil remonte.');
   },
   // ---------- carte du voyage : tous les lieux, le parcours suggéré, et un saut vers n'importe lequel
   goTo(k) {
@@ -113,7 +103,7 @@ Object.assign(Component.prototype, {
       if (k === 'cartevivante' || k === 'serveur') { this.setNightNow(0); this.flyTo(k); Object.assign(this.orb, this.orbW); return; }
       if (k === 'ponton') { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.camYaw = 0; this.camPitch = 0.28; this.setState({ phase: 'ponton' }); this.say(PR_RADIO.ponton); return; }
       if (['insula', 'cinema', 'longuevue', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); return; }
-      this.setNightNow(1); atQuay(); this.prevPhase = 'accoste';
+      this.setNightNow(1); const far = ['serveur', 'cartevivante'].find((i) => this.berthed(i)); if (far) { this.prevPhase = 'escale'; this.nightIsle = far; } else { atQuay(); this.prevPhase = 'accoste'; } this.orbitBoat(); Object.assign(this.orb, this.orbW);
       if (k === 'nuit') { this.orbitBoat(); this.setState({ phase: 'nuit' }); this.say("La nuit est tombée sur Insula. Descends dans la cabine quand tu veux."); return; }
       const obj = { carte: 'carte', coffre: 'coffre', recap: 'livre', bouteilles: 'bouteilles', apropos: 'photo', contact: 'vhf' }[k];
       const inCab = () => { const C = this.cabin; C.cam.aspect = this.host.clientWidth / this.host.clientHeight; C.cam.updateProjectionMatrix(); this.cabUnfocus(true); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null, loading: false }); if (obj) setTimeout(() => this.cabFocus(obj), 250); else this.say(PR_CAB_RADIO2.enter); };
