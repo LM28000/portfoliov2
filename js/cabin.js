@@ -14,9 +14,10 @@ const PR_CABIN = {
     list: [
       ['Départ', 'Le ponton, à bord d’Elba.'],
       ['Escale n° 1 · Insula', 'Choisir où acheter, entre amis : 22 villes, les annonces du soir, 15 ans de calcul. Démo au cinéma, app dans la longue-vue.'],
-      ['Prochaines escales', 'D’autres îles arrivent : chacune sera un projet.']
+      ['Escale n° 2 · Carte vivante', 'La France en direct : trains, avions, météo, sur une carte qui tourne chez moi.'],
+      ['Escale n° 3 · Le serveur', 'Mon serveur maison : une trentaine de services, tous décrits dans git.']
     ],
-    paras: ['Le CV complet (PDF) arrive bientôt ici.'],
+    paras: ['Mon CV complet est dans le coffre de la cabine.'],
     links: [['Essayer Insula', 'https://insula.du-cray.eu/'], ['Le code d’Insula', 'https://github.com/LM28000/immobilier-tool']]
   },
   contact: {

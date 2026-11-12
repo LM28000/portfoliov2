@@ -122,10 +122,10 @@ init() {
  const ray = new T.Raycaster(), ndc = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0);
  let down = null;
  r.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
- r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb), cy: (this.cabin && this.cabin.yawOff) || 0 }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
+ r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb), cl: this.cabin ? this.cabin.look.clone() : null }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
  r.domElement.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 5) down.moved = true;
   const phx = this.st().phase;
-  if (phx === 'cabine') { const C = this.cabin; if (C && !C.focus && C.camT >= 1 && down.moved) C.yawOff = Math.max(-2.8, Math.min(2.8, down.cy + dx * 0.006)); return; }
+  if (phx === 'cabine') { if (down.moved && down.cl && this.cabCanLook()) this.cabTurn(down.cl, dx * 0.005, dy * 0.004); return; }
   if (this.orbitPh(phx)) { const o = this.orbW, O = this.orb, d0 = down.o;
    if (down.pan) { // clic droit / Maj + glisser = déplacer : le point saisi reste sous le curseur
     const rc = r.domElement.getBoundingClientRect(); const hitAt = (px, py) => { ndc.set(((px - rc.left) / rc.width) * 2 - 1, -((py - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam); const pl = new T.Plane(new T.Vector3(0, 1, 0), -O.ty); const h = new T.Vector3(); return ray.ray.intersectPlane(pl, h) ? h : null; };
@@ -136,6 +136,7 @@ init() {
   this.camYaw = down.yaw - dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, down.pitch + dy * 0.004)); });
  r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const ph = this.st().phase; const isle = this.orbitPh(ph);
   const pad = !e.ctrlKey && e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || (Math.abs(e.deltaY) < 40 && e.deltaY % 1 !== 0));
+  if (ph === 'cabine') { if (!this.cabCanLook()) return; if (pad) this.cabTurn(this.cabin.look.clone(), e.deltaX * 0.005, e.deltaY * 0.004); else this.cabZoom(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))) * 0.0015)); return; }
   if (pad) { // deux doigts sur le trackpad : pivoter, comme en glissant
    const dx = e.deltaX, dy = e.deltaY;
    if (isle) { const O = this.orb, o = this.orbW; o.yaw = O.yaw = O.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, O.pitch + dy * 0.004)); this.placeCam(); }
@@ -144,6 +145,16 @@ init() {
   const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))); const f = Math.exp(d * 0.0012);
   if (isle) { const L = this.distLim(ph); const want = this.orbW.dist * f; this.orbW.dist = Math.max(L[0], Math.min(L[1], want));
    if ((ph === 'accoste' || ph === 'escale') && want > L[1]) { this.zAcc = (this.zAcc || 0) + d; if (this.zAcc > 120) { this.zAcc = 0; this.archipel(); } } else if (ph === 'archipel' && want < L[0]) { this.zAcc = (this.zAcc || 0) - d; const k = this.islesHit(e.clientX, e.clientY); if (k && this.zAcc > 120) { this.zAcc = 0; this.visit(k); } } else this.zAcc = 0; } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
+  // pincer à deux doigts (écran tactile) : zoom, partout
+ const ptrs = new Map(); let pinch = null;
+ r.domElement.addEventListener('pointerdown', (e) => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) { down = null; const [a, b] = [...ptrs.values()]; pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, dist: this.orbW.dist, cam: this.camDist, fov: this.cabin ? this.cabin.cam.fov : 62, out: false }; } });
+ r.domElement.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (!pinch || ptrs.size < 2) return;
+  const [a, b] = [...ptrs.values()], k = Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0, ph = this.st().phase;
+  if (ph === 'cabine') { if (this.cabCanLook()) { this.cabin.cam.fov = Math.max(32, Math.min(78, pinch.fov / k)); this.cabin.cam.updateProjectionMatrix(); } }
+  else if (this.orbitPh(ph)) { const L = this.distLim(ph), want = pinch.dist / k; this.orbW.dist = Math.max(L[0], Math.min(L[1], want)); if ((ph === 'accoste' || ph === 'escale') && want > L[1] * 1.3 && !pinch.out) { pinch.out = true; this.archipel(); } }
+  else this.camDist = Math.max(8, Math.min(70, pinch.cam / k)); });
+ const ptrUp = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
+ r.domElement.addEventListener('pointerup', ptrUp); r.domElement.addEventListener('pointercancel', ptrUp);
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
   if (ph === 'archipel') { const k = this.islesHit(e.clientX, e.clientY); if (k) this.visit(k); return; }

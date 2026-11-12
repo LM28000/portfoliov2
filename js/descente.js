@@ -62,7 +62,7 @@ Object.assign(Component.prototype, {
     const C = this.cabin, T = window.THREE, cam = this.cam; this.setNightNow(1);
     C.cam.aspect = this.host.clientWidth / this.host.clientHeight; C.cam.fov = cam.fov; C.cam.updateProjectionMatrix();
     const p = this.toCab(cam.position), q = this.boatQ().invert().multiply(cam.quaternion), fw = new T.Vector3(0, 0, -1).applyQuaternion(q);
-    C.cam.position.copy(p); C.cam.up.set(0, 1, 0); C.look.copy(p).addScaledVector(fw, 2); C.focus = null; C.prog = {}; C.sel = -1; C.yawOff = 0;
+    C.cam.position.copy(p); C.cam.quaternion.copy(q); C.cam.up.set(0, 1, 0); C.look.copy(p).addScaledVector(fw, 2); C.focus = null; C.prog = {}; C.sel = -1;
     this.seen('cabine'); this.setState({ phase: 'cabine', panel: null, loading: false, objText: '', cabFocus: null });
     // on s'avance dans la cabine en passant devant la table à cartes et la VHF
     const v = PR_CAB_VIEWS.idle; C.camFrom = { p: p.clone(), l: C.look.clone(), u: new T.Vector3(0, 1, 0), mid: { at: 0.5, p: new T.Vector3(-1.35, 1.6, -0.3), l: new T.Vector3(-2.0, 0.95, 0.7) } }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) };
@@ -72,7 +72,7 @@ Object.assign(Component.prototype, {
   // ---------- remonter : on recule jusqu'à l'ouverture, on ressort, la caméra s'éloigne
   ascend() {
     const C = this.cabin; if (!C || this.st().phase !== 'cabine') return; this.buildPortal(); const T = window.THREE;
-    C.focus = null; this.setState({ objText: '', cabFocus: null, panel: null }); C.prog = {}; C.sel = -1; C.yawOff = 0;
+    C.focus = null; this.setState({ objText: '', cabFocus: null, panel: null }); C.prog = {}; C.sel = -1;
     const E = this.portalPose(), pc = this.toCab(E.p);
     C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: pc, l: pc.clone().add(new T.Vector3(2, 0, 0)), u: new T.Vector3(0, 1, 0) };
     C.camT = 0; C.camDur = 1.8; C.fov0 = C.cam.fov; C.fov1 = this.cam.fov;

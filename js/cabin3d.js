@@ -59,10 +59,11 @@ Object.assign(Component.prototype, {
       g.strokeStyle = 'rgba(90,120,160,0.35)'; g.lineWidth = 2; for (const x0 of [110, W / 2 + 90]) for (let k = 0; k < 17; k++) { g.beginPath(); g.moveTo(x0, 300 + k * 62); g.lineTo(x0 + W / 2 - 200, 300 + k * 62); g.stroke(); }
       g.fillStyle = '#5a1d12'; g.font = 'italic 700 70px Fraunces, Georgia, serif';
       if (n === 0) {
-        g.fillText('Livre de bord — Elba', 120, 160); g.fillText('Prochaines escales', W / 2 + 100, 160);
+        g.fillText('Livre de bord — Elba', 120, 160); g.fillText('Les îles', W / 2 + 100, 160);
         g.fillStyle = '#23345a'; g.font = '62px Caveat, cursive';
         log.slice(0, 15).forEach(([, t], i) => g.fillText('—  ' + t, 130, 290 + i * 62));
-        ['Île n° 2 — bientôt', 'Île n° 3 — bientôt', 'et la suite…'].forEach((t, i) => g.fillText('—  ' + t, W / 2 + 110, 290 + i * 124));
+        ['insula', 'cartevivante', 'serveur'].forEach((k, i) => { const I = PR_ISLES[k]; g.fillStyle = '#23345a'; g.fillText((v[k] ? '✓  ' : '○  ') + 'Île n° ' + I.n + ' — ' + I.name, W / 2 + 110, 290 + i * 186); g.fillStyle = '#5b6b86'; g.font = '50px Caveat, cursive'; g.fillText(I.line, W / 2 + 160, 352 + i * 186); g.font = '62px Caveat, cursive'; });
+        g.fillStyle = '#5b6b86'; g.fillText('et d’autres à venir…', W / 2 + 110, 290 + 3 * 186);
       } else {
         g.fillText('Le mot du skipper', 120, 160); g.fillText('Équipage', W / 2 + 100, 160);
         g.fillStyle = '#23345a'; g.font = '64px Caveat, cursive';
@@ -129,9 +130,15 @@ Object.assign(Component.prototype, {
   },
   leaveCabin() { this.ascend(); },
   leaveCabinFade() { this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
+  // regarder autour, comme ailleurs : glisser (ou deux doigts) pour tourner sur 360°, molette ou pincement pour zoomer
+  cabCanLook() { const C = this.cabin; return C && !C.focus && C.camT >= 1; },
+  cabTurn(base, dyaw, dpitch) { const C = this.cabin, T = window.THREE, d = base.clone().sub(C.cam.position), L = d.length() || 1;
+    const yaw = Math.atan2(d.x, d.z) + dyaw, pitch = Math.max(-1.2, Math.min(1.2, Math.asin(Math.max(-1, Math.min(1, d.y / L))) + dpitch));
+    C.look.copy(C.cam.position).add(new T.Vector3(Math.sin(yaw) * Math.cos(pitch) * L, Math.sin(pitch) * L, Math.cos(yaw) * Math.cos(pitch) * L)); },
+  cabZoom(f) { const C = this.cabin; C.cam.fov = Math.max(32, Math.min(78, C.cam.fov * f)); C.cam.updateProjectionMatrix(); },
   cabSetView(name, instant) {
     const C = this.cabin, T = window.THREE, v = PR_CAB_VIEWS[name] || PR_CAB_VIEWS.idle;
-    C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) }; C.camT = instant ? 1 : 0; C.camDur = null; C.fov0 = null; C.camDone = null; C.yawOff = 0; if (C.cam.fov !== 62) { C.cam.fov = 62; C.cam.updateProjectionMatrix(); }
+    C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) }; C.camT = instant ? 1 : 0; C.camDur = null; C.fov0 = null; C.camDone = null; if (C.cam.fov !== 62 && !instant) { C.fov0 = C.cam.fov; C.fov1 = 62; } else if (C.cam.fov !== 62) { C.cam.fov = 62; C.cam.updateProjectionMatrix(); }
     if (instant) { C.cam.position.copy(C.camTo.p); C.look.copy(C.camTo.l); C.cam.up.copy(C.camTo.u); }
   },
   cabFocus(k, i) {
@@ -174,15 +181,17 @@ Object.assign(Component.prototype, {
   cabinStep(T, t, dt) {
     const C = this.cabin; if (!C) return; const ease = (x) => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     // caméra
-    if (C.camT < 1 && C.camFrom) { C.camT = Math.min(1, C.camT + dt / (C.camDur || 1.1)); const e = ease(C.camT); C.cam.position.lerpVectors(C.camFrom.p, C.camTo.p, e);
-      if (C.camFrom.mid) { const M = C.camFrom.mid, a = C.camT < M.at, k = a ? C.camT / M.at : (C.camT - M.at) / (1 - M.at), f = ease(k); C.cam.position.lerpVectors(a ? C.camFrom.p : M.p, a ? M.p : C.camTo.p, f); C.look.lerpVectors(a ? C.camFrom.l : M.l, a ? M.l : C.camTo.l, f); }
-      else if (C.camFrom.m) { const u = 1 - e, a = C.camFrom.l, m = C.camFrom.m, b = C.camTo.l; C.look.set(u * u * a.x + 2 * u * e * m.x + e * e * b.x, u * u * a.y + 2 * u * e * m.y + e * e * b.y, u * u * a.z + 2 * u * e * m.z + e * e * b.z); } else C.look.lerpVectors(C.camFrom.l, C.camTo.l, e);
+    // transitions : la position glisse, l'orientation tourne par le plus court chemin (pas de volte-face)
+    if (C.camT < 1 && C.camFrom) {
+      const qL = (p, l, u) => new T.Quaternion().setFromRotationMatrix(new T.Matrix4().lookAt(p, l, u)), F = C.camFrom, M = F.mid;
+      if (!F.q) { F.q = C.cam.quaternion.clone(); C.camTo.q = qL(C.camTo.p, C.camTo.l, C.camTo.u); if (M) M.q = qL(M.p, M.l, new T.Vector3(0, 1, 0)); }
+      C.camT = Math.min(1, C.camT + dt / (C.camDur || 1.1)); const e = ease(C.camT);
+      if (M) { const a = C.camT < M.at, f = ease(a ? C.camT / M.at : (C.camT - M.at) / (1 - M.at)); C.cam.position.lerpVectors(a ? F.p : M.p, a ? M.p : C.camTo.p, f); C.cam.quaternion.copy(a ? F.q : M.q).slerp(a ? M.q : C.camTo.q, f); }
+      else { C.cam.position.lerpVectors(F.p, C.camTo.p, e); C.cam.quaternion.copy(F.q).slerp(C.camTo.q, e); }
       if (C.fov0) { C.cam.fov = C.fov0 + (C.fov1 - C.fov0) * e; C.cam.updateProjectionMatrix(); if (C.camT >= 1) C.fov0 = null; }
-      if (C.camT >= 1 && C.camDone) { const f = C.camDone; C.camDone = null; setTimeout(f, 0); }
-      C.cam.up.lerpVectors(C.camFrom.u, C.camTo.u, e).normalize(); }
-    const look = C.look.clone(); if (!C.focus && C.camT >= 1 && C.yawOff) { const d = look.clone().sub(C.cam.position); d.applyAxisAngle(new T.Vector3(0, 1, 0), C.yawOff); look.copy(C.cam.position).add(d); }
-    if (!C.focus && C.camT >= 1 && this.mouse && !C.yawOff) { const mx = this.mouse.x / innerWidth - 0.5, my = this.mouse.y / innerHeight - 0.5; look.z += mx * 1.6; look.y -= my * 0.8; }
-    C.cam.lookAt(look);
+      const L = C.camTo.l.distanceTo(C.camTo.p); C.look.copy(C.cam.position).add(new T.Vector3(0, 0, -L).applyQuaternion(C.cam.quaternion)); C.cam.up.set(0, 1, 0).applyQuaternion(C.cam.quaternion);
+      if (C.camT >= 1) { C.look.copy(C.camTo.l); C.cam.up.copy(C.camTo.u); C.cam.lookAt(C.look); if (C.camDone) { const f = C.camDone; C.camDone = null; setTimeout(f, 0); } }
+    } else C.cam.lookAt(C.look);
     // progressions des animations (0 → 1 quand l'objet est actif, retour sinon)
     for (const k of ['coffre', 'photo', 'vhf', 'bouteilles', 'carte']) { const on = C.focus === k && C.camT > 0.55; C.prog[k] = this.reduced ? (on ? 1 : 0) : Math.max(0, Math.min(1, (C.prog[k] || 0) + (on ? dt / 1.1 : -dt / 0.7))); }
     const P = (k) => ease(C.prog[k] || 0);
@@ -207,7 +216,7 @@ Object.assign(Component.prototype, {
     C.root.rotation.x = this.reduced ? 0 : 0.012 * Math.sin(t * 0.7);
     // survol
     if (this.mouse && (this.cabHov = (this.cabHov || 0) + 1) % 5 === 0) {
-      const k = this.cabinPick(this.mouse.x, this.mouse.y), r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'default';
+      const k = C.camT < 1 ? null : this.cabinPick(this.mouse.x, this.mouse.y), r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'grab';
       let label = k ? PR_CAB_NAMES[k.k] : null; if (k && k.k === 'coffre' && C.focus === 'coffre' && k.roll) label = 'Télécharger mon CV (PDF)'; if (k && k.k === 'livre' && C.focus === 'livre') label = 'Tourner la page';
       if (k && k.k === 'bouteilles' && k.i != null) label = 'Bouteille · ' + PR_BOTTLES[k.i][0];
       if (label) { this.tip.innerHTML = '<b>' + (PR_CAB_ICON[k.k] || '•') + '</b>' + label; this.tip.style.display = 'block'; this.tip.style.left = (this.mouse.x - r0.left) + 'px'; this.tip.style.top = (this.mouse.y - r0.top - 14) + 'px'; } else this.tip.style.display = 'none';
