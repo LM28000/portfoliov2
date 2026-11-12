@@ -198,3 +198,5 @@ body.texte-open .texte-k { display: block; margin: 0; font: 700 12px 'JetBrains 
 .texte-close { position: sticky; top: 0; float: right; z-index: 2; }
 @media (max-width: 760px) { body.ph-archipel .ident p { display: none; } body.ph-archipel .ident { margin-bottom: 0; } .isle-lbl { min-width: 120px; max-width: 150px; padding: 7px 9px; } .isle-lbl b { font-size: 16px; } .isle-lbl small { display: none; } .isle-lbl { transform: translate(34px, -50%); } .isle-lbl::after { left: -9px; top: 50%; bottom: auto; margin: -9px 0 0; border: 9px solid transparent; border-left: 0; border-right-color: rgba(11,22,38,.9); } }
 .vhf-voice.off { opacity: .45; text-decoration: line-through; }
+.boat-pin { position: absolute; transform: translate(-50%, calc(-100% - 10px)); padding: 4px 10px; border-radius: 999px; background: #FFC94A; color: #0B1626; font: 700 13px Inter, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.35); z-index: 3; }
+.boat-pin::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-bottom: 0; border-top-color: #FFC94A; }

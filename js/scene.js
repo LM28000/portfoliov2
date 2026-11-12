@@ -142,10 +142,10 @@ init() {
    return; }
   const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))); const f = Math.exp(d * 0.0012);
   if (isle) { const L = this.distLim(ph); const want = this.orbW.dist * f; this.orbW.dist = Math.max(L[0], Math.min(L[1], want));
-   if ((ph === 'accoste' || ph === 'escale') && want > L[1]) { this.zAcc = (this.zAcc || 0) + d; if (this.zAcc > 120) { this.zAcc = 0; this.archipel(); } } else if (ph === 'archipel' && want < L[0]) { this.zAcc = (this.zAcc || 0) - d; const k = this.islesHit(e.clientX, e.clientY); if (k && this.zAcc > 120) { this.zAcc = 0; this.flyTo(k); } } else this.zAcc = 0; } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
+   if ((ph === 'accoste' || ph === 'escale') && want > L[1]) { this.zAcc = (this.zAcc || 0) + d; if (this.zAcc > 120) { this.zAcc = 0; this.archipel(); } } else if (ph === 'archipel' && want < L[0]) { this.zAcc = (this.zAcc || 0) - d; const k = this.islesHit(e.clientX, e.clientY); if (k && this.zAcc > 120) { this.zAcc = 0; this.visit(k); } } else this.zAcc = 0; } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
-  if (ph === 'archipel') { const k = this.islesHit(e.clientX, e.clientY); if (k) this.flyTo(k); return; }
+  if (ph === 'archipel') { const k = this.islesHit(e.clientX, e.clientY); if (k) this.visit(k); return; }
   if (ph === 'cabine') { this.cabinClick(e.clientX, e.clientY); return; }
   if (ph !== 'mer' && ph !== 'approche' || !this.island) return;
   const other = this.islesHit(e.clientX, e.clientY); if (other && other !== 'insula') { const rc0 = r.domElement.getBoundingClientRect(); if (!this.st().auto) this.setState({ ask: { x: e.clientX - rc0.left, y: e.clientY - rc0.top, k: other } }); return; }
@@ -327,19 +327,19 @@ step(T, dt) {
  this.sea.material.uniforms.t.value = t;
  const ph = s.phase;
  if (ph !== this.lastPh) { this.lastPh = ph; if (this.narrow && ph) { this.setState({ hintOn: true }); clearTimeout(this.hintT); this.hintT = setTimeout(() => this.setState({ hintOn: false }), 6000); } }
- if (this.cruiseP && (ph === 'mer' || ph === 'approche' || ph === 'accostage')) {
+ if (this.cruiseP && (ph === 'mer' || ph === 'approche' || ph === 'accostage' || ph === 'transit')) {
   const C = this.cruiseP, rest = C.len - C.s;
   const manual = k['arrowleft'] || k['arrowright'] || k['arrowup'] || k['arrowdown'] || k['q'] || k['a'] || k['d'] || k['z'] || k['w'] || k['s'] || this.pad;
-  if (manual && ph !== 'accostage') { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.sailK = null; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
+  if (manual && ph !== 'accostage' && !C.transit) { this.cruiseP = null; this.route = []; if (this.autoDock) { this.autoDock = false; this.sailK = null; this.setState({ auto: false }); this.say("D'accord, tu reprends la barre."); } }
   else {
-   const vt = C.dock ? Math.max(1.8, Math.min(C.vmax, Math.sqrt(2 * 1.6 * rest) + 0.5)) : C.vmax; C.v += Math.max(-4 * dt, Math.min(3.2 * dt, vt - C.v)); C.s = Math.min(C.len, C.s + C.v * dt);
+   if (C.transit) { const vt = Math.max(2.5, C.vmax * Math.min(1, (C.s + 4) / (0.18 * C.len), Math.sqrt(rest / (0.3 * C.len)))); C.v += (vt - C.v) * Math.min(1, dt * 6); this.transitFrame(dt); } else { const vt = C.dock ? Math.max(1.8, Math.min(C.vmax, Math.sqrt(2 * 1.6 * rest) + 0.5)) : C.vmax; C.v += Math.max(-4 * dt, Math.min(3.2 * dt, vt - C.v)); } C.s = Math.min(C.len, C.s + C.v * dt);
    const f = C.s / C.len, pnt = C.curve.getPointAt(f), tg = C.curve.getTangentAt(Math.min(0.999, f));
    let want = Math.atan2(-tg.z, tg.x), dh = want - b.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
    const rate = 0.9 + C.v * 0.05; const turn = Math.max(-rate * dt, Math.min(rate * dt, dh)); b.h += turn; b.turn += (Math.sign(dh) * Math.min(1, Math.abs(dh) * 2) - b.turn) * dt * 2;
    b.x = pnt.x; b.z = pnt.z; b.v = C.v;
    while (this.route.length > 1 && Math.hypot(this.route[0].x - b.x, this.route[0].z - b.z) < 8) this.route.shift();
-   if (C.dock && rest < 45 && ph !== 'accostage') { this.setState({ phase: 'accostage', auto: false }); this.say('On réduit… je te mets le long du quai.'); }
-   if (C.s >= C.len - 0.05) { this.cruiseP = null; this.route = []; if (C.dock) { b.v = 0; this.autoDock = false; this.docked(); } else { b.v = Math.min(b.v, 4); this.setState({ auto: false }); } }
+   if (C.dock && rest < 45 && ph !== 'accostage' && !C.transit) { this.setState({ phase: 'accostage', auto: false }); this.say('On réduit… je te mets le long du quai.'); }
+   if (C.s >= C.len - 0.05) { this.cruiseP = null; this.route = []; if (C.transit) { b.v = 0; this.transitEnd(); } else if (C.dock) { b.v = 0; this.autoDock = false; this.docked(); } else { b.v = Math.min(b.v, 4); this.setState({ auto: false }); } }
   }
  } else if (ph === 'mer' || ph === 'approche') {
   let turn = 0, thr = 0;
@@ -394,6 +394,7 @@ renderVals() {
  if (ph === 'archipel') { acts.push({ label: '☰ Tout voir en 1 minute', cls: 'pr-btn2', go: () => this.setState({ showText: true }) }); acts.push({ label: "⛵ Embarquer à bord d'Elba", cls: 'pr-btn', go: () => this.embark() }); }
  if (ph === 'escale') { const k = this.isleK; acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (PR_ISLES[k] && PR_ISLES[k].code) acts.push({ label: 'Voir le code ↗', cls: 'pr-btn2', go: () => window.open(PR_ISLES[k].code, '_blank', 'noopener') });
   { if (k === 'cartevivante') acts.push({ label: '⛵ Île suivante : Le serveur', cls: 'pr-btn', go: () => this.sailTo('serveur') }); else acts.push({ label: '⌂ Descendre dans la cabine', cls: 'pr-btn', go: () => this.goTo('cabine') }); } }
+ if (ph === 'transit') acts.push({ label: '⏭ Arriver tout de suite', cls: 'pr-btn2', go: () => this.skipTransit() });
  if (ph === 'ponton') { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); acts.push({ label: '⚓ Larguer les amarres', cls: 'pr-btn', go: () => this.leave() }); }
  if ((ph === 'mer' || ph === 'approche') && s.auto) acts.push({ label: 'Reprendre la barre', cls: 'pr-btn2', go: () => { this.cruiseP = null; this.route = []; this.autoDock = false; this.sailK = null; this.setState({ auto: false }); } });
  if ((ph === 'mer' || ph === 'approche') && !s.auto) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() });
@@ -407,7 +408,7 @@ renderVals() {
   if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
   if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
   if (!f) { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.goTo('archipel') }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => this.goTo('ponton') }); } }
- const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
+ const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'transit' ? 'Traversée express vers la destination · « Arriver tout de suite » pour sauter' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });

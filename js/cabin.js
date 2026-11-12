@@ -95,6 +95,16 @@ Object.assign(Component.prototype, {
   // ---------- carte du voyage : tous les lieux, le parcours suggéré, et un saut vers n'importe lequel
   goTo(k) {
     this.setState({ showMap: false });
+    // les îles, le ponton, l'archipel : on y va à vue (traversée express), sans fondu au noir
+    const sub = { cinema: 'insula', longuevue: 'insula', archi: 'insula' }[k], dest = sub || k;
+    if (['archipel', 'insula', 'cartevivante', 'serveur', 'ponton'].includes(dest)) {
+      const run = () => { const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
+        this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
+        if (dest === 'archipel') { this.archipel(); return; }
+        this.visit(dest, sub ? () => { if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); } : null); };
+      if (this.st().phase === 'cabine') this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); run(); }); else run();
+      return;
+    }
     this.fade(() => {
       const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
       this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
