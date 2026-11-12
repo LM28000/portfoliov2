@@ -122,9 +122,10 @@ init() {
  const ray = new T.Raycaster(), ndc = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0);
  let down = null;
  r.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
- r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb) }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
+ r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb), cy: (this.cabin && this.cabin.yawOff) || 0 }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
  r.domElement.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 5) down.moved = true;
   const phx = this.st().phase;
+  if (phx === 'cabine') { const C = this.cabin; if (C && !C.focus && C.camT >= 1 && down.moved) C.yawOff = Math.max(-2.8, Math.min(2.8, down.cy + dx * 0.006)); return; }
   if (this.orbitPh(phx)) { const o = this.orbW, O = this.orb, d0 = down.o;
    if (down.pan) { // clic droit / Maj + glisser = déplacer : le point saisi reste sous le curseur
     const rc = r.domElement.getBoundingClientRect(); const hitAt = (px, py) => { ndc.set(((px - rc.left) / rc.width) * 2 - 1, -((py - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam); const pl = new T.Plane(new T.Vector3(0, 1, 0), -O.ty); const h = new T.Vector3(); return ray.ray.intersectPlane(pl, h) ? h : null; };
@@ -167,7 +168,7 @@ init() {
  this.dot = document.createElement('div'); this.dot.style.cssText = 'position:absolute;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:13px solid #B4412E;margin:-7px 0 0 -5px;transform-origin:5px 7px';
  this.chart.appendChild(this.dot); this.chartHost.appendChild(this.chart);
  this.clock = new T.Clock();
- const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); if (this.st().phase === 'cabine' && this.cabin) { r.toneMappingExposure = 0.95; r.render(this.cabin.scene, this.cabin.cam); } else { r.toneMappingExposure = 1.05; r.render(scene, cam); } };
+ const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); this.portalPre(r); if (this.st().phase === 'cabine' && this.cabin) { r.toneMappingExposure = 0.95; r.clippingPlanes = this.portalClip && this.cabin.cam.position.x < PR_PORTAL.cab[0] + 0.02 ? this.portalClip : []; r.render(this.cabin.scene, this.cabin.cam); r.clippingPlanes = []; } else { r.toneMappingExposure = 1.05; r.render(scene, cam); } };
  tick();
 }
 prepIsland(T) {
@@ -279,7 +280,7 @@ setPlan(on) {
  if (this.life) this.life.visible = !on;
  this.setState({ plan: on }); this.layer.classList.toggle('pr-plan', on); this.focused = null; Object.assign(this.orbW, { tx: 4, tz: on ? 30 : -2, ty: 4, yaw: -0.59, pitch: on ? 0.95 : 0.42, dist: on ? 230 : 165 }); if (on) this.say(PR_RADIO.archi, 'LES COULISSES');
 }
-leave() { if (this.st().phase !== 'ponton') return; this.seen('ponton'); this.sailDest = 'insula'; this.b.v = 1.5; this.b.h = Math.PI / 2; this.setState({ phase: 'mer' }); this.say(PR_RADIO.mer); }
+leave() { if (this.st().phase !== 'ponton') return; this.seen('ponton'); this.camYaw = 0; this.camPitch = 0.28; this.camDist = 16; this.sailDest = 'insula'; this.b.v = 1.5; this.b.h = Math.PI / 2; this.setState({ phase: 'mer' }); this.say(PR_RADIO.mer); }
 // route qui contourne l'île (ellipse 72 × 46 m) par un point de passage au large
 plan(from, to, depth) {
  depth = depth || 0; const inside = (x, z) => Math.hypot(x / 72, z / 46) < 1.25;
@@ -359,7 +360,8 @@ step(T, dt) {
  if (this.boat) { const bo = this.boat; bo.position.set(b.x, 0.05 * Math.sin(t * 1.3) - 0.05, b.z); bo.rotation.set(0, 0, 0); bo.rotateY(b.h); bo.rotateX(0.14 * Math.min(1, b.v / 8) + b.turn * 0.04 + 0.02 * Math.sin(t * 1.1)); bo.rotateZ(0.015 * Math.sin(t * 0.9)); }
  // caméra : derrière le bateau ; en montant, elle regarde le bateau lui-même
  const cam = this.cam;
- if (this.orbitPh(ph)) { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * (ph === 'transit' ? 4 : 2.2)); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
+ if (ph === 'descente' || ph === 'montee') this.portalCam(dt);
+ else if (this.orbitPh(ph)) { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * (ph === 'transit' ? 4 : 2.2)); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
   for (const key of ['tx', 'tz', 'ty', 'pitch', 'dist']) O[key] += (W2[key] - O[key]) * k2; let dy = W2.yaw - O.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; O.yaw += dy * k2;
   this.placeCam(); }
  else {
@@ -409,7 +411,7 @@ renderVals() {
   if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
   if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
   if (!f) { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.goTo('archipel') }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => this.goTo('ponton') }); } }
- const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · Échap pour revenir' : ph === 'transit' ? 'Traversée express vers la destination · « Arriver tout de suite » pour sauter' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
+ const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · glissez pour regarder autour · Échap pour revenir' : ph === 'descente' || ph === 'montee' ? '' : ph === 'transit' ? 'Traversée express vers la destination · « Arriver tout de suite » pour sauter' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
  if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
  else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });

@@ -21,7 +21,7 @@ const PR_CAB_RADIO2 = {
   vhf: "Canal 16, je t'écoute : choisis un canal dans la radio, en bas à gauche."
 };
 const PR_CAB_VIEWS = { // [caméra, cible, haut]
-  idle: [[-2.05, 1.42, 0.15], [1.4, 0.85, -0.15], [0, 1, 0]],
+  idle: [[-1.0, 1.48, 0.05], [1.6, 0.88, -0.1], [0, 1, 0]],
   carte: [[-1.86, 1.42, 0.715], [-1.85, 0.80, 0.716], [0, 0, -1]],
   coffre: [[1.55, 1.36, 0.36], [2.12, 0.62, 0.0], [0, 1, 0]],
   livre: [[0.16, 1.1, 0.0], [0.16, 0.76, 0.0], [-1, 0, 0]],
@@ -122,14 +122,16 @@ Object.assign(Component.prototype, {
     window.addEventListener('resize', () => { cam.aspect = this.host.clientWidth / this.host.clientHeight; cam.updateProjectionMatrix(); });
   },
   // ---------- navigation dans la cabine
-  enterCabin() {
+  enterCabin() { this.descend(); },
+  enterCabinFade() {
     const go = () => this.fade(() => { const C = this.cabin; C.cam.aspect = this.host.clientWidth / this.host.clientHeight; C.cam.updateProjectionMatrix(); this.cabUnfocus(true); this.seen('cabine'); this.setState({ phase: 'cabine', panel: null, loading: false }); this.say(PR_CAB_RADIO2.enter); });
     if (this.cabin) go(); else { this.setState({ loading: true, loadMsg: 'la cabine…' }); this.loadCabin(go); }
   },
-  leaveCabin() { this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
+  leaveCabin() { this.ascend(); },
+  leaveCabinFade() { this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); this.say("Belle nuit. Tu peux redescendre quand tu veux, ou refaire la traversée."); }); },
   cabSetView(name, instant) {
     const C = this.cabin, T = window.THREE, v = PR_CAB_VIEWS[name] || PR_CAB_VIEWS.idle;
-    C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) }; C.camT = instant ? 1 : 0;
+    C.camFrom = { p: C.cam.position.clone(), l: C.look.clone(), u: C.cam.up.clone() }; C.camTo = { p: new T.Vector3(...v[0]), l: new T.Vector3(...v[1]), u: new T.Vector3(...v[2]) }; C.camT = instant ? 1 : 0; C.camDur = null; C.fov0 = null; C.camDone = null; C.yawOff = 0; if (C.cam.fov !== 62) { C.cam.fov = 62; C.cam.updateProjectionMatrix(); }
     if (instant) { C.cam.position.copy(C.camTo.p); C.look.copy(C.camTo.l); C.cam.up.copy(C.camTo.u); }
   },
   cabFocus(k, i) {
@@ -172,8 +174,14 @@ Object.assign(Component.prototype, {
   cabinStep(T, t, dt) {
     const C = this.cabin; if (!C) return; const ease = (x) => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     // caméra
-    if (C.camT < 1 && C.camFrom) { C.camT = Math.min(1, C.camT + dt / 1.1); const e = ease(C.camT); C.cam.position.lerpVectors(C.camFrom.p, C.camTo.p, e); C.look.lerpVectors(C.camFrom.l, C.camTo.l, e); C.cam.up.lerpVectors(C.camFrom.u, C.camTo.u, e).normalize(); }
-    const look = C.look.clone(); if (!C.focus && C.camT >= 1 && this.mouse) { const mx = this.mouse.x / innerWidth - 0.5, my = this.mouse.y / innerHeight - 0.5; look.z += mx * 1.6; look.y -= my * 0.8; }
+    if (C.camT < 1 && C.camFrom) { C.camT = Math.min(1, C.camT + dt / (C.camDur || 1.1)); const e = ease(C.camT); C.cam.position.lerpVectors(C.camFrom.p, C.camTo.p, e);
+      if (C.camFrom.mid) { const M = C.camFrom.mid, a = C.camT < M.at, k = a ? C.camT / M.at : (C.camT - M.at) / (1 - M.at), f = ease(k); C.cam.position.lerpVectors(a ? C.camFrom.p : M.p, a ? M.p : C.camTo.p, f); C.look.lerpVectors(a ? C.camFrom.l : M.l, a ? M.l : C.camTo.l, f); }
+      else if (C.camFrom.m) { const u = 1 - e, a = C.camFrom.l, m = C.camFrom.m, b = C.camTo.l; C.look.set(u * u * a.x + 2 * u * e * m.x + e * e * b.x, u * u * a.y + 2 * u * e * m.y + e * e * b.y, u * u * a.z + 2 * u * e * m.z + e * e * b.z); } else C.look.lerpVectors(C.camFrom.l, C.camTo.l, e);
+      if (C.fov0) { C.cam.fov = C.fov0 + (C.fov1 - C.fov0) * e; C.cam.updateProjectionMatrix(); if (C.camT >= 1) C.fov0 = null; }
+      if (C.camT >= 1 && C.camDone) { const f = C.camDone; C.camDone = null; setTimeout(f, 0); }
+      C.cam.up.lerpVectors(C.camFrom.u, C.camTo.u, e).normalize(); }
+    const look = C.look.clone(); if (!C.focus && C.camT >= 1 && C.yawOff) { const d = look.clone().sub(C.cam.position); d.applyAxisAngle(new T.Vector3(0, 1, 0), C.yawOff); look.copy(C.cam.position).add(d); }
+    if (!C.focus && C.camT >= 1 && this.mouse && !C.yawOff) { const mx = this.mouse.x / innerWidth - 0.5, my = this.mouse.y / innerHeight - 0.5; look.z += mx * 1.6; look.y -= my * 0.8; }
     C.cam.lookAt(look);
     // progressions des animations (0 → 1 quand l'objet est actif, retour sinon)
     for (const k of ['coffre', 'photo', 'vhf', 'bouteilles', 'carte']) { const on = C.focus === k && C.camT > 0.55; C.prog[k] = this.reduced ? (on ? 1 : 0) : Math.max(0, Math.min(1, (C.prog[k] || 0) + (on ? dt / 1.1 : -dt / 0.7))); }

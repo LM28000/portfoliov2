@@ -105,6 +105,10 @@ Object.assign(Component.prototype, {
       if (this.st().phase === 'cabine') this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); run(); }); else run();
       return;
     }
+    // la cabine : on y descend par l'ouverture, sans fondu
+    if (k !== 'nuit') { const obj = { carte: 'carte', coffre: 'coffre', recap: 'livre', bouteilles: 'bouteilles', apropos: 'photo', contact: 'vhf' }[k];
+      if (this.st().phase === 'cabine') { if (obj) this.cabFocus(obj); else this.cabUnfocus(); return; }
+      this.descend(obj); return; }
     this.fade(() => {
       const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
       this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
