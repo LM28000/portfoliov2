@@ -53,7 +53,7 @@ Object.assign(Component.prototype, {
     sp.scale.set(30, 30 * 170 / 640, 1); sp.position.set(4, 42, -2); this.scene.add(sp); this.marker = sp;
   },
   markerStep(T, t, ph) {
-    if (!this.marker) return; const atSea = ph === 'ponton' || ph === 'mer' || ph === 'approche';
+    if (!this.marker) return; const atSea = ph === 'mer' || ph === 'approche';
     this.marker.visible = atSea && !this.cruiseP && !this.st().auto;
     const k = 1 + 0.05 * Math.sin(t * 3); this.marker.scale.set(30 * k, 30 * k * 170 / 640, 1);
     if ((ph === 'mer' || ph === 'approche') && this.mouse && this.island && (this.seaHov = (this.seaHov || 0) + 1) % 6 === 0) {
