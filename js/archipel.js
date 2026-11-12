@@ -1,0 +1,119 @@
+/* L'archipel : vue aérienne d'arrivée, une île par projet (Insula, Carte vivante, le serveur), survol au clic. */
+const PR_ISLES = {
+  insula: { n: 1, name: 'Insula', line: 'Choisir où acheter, entre amis', x: 4, z: -2, top: 40 },
+  cartevivante: { n: 2, name: 'Carte vivante', line: 'La France en direct : trains, avions, météo', x: -190, z: 0, rx: 46, rz: 34, h: 8, s: 1.3, top: 34,
+    view: { ty: 8, yaw: 0.12, pitch: 0.5, dist: 95 }, code: 'https://github.com/LM28000/openstreetmap' },
+  serveur: { n: 3, name: 'Le serveur', line: 'Mon serveur maison : une trentaine de services', x: 190, z: -24, rx: 40, rz: 30, h: 10, s: 4.1, top: 36,
+    view: { ty: 8, yaw: -0.08, pitch: 0.2, dist: 44 } }
+};
+Object.assign(PR_RADIO, {
+  archipel: "Ici Louis-Marie, bienvenue ! Voici l'archipel : chaque île est un de mes projets. Clique sur une île pour la survoler. Ou embarque à bord d'Elba : tu barres, et je te guide à la radio.",
+  cartevivante: "La Carte vivante : la France en 3D et en temps réel. On voit les trains voiture par voiture, les avions, les bateaux, la météo, l'énergie, les séismes. Une frise remonte sept jours en arrière, et tout est rejoué. Derrière, il y a un serveur en Rust qui archive le temps réel, et un site en TypeScript (MapLibre, deck.gl). Elle tourne en permanence sur mon serveur maison, l'île d'en face.",
+  serveur: "La salle des machines : un serveur chez moi, sous Debian, avec une trentaine de services dans Docker. Chacun est décrit dans un fichier versionné dans git. Il y a un cloud privé, une IA locale, une messagerie, un VPN, de la supervision, et des sauvegardes chiffrées chaque nuit. C'est lui qui fait tourner la Carte vivante."
+});
+const PR_SRV_ROWS = [['CLOUD PRIVÉ', 'Nextcloud · webmail · wiki'], ['IA LOCALE', 'Ollama · n8n · Qdrant'], ['MESSAGERIE', 'Matrix (Synapse, Element)'], ['ACCÈS', 'VPN Headscale · SSO Authelia'], ['SUPERVISION', 'Grafana · Prometheus · Uptime Kuma'], ['SAUVEGARDES', 'Kopia chiffré · dumps SQL · SnapRAID'], ['CARTE VIVANTE', 'tourne ici, 24 h sur 24']];
+Object.assign(Component.prototype, {
+  orbitPh(ph) { return ph === 'accoste' || ph === 'nuit' || ph === 'archipel' || ph === 'escale'; },
+  // limite du déplacement (clic droit) selon l'endroit
+  clampPan(tx, tz) { const ph = this.st().phase; let c = { x: 0, z: 0, rx: 85, rz: 55 };
+    if (ph === 'archipel') c = { x: 0, z: 10, rx: 380, rz: 260 }; else if (ph === 'escale') { const I = PR_ISLES[this.isleK]; c = { x: I.x, z: I.z, rx: 80, rz: 60 }; }
+    const rr = Math.hypot((tx - c.x) / c.rx, (tz - c.z) / c.rz); if (rr > 1) { tx = c.x + (tx - c.x) / rr; tz = c.z + (tz - c.z) / rr; } return [tx, tz]; },
+  distLim(ph) { return ph === 'archipel' ? [150, 1300] : ph === 'escale' ? [18, 260] : [10, 220]; },
+  isleH(I, x, z) { const lx = x - I.x, lz = z - I.z, r = Math.hypot(lx / I.rx, lz / I.rz); const n = Math.sin(lx * 0.11 + I.s) * Math.cos(lz * 0.13 + I.s * 2) * 0.6 + Math.sin(lx * 0.05 - lz * 0.07 + I.s) * 0.4;
+    if (r >= 1) return 0.6 - (r - 1) * 16; let y = I.h * Math.pow(1 - r * r, 0.7) * (0.82 + 0.18 * n) + 0.6; const flat = I.h * 0.72; if (r < 0.42) y = flat + (y - flat) * Math.pow(r / 0.42, 3) * 0.2; return y; },
+  buildIsles(T) {
+    this.isleG = {}; const tl = new T.TextureLoader();
+    const sand = new T.Color(0xcdb994), grass = new T.Color(0x6f8a4a), grass2 = new T.Color(0x8c9a58), rock = new T.Color(0x857b70);
+    const wood = new T.MeshStandardMaterial({ color: new T.Color(0x3b2a1c).convertSRGBToLinear(), roughness: 0.8 });
+    ['cartevivante', 'serveur'].forEach((k) => {
+      const I = PR_ISLES[k]; const g = new T.Group(); g.userData.isle = k; this.isleG[k] = g; this.scene.add(g);
+      const geo = new T.PlaneGeometry(I.rx * 2.5, I.rz * 2.5, 90, 70); geo.rotateX(-Math.PI / 2); const pa = geo.attributes.position;
+      for (let i = 0; i < pa.count; i++) pa.setY(i, this.isleH(I, I.x + pa.getX(i), I.z + pa.getZ(i)));
+      geo.computeVertexNormals(); const nor = geo.attributes.normal, col = new Float32Array(pa.count * 3), c = new T.Color();
+      for (let i = 0; i < pa.count; i++) { const y = pa.getY(i), ny = nor.getY(i); if (y < 1.1) c.copy(sand); else c.copy(grass).lerp(grass2, Math.min(1, Math.max(0, (y - 3) / 8))); if (k === 'serveur') c.lerp(rock, 0.35); if (ny < 0.75) c.lerp(rock, Math.min(1, (0.75 - ny) * 4)); c.convertSRGBToLinear(); col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b; }
+      geo.setAttribute('color', new T.BufferAttribute(col, 3));
+      const land = new T.Mesh(geo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); land.position.set(I.x, 0, I.z); g.add(land);
+      // quelques pins, loin du centre
+      if (this.treeMats) { let seed = I.s * 1000; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        for (let i = 0; i < 26; i++) { const a = rnd() * Math.PI * 2, r = 0.5 + rnd() * 0.36; const x = I.x + Math.cos(a) * I.rx * r, z = I.z + Math.sin(a) * I.rz * r; if (Math.sin(a) > (k === 'serveur' ? -0.1 : 0.35)) continue; const kk = 1 + Math.floor(rnd() * 3), [, w, h, z0] = PR_TREE_IMG[kk], s = 0.55 + rnd() * 0.35, y = this.isleH(I, x, z);
+          for (let j = 0; j < 2; j++) { const m = new T.Mesh(new T.PlaneGeometry(w, h), this.treeMats[kk]); m.position.set(x, y + (z0 + h / 2) * s, z); m.scale.setScalar(s); m.rotation.y = a + j * Math.PI / 2; g.add(m); } } }
+      const top = this.isleH(I, I.x, I.z);
+      if (k === 'cartevivante') {
+        // grand écran incliné : la vraie carte, deux vues qui alternent
+        const W = 36, H = W / 1.6; const scr = new T.Group(); scr.position.set(I.x, top + 1.5, I.z - 2); scr.rotation.x = -0.55;
+        this.cvTex = [1, 2].map((n) => { const t = tl.load('assets/carte-vivante-' + n + '.jpg'); t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; });
+        const fr = new T.Mesh(new T.BoxGeometry(W + 1, H + 1, 0.5), new T.MeshStandardMaterial({ color: 0x151a22, roughness: 0.5 })); fr.position.y = H / 2; scr.add(fr);
+        const pl = new T.Mesh(new T.PlaneGeometry(W, H), new T.MeshBasicMaterial({ map: this.cvTex[0], toneMapped: false })); pl.position.set(0, H / 2, 0.27); scr.add(pl); this.cvScreen = pl; g.add(scr);
+        for (const sx of [-W / 2 + 2, W / 2 - 2]) { const post = new T.Mesh(new T.BoxGeometry(0.6, 9, 0.6), wood); post.position.set(I.x + sx, top + 3, I.z - 2 - 6); g.add(post); }
+        // une voie ferrée en boucle et un train qui y roule
+        const pts = []; for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, x = I.x + Math.cos(a) * I.rx * 0.66, z = I.z + Math.sin(a) * I.rz * 0.64; pts.push(new T.Vector3(x, this.isleH(I, x, z) + 0.4, z)); }
+        const curve = new T.CatmullRomCurve3(pts, true, 'centripetal'); this.cvRail = curve;
+        g.add(new T.Mesh(new T.TubeGeometry(curve, 256, 0.45, 5, true), new T.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.9 })));
+        const white = new T.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.5 }), red = new T.MeshStandardMaterial({ color: new T.Color(0xb4412e).convertSRGBToLinear(), roughness: 0.5 });
+        this.cvTrain = []; for (let i = 0; i < 5; i++) { const car = new T.Group(); const body = new T.Mesh(new T.BoxGeometry(2.6, 2.4, 6.2), i === 0 ? red : white); body.position.y = 1.5; car.add(body); const stripe = new T.Mesh(new T.BoxGeometry(2.65, 0.5, 6.25), i === 0 ? white : red); stripe.position.y = 1.1; car.add(stripe); g.add(car); this.cvTrain.push(car); }
+        // un avion qui tourne au-dessus
+        const plane = new T.Group(); const fus = new T.Mesh(new T.CylinderGeometry(0.7, 0.5, 9, 10), white); fus.rotation.x = Math.PI / 2; plane.add(fus); const wing = new T.Mesh(new T.BoxGeometry(11, 0.2, 1.8), white); plane.add(wing); const tail = new T.Mesh(new T.BoxGeometry(0.2, 2, 1.4), red); tail.position.set(0, 1, -4); plane.add(tail); g.add(plane); this.cvPlane = plane;
+      } else {
+        // la salle des machines : un bâtiment, sa façade-baie, ses voyants
+        const bw = 26, bh = 12, bd = 14, by = top; const conc = new T.MeshStandardMaterial({ color: new T.Color(0xb9b6ae).convertSRGBToLinear(), roughness: 0.9 });
+        const bld = new T.Mesh(new T.BoxGeometry(bw, bh, bd), conc); bld.position.set(I.x, by + bh / 2, I.z - 3); g.add(bld);
+        const base = new T.Mesh(new T.BoxGeometry(bw + 6, 1.2, bd + 8), new T.MeshStandardMaterial({ color: new T.Color(0x8f8a80).convertSRGBToLinear(), roughness: 1 })); base.position.set(I.x, by, I.z - 1); g.add(base);
+        for (let i = 0; i < 4; i++) { const ac = new T.Mesh(new T.BoxGeometry(3.2, 1.6, 3.2), new T.MeshStandardMaterial({ color: 0x8d9096, metalness: 0.4, roughness: 0.5 })); ac.position.set(I.x - 8 + i * 5.3, by + bh + 0.8, I.z - 6); g.add(ac); }
+        const cv = document.createElement('canvas'); cv.width = 1040; cv.height = 400; const x = cv.getContext('2d');
+        x.fillStyle = '#0d131c'; x.fillRect(0, 0, 1040, 400); x.fillStyle = '#FFC94A'; x.font = '700 30px JetBrains Mono, monospace'; x.fillText('LA SALLE DES MACHINES', 34, 52);
+        x.fillStyle = '#9fb0c4'; x.font = '400 22px Inter, sans-serif'; x.fillText('Debian 13 · Xeon 6 cœurs · 8 disques · ~30 services Docker, versionnés dans git', 34, 380);
+        this.srvLeds = [];
+        PR_SRV_ROWS.forEach(([a, b], i) => { const y = 92 + i * 40; x.fillStyle = '#1a2330'; x.fillRect(24, y - 28, 992, 34); x.fillStyle = '#7FE6FF'; x.font = '700 22px JetBrains Mono, monospace'; x.fillText(a, 40, y); x.fillStyle = '#F4EFE6'; x.font = '600 23px Inter, sans-serif'; x.fillText(b, 300, y);
+          for (let j = 0; j < 5; j++) { const lx = 860 + j * 30, ly = y - 11; x.fillStyle = '#05080c'; x.beginPath(); x.arc(lx, ly, 8, 0, 7); x.fill(); this.srvLeds.push([lx, ly]); } });
+        const tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
+        const face = new T.Mesh(new T.PlaneGeometry(bw - 1, (bw - 1) * 400 / 1040), new T.MeshBasicMaterial({ map: tex, toneMapped: false })); const fz = I.z - 3 + bd / 2 + 0.03, fy = by + bh / 2 + 0.3; face.position.set(I.x, fy, fz); g.add(face);
+        const fw = bw - 1, fh = fw * 400 / 1040; const im = new T.InstancedMesh(new T.CircleGeometry(fw / 1040 * 8, 10), new T.MeshBasicMaterial({ toneMapped: false }), this.srvLeds.length); const m4 = new T.Matrix4();
+        this.srvLeds.forEach(([lx, ly], i) => { m4.makeTranslation(I.x + (lx / 1040 - 0.5) * fw, fy + (0.5 - ly / 400) * fh, fz + 0.02); im.setMatrixAt(i, m4); im.setColorAt(i, new T.Color(0x39ff7a)); });
+        g.add(im); this.srvIM = im;
+        const mast = new T.Mesh(new T.CylinderGeometry(0.15, 0.3, 14, 6), new T.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.6 })); mast.position.set(I.x + 10, by + bh + 7, I.z - 8); g.add(mast);
+        this.srvBeacon = new T.Mesh(new T.SphereGeometry(0.6, 12, 8), new T.MeshBasicMaterial({ color: 0xff3a2a, toneMapped: false })); this.srvBeacon.position.set(I.x + 10, by + bh + 14.3, I.z - 8); g.add(this.srvBeacon);
+        // un petit quai devant
+        const pier = new T.Mesh(new T.BoxGeometry(3, 0.4, 16), wood); pier.position.set(I.x - 6, 0.6, I.z + I.rz * 0.95); g.add(pier);
+      }
+    });
+    // étiquettes des îles (vue de l'archipel)
+    this.isleLbl = {}; Object.keys(PR_ISLES).forEach((k) => { const I = PR_ISLES[k]; const el = document.createElement('button'); el.className = 'isle-lbl'; el.innerHTML = '<span class="il-k"></span><b></b><small></small><span class="il-go">survoler →</span>';
+      el.querySelector('.il-k').textContent = 'PROJET ' + I.n; el.querySelector('b').textContent = I.name; el.querySelector('small').textContent = I.line; el.onclick = () => this.flyTo(k); el.style.display = 'none'; this.layer.appendChild(el); this.isleLbl[k] = el; });
+  },
+  archView(instant) { const asp = (this.host && this.host.clientWidth / Math.max(1, this.host.clientHeight)) || 1.6, t25 = Math.tan(25 * Math.PI / 180);
+    if (asp < 0.9) Object.assign(this.orbW, { tx: 70, tz: 10, ty: 0, yaw: Math.PI / 2, pitch: 1.1, dist: Math.min(1300, Math.max(720, 170 / (t25 * asp))) }); // téléphone : les îles l'une sous l'autre
+    else Object.assign(this.orbW, { tx: 0, tz: 8, ty: 0, yaw: 0, pitch: 0.75, dist: Math.min(1300, Math.max(400, 270 / (t25 * asp))) });
+    if (instant) Object.assign(this.orb, this.orbW); },
+  archipel(instant) { const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; this.isleK = null;
+    if (this.nightTarget) this.setNightNow(0); if (this.boat && this.b && (Math.hypot(this.b.x - this.P0.x, this.b.z - this.P0.z) > 30)) Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 });
+    if (!instant) { const O = this.orb, c = this.cam.position; if (!this.orbitPh(st.phase)) { O.tx = this.look ? this.look.x : 0; O.tz = this.look ? this.look.z : 0; O.ty = 0; O.dist = Math.hypot(c.x - O.tx, c.y, c.z - O.tz); O.yaw = Math.atan2(c.x - O.tx, c.z - O.tz); O.pitch = Math.asin(Math.min(1, c.y / O.dist)); } }
+    this.archView(instant); this.setState({ phase: 'archipel', focus: null, showApp: false, ask: null, auto: false }); this.say(PR_RADIO.archipel); },
+  flyTo(k) {
+    if (k === 'insula') { if (!this.D) return; this.setState({ showMap: false }); const u = this.jetty.u; Object.assign(this.b, { x: this.D.x, z: this.D.z, h: Math.atan2(u.z, -u.x), v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
+      this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); return; }
+    const I = PR_ISLES[k]; if (!I) return; this.isleK = k; this.seen(k); const v = I.view, narrow = this.host.clientWidth < this.host.clientHeight;
+    Object.assign(this.orbW, { tx: I.x, tz: I.z, ty: v.ty, yaw: v.yaw, pitch: v.pitch, dist: v.dist * (narrow ? 1.7 : 1) });
+    this.setState({ phase: 'escale', showMap: false, ask: null }); this.say(PR_RADIO[k], 'LOUIS-MARIE · ' + I.name.toUpperCase());
+  },
+  // embarquer : la caméra plonge de l'archipel vers le ponton
+  embark() { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
+    this.lookCur = new window.THREE.Vector3(this.orb.tx, this.orb.ty, this.orb.tz); this.swoop = 2.2; this.camYaw = 0; this.camPitch = 0.28; this.seen('ponton'); this.setState({ phase: 'ponton', showMap: false }); this.say(PR_RADIO.ponton); },
+  islesHit(cx, cy) { const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(); const rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
+    if (this.island && (rc.intersectObject(this.island, true).length || rc.intersectObject(this.trees, true).length)) return 'insula';
+    for (const k in this.isleG || {}) if (rc.intersectObject(this.isleG[k], true).length) return k; return null; },
+  islePen(x, z) { let p = -1e9; ['cartevivante', 'serveur'].forEach((k) => { const I = PR_ISLES[k]; p = Math.max(p, 1.1 - Math.hypot((x - I.x) / I.rx, (z - I.z) / I.rz)); }); return p; },
+  isleStep(T, t, dt, ph) {
+    if (!this.isleG) return;
+    // brume repoussée vue de haut
+    const far = ph === 'archipel' ? 3000 : (this.st().plan ? 2600 : 1350), near = ph === 'archipel' ? 500 : 220; const F = this.scene.fog; F.far += (far - F.far) * Math.min(1, dt * 2); F.near += (near - F.near) * Math.min(1, dt * 2);
+    if (this.cvRail && this.cvTrain) { const u0 = (t * 0.035) % 1; this.cvTrain.forEach((car, i) => { const u = (u0 - i * 0.0215 + 1) % 1; const p = this.cvRail.getPointAt(u), tg = this.cvRail.getTangentAt(u); car.position.copy(p); car.rotation.set(0, Math.atan2(tg.x, tg.z), 0); }); }
+    if (this.cvPlane) { const I = PR_ISLES.cartevivante, a = t * 0.18; this.cvPlane.position.set(I.x + Math.cos(a) * 52, 34 + 2 * Math.sin(t * 0.5), I.z + Math.sin(a) * 40); this.cvPlane.rotation.set(0, -a, 0.35); }
+    if (this.cvScreen) { const i = Math.floor(t / 7) % 2; if (this.cvScreen.material.map !== this.cvTex[i]) { this.cvScreen.material.map = this.cvTex[i]; this.cvScreen.material.needsUpdate = true; } }
+    if (this.srvIM && (this.ledT = (this.ledT || 0) + dt) > 0.18) { this.ledT = 0; const c = new T.Color(); for (let i = 0; i < this.srvLeds.length; i++) { const on = Math.random() > (i % 5 === 0 ? 0.05 : 0.45); c.set(on ? (i % 5 === 4 ? 0xffc94a : 0x39ff7a) : 0x0c2414); this.srvIM.setColorAt(i, c); } this.srvIM.instanceColor.needsUpdate = true; }
+    if (this.srvBeacon) this.srvBeacon.visible = (t % 1.6) < 0.5;
+    // étiquettes
+    const W = this.host.clientWidth, H = this.host.clientHeight, show = ph === 'archipel';
+    for (const k in this.isleLbl) { const el = this.isleLbl[k], I = PR_ISLES[k]; if (!show) { el.style.display = 'none'; continue; } const p = new T.Vector3(I.x, I.top, I.z).project(this.cam); if (p.z > 1) { el.style.display = 'none'; continue; } el.style.display = 'block'; el.style.left = ((p.x + 1) / 2 * W) + 'px'; el.style.top = ((1 - p.y) / 2 * H) + 'px'; el.classList.toggle('done', !!(this.visitedSet || {})[k]); }
+    if (ph === 'archipel' && this.mouse && (this.archHov = (this.archHov || 0) + dt) > 0.1) { this.archHov = 0; const k = this.islesHit(this.mouse.x, this.mouse.y); this.renderer.domElement.style.cursor = k ? 'pointer' : 'grab'; for (const kk in this.isleLbl) this.isleLbl[kk].classList.toggle('hov', kk === k); }
+  }
+});

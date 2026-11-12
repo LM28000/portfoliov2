@@ -33,19 +33,21 @@ const PR_CABIN_RADIO = {
 };
 
 const PR_STOPS = [
-  { k: 'ponton', n: '1', t: 'Le ponton', d: 'Le départ, à bord d\u2019Elba', x: 12, y: 84 },
-  { k: 'insula', n: '2', t: 'Insula', d: 'Île n° 1 · choisir où acheter, entre amis', x: 38, y: 32, big: true },
-  { k: 'cinema', n: '2a', t: 'Le cinéma', d: 'La démo, en une minute', x: 56, y: 14, sub: true },
-  { k: 'longuevue', n: '2b', t: 'La longue-vue', d: 'Essayer l\u2019app pour de vrai', x: 20, y: 14, sub: true },
-  { k: 'archi', n: '2c', t: 'Les coulisses', d: 'L\u2019architecture', x: 56, y: 46, sub: true },
-  { k: 'nuit', n: '3', t: 'La nuit tombe', d: 'Fin de la traversée', x: 82, y: 30 },
-  { k: 'cabine', n: '4', t: 'La cabine', d: 'À bord, à la lanterne', x: 78, y: 60, big: true },
-  { k: 'carte', n: '4a', t: 'La carte', d: 'Mon parcours', x: 52, y: 66, sub: true },
-  { k: 'coffre', n: '4b', t: 'Le coffre', d: 'Mon CV', x: 56, y: 80, sub: true },
-  { k: 'recap', n: '4c', t: 'Livre de bord', d: 'Ta traversée', x: 66, y: 93, sub: true },
-  { k: 'bouteilles', n: '4d', t: 'Les bouteilles', d: 'Anecdotes', x: 84, y: 93, sub: true },
-  { k: 'apropos', n: '4e', t: 'La photo', d: 'À propos', x: 92, y: 80, sub: true },
-  { k: 'contact', n: '4f', t: 'La VHF', d: 'Me contacter', x: 92, y: 46, sub: true }
+  { k: 'insula', n: '1', t: 'Insula', d: 'Choisir où acheter, entre amis', x: 50, y: 13, big: true },
+  { k: 'cinema', n: '1a', t: 'Le cinéma', d: 'La démo, en une minute', x: 37, y: 31, sub: true },
+  { k: 'longuevue', n: '1b', t: 'La longue-vue', d: 'Essayer l\u2019app pour de vrai', x: 63, y: 31, sub: true },
+  { k: 'archi', n: '1c', t: 'Les coulisses', d: 'L\u2019architecture', x: 50, y: 44, sub: true },
+  { k: 'cartevivante', n: '2', t: 'Carte vivante', d: 'La France en direct', x: 15, y: 18, big: true },
+  { k: 'serveur', n: '3', t: 'Le serveur', d: 'Mon serveur maison', x: 85, y: 18, big: true },
+  { k: 'ponton', n: '⚓', t: 'Le ponton', d: 'Embarquer, barrer Elba', x: 14, y: 72 },
+  { k: 'nuit', n: '☾', t: 'La nuit tombe', d: 'Fin de la traversée', x: 40, y: 72 },
+  { k: 'cabine', n: '⌂', t: 'La cabine', d: 'Qui je suis · CV · contact', x: 70, y: 72, big: true },
+  { k: 'carte', n: 'a', t: 'La carte', d: 'Mon parcours', x: 10, y: 90, sub: true },
+  { k: 'coffre', n: 'b', t: 'Le coffre', d: 'Mon CV', x: 26, y: 90, sub: true },
+  { k: 'recap', n: 'c', t: 'Le livre', d: 'Ta traversée', x: 42, y: 90, sub: true },
+  { k: 'bouteilles', n: 'd', t: 'Bouteilles', d: 'Anecdotes', x: 58, y: 90, sub: true },
+  { k: 'apropos', n: 'e', t: 'La photo', d: 'À propos', x: 74, y: 90, sub: true },
+  { k: 'contact', n: 'f', t: 'La VHF', d: 'Me contacter', x: 90, y: 90, sub: true }
 ];
 Object.assign(Component.prototype, {
   seen(k) { this.visitedSet = this.visitedSet || {}; if (!this.visitedSet[k]) { this.visitedSet[k] = true; try { localStorage.setItem('elba-escales', JSON.stringify(this.visitedSet)); } catch (e) {} this.setState({ v: Date.now() }); } },
@@ -107,6 +109,8 @@ Object.assign(Component.prototype, {
       const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
       this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
       const atQuay = () => { const u = this.jetty.u; this.b.x = this.D.x; this.b.z = this.D.z; this.b.h = Math.atan2(u.z, -u.x); this.b.v = 0; this.b.turn = 0; };
+      if (k === 'archipel') { this.archipel(true); return; }
+      if (k === 'cartevivante' || k === 'serveur') { this.setNightNow(0); this.flyTo(k); Object.assign(this.orb, this.orbW); return; }
       if (k === 'ponton') { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.camYaw = 0; this.camPitch = 0.28; this.setState({ phase: 'ponton' }); this.say(PR_RADIO.ponton); return; }
       if (['insula', 'cinema', 'longuevue', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); return; }
       this.setNightNow(1); atQuay(); this.prevPhase = 'accoste';

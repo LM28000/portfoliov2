@@ -12,8 +12,8 @@ html, body { margin: 0; height: 100%; background: var(--night); color: #F4EFE6; 
 .ident { display: none; max-width: 520px; margin-bottom: 10px; padding: 16px 18px; border-radius: 14px; background: rgba(11,22,38,.78); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
 .ident h1 { margin: 0 0 6px; font: 700 30px/1.1 Fraunces, serif; color: #fff; }
 .ident p { margin: 0; font-size: 15px; line-height: 1.5; color: #E6DED0; }
-body.ph-ponton .ident { display: block; }
-body.ph-ponton .kicker { display: none; }
+body.ph-archipel .ident { display: block; }
+body.ph-archipel .kicker { display: none; }
 .kicker, .hint { display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(11,22,38,.55); }
 .hint { display: block; width: fit-content; }
 .kicker { margin: 0; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--sun); text-shadow: 0 1px 4px rgba(0,0,0,.5); }
@@ -106,7 +106,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .voy-t { margin: 0 0 4px; font: 700 22px Fraunces, serif; }
 .voy-s { margin: 0; font-size: 12.5px; line-height: 1.45; color: #3B4D63; }
 .pr-btn2.dark { color: var(--ink); border-color: rgba(20,37,58,.5); background: transparent; }
-.voy-map { position: relative; margin: 10px 0; height: 330px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
+.voy-map { position: relative; margin: 10px 0; height: 360px; border-radius: 10px; background: radial-gradient(ellipse at 40% 35%, #cfe3ea 0%, #a8c9d6 60%, #8db7c8 100%); border: 2px solid #c9b892; overflow: hidden; }
 .voy-map::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(20,37,58,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(20,37,58,.08) 1px, transparent 1px); background-size: 32px 32px; }
 .voy-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 #voyPath { stroke-width: 1.4; }
@@ -122,7 +122,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .stop.big .num { min-width: 32px; height: 32px; font-size: 14px; }
 .stop.done .num::after { content: ' ✓'; }
 .stop.here { box-shadow: 0 0 0 3px var(--cyan), 0 3px 10px rgba(0,0,0,.2); }
-.voy-foot { display: flex; gap: 8px; align-items: center; }
+.voy-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .voy-sp { flex: 1; }
 .voy-foot .pr-btn2 { min-height: 40px; }
 .voy-foot .pr-btn { padding: 9px 14px; font-size: 13px; }
@@ -130,7 +130,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 @media (max-width: 760px) {
   .voyage { right: 8px; top: 8px; width: calc(100% - 16px); max-height: calc(100% - 16px); overflow: auto; }
   .voy-map { height: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: #cfe3ea; }
-  .voy-map::before, .voy-svg, .voy-isle, .voy-next { display: none; }
+  .voy-map::before, .voy-svg, .voy-isle, .voy-next, .voy-band { display: none; }
   .stop { position: static; transform: none; white-space: normal; }
   .stop.sub { margin-left: 24px; }
   .map-btn { top: 114px; right: 12px; font-size: 11px; } .credits-btn { top: 150px; }
@@ -158,9 +158,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 
 /* version texte : lue par les lecteurs d'écran et les moteurs ; affichée si la 3D est impossible */
 .sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-body.no3d #texte { position: absolute !important; inset: 0; width: auto; height: auto; overflow: auto; clip: auto; white-space: normal; z-index: 20; padding: 40px max(20px, calc(50% - 360px)); background: var(--cream); color: var(--ink); font: 400 17px/1.6 Fraunces, serif; }
-body.no3d #texte h2 { font: 700 26px Fraunces, serif; margin: 28px 0 8px; }
-body.no3d #texte a { color: var(--rust); }
+body.no3d #texte, body.texte-open #texte { position: absolute !important; inset: 0; width: auto; height: auto; overflow: auto; clip: auto; white-space: normal; z-index: 20; padding: 40px max(20px, calc(50% - 360px)); background: var(--cream); color: var(--ink); font: 400 17px/1.6 Fraunces, serif; }
+body.no3d #texte h2, body.texte-open #texte h2 { font: 700 26px Fraunces, serif; margin: 28px 0 8px; }
+body.no3d #texte a, body.texte-open #texte a { color: var(--rust); }
 body.no3d #texte .texte-note { display: block !important; padding: 10px 14px; border-radius: 10px; background: #fff3cf; font: 600 14px Inter, sans-serif; }
 body.no3d .loading { display: none; }
 /* la carte marine pulse tant qu'on ne l'a pas ouverte (téléphone) */
@@ -177,3 +177,23 @@ body.no3d .loading { display: none; }
   body.hint-on .brand .hint { display: block; }
   .pr-btn, .pr-btn2 { min-height: 44px; }
 }
+
+/* archipel : étiquettes des îles */
+.isle-lbl { position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 12px)); display: block; min-width: 170px; max-width: 240px; padding: 9px 13px 10px; border: 0; border-radius: 12px; background: rgba(11,22,38,.9); color: #fff; text-align: left; cursor: pointer; pointer-events: auto; box-shadow: 0 8px 24px rgba(0,0,0,.35); font-family: Inter, sans-serif; }
+.isle-lbl::after { content: ''; position: absolute; left: 50%; bottom: -9px; margin-left: -9px; border: 9px solid transparent; border-bottom: 0; border-top-color: rgba(11,22,38,.9); }
+.isle-lbl:hover, .isle-lbl.hov { box-shadow: 0 0 0 3px var(--sun), 0 8px 24px rgba(0,0,0,.35); }
+.isle-lbl .il-k { display: block; font: 700 10.5px 'JetBrains Mono', monospace; letter-spacing: .12em; color: var(--sun); }
+.isle-lbl b { display: block; margin: 2px 0 3px; font: 700 21px/1.1 Fraunces, serif; }
+.isle-lbl small { display: block; font-size: 12.5px; line-height: 1.35; color: #D8CFC0; }
+.isle-lbl .il-go { display: block; margin-top: 6px; font: 700 11px Inter, sans-serif; color: var(--cyan); }
+.isle-lbl.done .il-k::after { content: ' · VU ✓'; color: var(--cyan); }
+.voy-isle.rock { background: radial-gradient(ellipse, #c2bfae 0%, #aaa592 60%, #d8c99a 92%, transparent 94%); }
+.voy-band { position: absolute; border: 1.5px dashed rgba(20,37,58,.35); border-radius: 10px; }
+.voy-band span { position: absolute; right: 8px; top: 4px; font: 700 9.5px 'JetBrains Mono', monospace; letter-spacing: .1em; color: rgba(20,37,58,.55); }
+/* tout voir en une minute */
+body.texte-open #texte { z-index: 30; }
+body.texte-open #texte h3, body.no3d #texte h3 { font: 700 20px Fraunces, serif; margin: 18px 0 4px; }
+.texte-k { display: none; }
+body.texte-open .texte-k { display: block; margin: 0; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: var(--rust); }
+.texte-close { position: sticky; top: 0; float: right; z-index: 2; }
+@media (max-width: 760px) { body.ph-archipel .ident p { display: none; } body.ph-archipel .ident { margin-bottom: 0; } .isle-lbl { min-width: 120px; max-width: 150px; padding: 7px 9px; } .isle-lbl b { font-size: 16px; } .isle-lbl small { display: none; } .isle-lbl { transform: translate(34px, -50%); } .isle-lbl::after { left: -9px; top: 50%; bottom: auto; margin: -9px 0 0; border: 9px solid transparent; border-left: 0; border-right-color: rgba(11,22,38,.9); } }

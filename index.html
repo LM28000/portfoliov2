@@ -6,7 +6,7 @@
 <title>Louis-Marie Perret du Cray · à bord d'Elba</title>
 <meta name="description" content="Prenez la barre d'Elba, un voilier de 1977, et naviguez d'île en île : chaque île est un projet de Louis-Marie Perret du Cray, étudiant ingénieur.">
 <meta property="og:title" content="Louis-Marie Perret du Cray · à bord d'Elba">
-<meta property="og:description" content="Un monde marin en 3D : chaque île est un projet. Première escale : Insula.">
+<meta property="og:description" content="Un archipel en 3D : chaque île est un projet. Insula, Carte vivante, et un serveur maison.">
 <meta property="og:image" content="https://louis-marie.du-cray.eu/assets/og.jpg">
 <meta name="theme-color" content="#0B1626">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -17,13 +17,13 @@
 </head>
 <body>
 <main id="app">
-  <div id="host" class="pr-host" role="img" aria-label="Monde 3D : on barre Elba depuis un ponton jusqu'à l'île d'Insula"></div>
+  <div id="host" class="pr-host" role="img" aria-label="Monde 3D : un archipel où chaque île est un projet ; on peut survoler les îles ou barrer Elba"></div>
   <div id="layer" class="layer"></div>
 
   <header class="brand">
     <div class="ident">
       <h1>Louis-Marie Perret du Cray</h1>
-      <p>Élève-ingénieur à l'ESILV, en alternance chez Devoteam (IA agentique &amp; RSE). Ce site est une traversée : chaque île est un de mes projets.</p>
+      <p>Élève-ingénieur à l'ESILV, en alternance chez Devoteam (IA agentique &amp; RSE). Voici mon archipel : chaque île est un de mes projets. Cliquez sur une île pour la survoler.</p>
     </div>
     <p class="kicker">LOUIS-MARIE PERRET DU CRAY · À BORD D'ELBA</p>
     <p id="hint" class="hint"></p>
@@ -87,15 +87,17 @@
   <div id="voyage" class="voyage" hidden>
     <div class="voy-in">
       <div class="voy-head">
-        <div><p class="p-k">CARTE DU VOYAGE</p><h2 class="voy-t">Où veux-tu aller ?</h2><p class="voy-s">Le parcours conseillé suit les numéros ; clique une étape pour y aller directement. La carte se replie en haut à droite.</p></div>
+        <div><p class="p-k">CARTE DU VOYAGE</p><h2 class="voy-t">Où veux-tu aller ?</h2><p class="voy-s">Trois îles, trois projets. Clique une étape pour y aller directement. Les pointillés suivent la traversée complète à bord d'Elba.</p></div>
         <button id="voyClose" class="pr-btn2 dark sm">Réduire ⤡</button>
       </div>
       <div id="voyMap" class="voy-map">
         <svg class="voy-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path id="voyPath" d="" fill="none" stroke="#B4412E" stroke-width="0.5" stroke-dasharray="1.6 1.2" vector-effect="non-scaling-stroke"/></svg>
-        <div class="voy-isle" style="left:24%;top:12%;width:42%;height:40%"></div>
-        <div class="voy-next" style="left:2%;top:4%">Prochaines îles · bientôt</div>
+        <div class="voy-isle" style="left:30%;top:3%;width:40%;height:52%"></div>
+        <div class="voy-isle" style="left:2%;top:4%;width:26%;height:34%"></div>
+        <div class="voy-isle rock" style="left:72%;top:4%;width:26%;height:34%"></div>
+        <div class="voy-band" style="left:2%;top:61%;width:96%;height:37%"><span>À BORD D'ELBA · LA TRAVERSÉE</span></div>
       </div>
-      <div class="voy-foot"><button id="voyAll" class="pr-btn2 dark sm"></button><button id="creditsBtn" class="pr-btn2 dark sm">Crédits</button><span class="voy-sp"></span><button id="voyStart" class="pr-btn">Suivre le parcours depuis le début</button></div>
+      <div class="voy-foot"><button id="voyAll" class="pr-btn2 dark sm"></button><button id="creditsBtn" class="pr-btn2 dark sm">Crédits</button><span class="voy-sp"></span><button id="voyArch" class="pr-btn2 dark sm">Vue de l'archipel</button><button id="voyText" class="pr-btn2 dark sm">Tout voir en 1 minute</button><button id="voyStart" class="pr-btn">⛵ La traversée</button></div>
     </div>
   </div>
 
@@ -114,6 +116,7 @@
         <li>Antenne : « Radio tower » par ocelotlmx (CC-BY 4.0)</li>
         <li>Maisons : « Slate Cottage » par howittworks · Immeuble : « PSX – Apartment » par Kasugay (Sketchfab)</li>
         <li>Arbres : island_tree_01 et pine_tree_01, Poly Haven (CC0)</li>
+        <li>Écran de la Carte vivante : fond OpenFreeMap, © OpenMapTiles, données © contributeurs OpenStreetMap</li>
       </ul>
       <button class="pr-btn sm" id="creditsClose">Fermer</button>
     </div>
@@ -121,11 +124,18 @@
 
   <p id="objText" class="sr-only" aria-live="polite"></p>
   <article id="texte" class="texte sr-only" aria-label="Version texte du site">
+    <button id="texteClose" class="pr-btn sm texte-close" hidden>← Revenir à l'archipel</button>
+    <p class="texte-k">TOUT VOIR EN UNE MINUTE</p>
     <h2>Louis-Marie Perret du Cray</h2>
     <p>Élève-ingénieur à l'ESILV (cycle ingénieur, 2024 – 2028), en alternance chez Devoteam, Group IT : IA agentique et RSE. Je construis les outils qui me manquent. Musicien (alto, violon) et marin sur Elba, un Flirt de 1977.</p>
-    <p class="texte-note" hidden>Votre navigateur n'affiche pas la 3D : voici la traversée en version texte.</p>
-    <h2>Île n° 1 · Insula</h2>
-    <p>Un outil pour choisir où acheter un appartement entre amis : 22 villes de l'Ouest comparées, les annonces relevées chaque soir, le rendement calculé sur 15 ans, et un serveur MCP pour l'interroger depuis une IA. <a href="https://insula.du-cray.eu/">Essayer Insula</a> · <a href="https://github.com/LM28000/immobilier-tool">le code</a></p>
+    <p class="texte-note" hidden>Votre navigateur n'affiche pas la 3D : voici le site en version texte.</p>
+    <h2>Mes projets</h2>
+    <h3>1 · Insula</h3>
+    <p>Un outil pour choisir où acheter un appartement entre amis. Il compare 22 villes de l'Ouest, relève les annonces chaque soir et calcule le rendement sur 15 ans. Un serveur MCP permet de l'interroger depuis une IA. JavaScript, MapLibre, Python, Supabase, Playwright. <a href="https://insula.du-cray.eu/">Essayer Insula</a> · <a href="https://github.com/LM28000/immobilier-tool">le code</a></p>
+    <h3>2 · Carte vivante</h3>
+    <p>Une carte 3D de la France en temps réel : trains (voiture par voiture), avions, bateaux, bus et métros, météo, qualité de l'air, énergie, séismes. Une frise remonte sept jours en arrière et rejoue tout. Un serveur Rust archive le temps réel, le site est en TypeScript (React, MapLibre, deck.gl). Elle tourne en permanence sur mon serveur maison. <a href="https://github.com/LM28000/openstreetmap">le code</a></p>
+    <h3>3 · Le serveur maison</h3>
+    <p>Un serveur chez moi, sous Debian, avec une trentaine de services dans Docker, chacun décrit dans un fichier versionné dans git. On y trouve un cloud privé, une IA locale (Ollama, n8n, Qdrant), une messagerie Matrix, un VPN (Headscale) et un SSO (Authelia), de la supervision (Grafana, Prometheus) et des sauvegardes chiffrées chaque nuit (Kopia). Un pare-feu ne laisse passer que le réseau local et le VPN.</p>
     <h2>Mon parcours</h2>
     <ol>
       <li>2020 – 2023 · Précigné : Académie musicale de Liesse, bac mention Bien (maths, NSI), 1er prix national des très jeunes altistes.</li>
@@ -149,7 +159,7 @@
   <noscript>
     <div class="nojs">
       <h1>Louis-Marie Perret du Cray</h1>
-      <p>Ce site est un monde marin en 3D : il a besoin de JavaScript. Première escale : <a href="https://insula.du-cray.eu/">Insula</a>, un outil pour choisir où acheter un appartement entre amis. <a href="assets/cv-louis-marie-perret-du-cray.pdf">Mon CV (PDF)</a> · <a href="mailto:louis-marie@du-cray.com">louis-marie@du-cray.com</a></p>
+      <p>Ce site est un archipel en 3D : il a besoin de JavaScript. Mes projets : <a href="https://insula.du-cray.eu/">Insula</a> (choisir où acheter un appartement entre amis), <a href="https://github.com/LM28000/openstreetmap">Carte vivante</a> (la France en temps réel) et mon serveur maison. <a href="assets/cv-louis-marie-perret-du-cray.pdf">Mon CV (PDF)</a> · <a href="mailto:louis-marie@du-cray.com">louis-marie@du-cray.com</a></p>
       <p><a href="https://github.com/LM28000">GitHub</a> · <a href="https://www.linkedin.com/in/louismarie-perret-du-cray/">LinkedIn</a></p>
     </div>
   </noscript>
@@ -160,6 +170,7 @@
 <script src="js/scene.js"></script>
 <script src="js/cabin.js"></script>
 <script src="js/cabin3d.js"></script>
+<script src="js/archipel.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
