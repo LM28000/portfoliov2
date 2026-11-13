@@ -79,7 +79,7 @@ Object.assign(Component.prototype, {
     });
     // étiquettes des îles (vue de l'archipel)
     this.isleLbl = {}; Object.keys(PR_ISLES).forEach((k) => { const I = PR_ISLES[k]; const el = document.createElement('button'); el.className = 'isle-lbl'; el.innerHTML = '<span class="il-k"></span><b></b><small></small><span class="il-go">survoler →</span>';
-      el.querySelector('.il-k').textContent = 'PROJET ' + I.n; el.querySelector('b').textContent = I.name; el.querySelector('small').textContent = I.line; el.onclick = () => this.visit(k); el.style.display = 'none'; this.layer.appendChild(el); this.isleLbl[k] = el; });
+      el.querySelector('.il-k').textContent = 'PROJET ' + I.n; el.querySelector('b').textContent = I.name; el.querySelector('small').textContent = I.line; el.onclick = () => this.visit(k); el.addEventListener('wheel', (e) => { e.preventDefault(); this.renderer.domElement.dispatchEvent(new WheelEvent('wheel', e)); }, { passive: false }); el.style.display = 'none'; this.layer.appendChild(el); this.isleLbl[k] = el; });
   },
   archView(instant) { const asp = (this.host && this.host.clientWidth / Math.max(1, this.host.clientHeight)) || 1.6, t25 = Math.tan(25 * Math.PI / 180);
     if (asp < 0.9) Object.assign(this.orbW, { tx: 70, tz: 10, ty: 0, yaw: Math.PI / 2, pitch: 1.1, dist: Math.min(1300, Math.max(720, 170 / (t25 * asp))) }); // téléphone : les îles l'une sous l'autre

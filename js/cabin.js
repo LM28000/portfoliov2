@@ -13,7 +13,7 @@ const PR_CABIN = {
     kicker: 'LIVRE DE BORD · TA TRAVERSÉE', title: 'Récap du voyage',
     list: [
       ['Départ', 'Le ponton, à bord d’Elba.'],
-      ['Escale n° 1 · Insula', 'Choisir où acheter, entre amis : 22 villes, les annonces du soir, 15 ans de calcul. Démo au cinéma, app dans la longue-vue.'],
+      ['Escale n° 1 · Insula', 'Choisir où acheter, entre amis : 22 villes, les annonces du soir, 15 ans de calcul. Le studio à vendre sur le quai, la démo et l’app sur son ordinateur.'],
       ['Escale n° 2 · Carte vivante', 'La France en direct : trains, avions, météo, sur une carte qui tourne chez moi.'],
       ['Escale n° 3 · Le serveur', 'Mon serveur maison : une trentaine de services, tous décrits dans git.']
     ],
@@ -96,13 +96,15 @@ Object.assign(Component.prototype, {
   // ---------- carte du voyage : tous les lieux, le parcours suggéré, et un saut vers n'importe lequel
   goTo(k) {
     this.setState({ showMap: false });
+    // depuis le studio : on en sort d'abord (caméra d'extérieur), sauf pour y revenir
+    if (this.st().phase === 'studio') { if (k === 'studio' || k === 'insula') return; this.stuUnfocus(true); if (this.stu && this.stu.video) this.stu.video.pause(); this.cam.near = 0.3; this.cam.fov = 50; this.cam.updateProjectionMatrix(); this.setState({ phase: 'accoste', stuFocus: null, showApp: false }); this.overview(); }
     // les îles, le ponton, l'archipel : on y va à vue (traversée express), sans fondu au noir
-    const sub = { cinema: 'insula', longuevue: 'insula', archi: 'insula' }[k], dest = sub || k;
+    const sub = { studio: 'insula', archi: 'insula' }[k], dest = sub || k;
     if (['archipel', 'insula', 'cartevivante', 'serveur', 'ponton'].includes(dest)) {
       const run = () => { const st = this.st(); if (st.plan) this.setPlan(false); this.cruiseP = null; this.route = []; this.autoDock = false; this.focused = null; clearTimeout(this.appT);
         this.setState({ showApp: false, panel: null, ask: null, focus: null, auto: false });
         if (dest === 'archipel') { this.archipel(); return; }
-        this.visit(dest, sub ? () => { if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); } : null); };
+        this.visit(dest, sub ? () => { if (k === 'studio') this.enterStudio(true); if (k === 'archi') this.setPlan(true); } : null); };
       if (this.st().phase === 'cabine') this.fade(() => { this.cabUnfocus(true); this.orbitBoat(); Object.assign(this.orb, this.orbW); this.setState({ phase: 'nuit', panel: null }); run(); }); else run();
       return;
     }
@@ -117,7 +119,7 @@ Object.assign(Component.prototype, {
       if (k === 'archipel') { this.archipel(true); return; }
       if (k === 'cartevivante' || k === 'serveur') { this.setNightNow(0); this.flyTo(k); Object.assign(this.orb, this.orbW); return; }
       if (k === 'ponton') { this.setNightNow(0); Object.assign(this.b, { x: this.P0.x + 3.0, z: this.P0.z - 4, h: Math.PI / 2, v: 0, turn: 0 }); this.camYaw = 0; this.camPitch = 0.28; this.setState({ phase: 'ponton' }); this.say(PR_RADIO.ponton); return; }
-      if (['insula', 'cinema', 'longuevue', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'cinema' || k === 'longuevue') this.focus(k); if (k === 'archi') this.setPlan(true); return; }
+      if (['insula', 'studio', 'archi'].includes(k)) { this.setNightNow(0); atQuay(); this.docked(); if (k === 'studio') this.enterStudio(true); if (k === 'archi') this.setPlan(true); return; }
       this.setNightNow(1); const far = ['serveur', 'cartevivante'].find((i) => this.berthed(i)); if (far) { this.prevPhase = 'escale'; this.nightIsle = far; } else { atQuay(); this.prevPhase = 'accoste'; } this.orbitBoat(); Object.assign(this.orb, this.orbW);
       if (k === 'nuit') { this.orbitBoat(); this.setState({ phase: 'nuit' }); this.say("La nuit est tombée sur Insula. Descends dans la cabine quand tu veux."); return; }
       const obj = { carte: 'carte', coffre: 'coffre', recap: 'livre', bouteilles: 'bouteilles', apropos: 'photo', contact: 'vhf' }[k];

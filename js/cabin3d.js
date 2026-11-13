@@ -53,7 +53,7 @@ Object.assign(Component.prototype, {
   wrap(g, text, maxW) { const words = text.split(' '), lines = []; let cur = ''; words.forEach((w) => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; },
   bookSpread(n) { const t = this.bookSpread0(n); t.flipY = false; return t; },
   bookSpread0(n) {
-    const v = this.visitedSet || {}; const log = [['ponton', 'Appareillé du ponton.'], ['insula', 'Accosté à Insula.'], ['cinema', 'Vu la démo au cinéma.'], ['longuevue', "Essayé l'app à la longue-vue."], ['archi', 'Visité les coulisses.'], ['cartevivante', 'Survolé la Carte vivante.'], ['serveur', 'Visité la salle des machines.'], ['cabine', 'Descendu dans la cabine.'], ['carte', 'Lu la carte du parcours.'], ['coffre', 'Ouvert le coffre.'], ['bouteilles', 'Débouché une bouteille.'], ['apropos', 'Retourné la photo.'], ['contact', 'Allumé la VHF.']].filter(([k]) => v[k] || k === 'cabine');
+    const v = this.visitedSet || {}; const log = [['ponton', 'Appareillé du ponton.'], ['insula', 'Accosté à Insula.'], ['panneau', 'Lu le panneau À vendre.'], ['studio', 'Visité le studio témoin.'], ['app', "Essayé l'app sur l'ordinateur."], ['carnet', 'Lu le carnet des amis.'], ['archi', 'Visité les coulisses.'], ['cartevivante', 'Survolé la Carte vivante.'], ['serveur', 'Visité la salle des machines.'], ['cabine', 'Descendu dans la cabine.'], ['carte', 'Lu la carte du parcours.'], ['coffre', 'Ouvert le coffre.'], ['bouteilles', 'Débouché une bouteille.'], ['apropos', 'Retourné la photo.'], ['contact', 'Allumé la VHF.']].filter(([k]) => v[k] || k === 'cabine');
     return this.paperTex(2048, 1400, (g, W, H) => {
       g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(W / 2 - 6, 0, 12, H);
       g.strokeStyle = 'rgba(90,120,160,0.35)'; g.lineWidth = 2; for (const x0 of [110, W / 2 + 90]) for (let k = 0; k < 17; k++) { g.beginPath(); g.moveTo(x0, 300 + k * 62); g.lineTo(x0 + W / 2 - 200, 300 + k * 62); g.stroke(); }
@@ -135,6 +135,12 @@ Object.assign(Component.prototype, {
   cabTurn(base, dyaw, dpitch) { const C = this.cabin, T = window.THREE, d = base.clone().sub(C.cam.position), L = d.length() || 1;
     const yaw = Math.atan2(d.x, d.z) + dyaw, pitch = Math.max(-1.2, Math.min(1.2, Math.asin(Math.max(-1, Math.min(1, d.y / L))) + dpitch));
     C.look.copy(C.cam.position).add(new T.Vector3(Math.sin(yaw) * Math.cos(pitch) * L, Math.sin(pitch) * L, Math.cos(yaw) * Math.cos(pitch) * L)); },
+  // un objet choisi : on tourne autour, on s'approche ou on recule
+  cabCanOrbit() { const C = this.cabin; return C && C.focus && C.camT >= 1; },
+  cabOrbit(p0, dyaw, dpitch) { const C = this.cabin, T = window.THREE, v = p0.clone().sub(C.look), L = v.length() || 0.5;
+    const yaw = Math.atan2(v.x, v.z) - dyaw, pitch = Math.max(-0.4, Math.min(1.35, Math.asin(Math.max(-1, Math.min(1, v.y / L))) + dpitch));
+    C.cam.position.copy(C.look).add(new T.Vector3(Math.sin(yaw) * Math.cos(pitch) * L, Math.sin(pitch) * L, Math.cos(yaw) * Math.cos(pitch) * L)); C.cam.up.set(0, 1, 0); },
+  cabDolly(f) { const C = this.cabin, v = C.cam.position.clone().sub(C.look), L = Math.max(0.15, Math.min(1.6, v.length() * f)); C.cam.position.copy(C.look).addScaledVector(v.normalize(), L); },
   cabZoom(f) { const C = this.cabin; C.cam.fov = Math.max(32, Math.min(78, C.cam.fov * f)); C.cam.updateProjectionMatrix(); },
   cabSetView(name, instant) {
     const C = this.cabin, T = window.THREE, v = PR_CAB_VIEWS[name] || PR_CAB_VIEWS.idle;

@@ -1,51 +1,16 @@
 /* Monde 3D : mer, Elba, île d'Insula. Repris du prototype du canvas (Round 11). */
 
-const PR_TREES = [[1,-31.3,5.8,6.66,2.16,0.8],[0,-52.2,0.9,3.37,0.95,1.28],[0,-1.4,-36.0,2.51,3.6,1.28],[1,-53.8,15.8,1.29,5.16,1.0],[0,-4.7,-26.0,4.77,1.37,1.15],[2,-26.0,18.6,7.45,5.47,0.76],[1,-51.3,-4.0,3.8,0.86,0.71],[0,-33.0,-32.6,2.33,1.47,1.02],[2,36.5,-8.4,5.8,3.02,0.76],[0,59.3,-4.6,3.4,0.33,1.07],[0,-48.8,-10.7,4.18,1.31,0.94],[2,55.7,8.0,4.58,5.33,0.65],[2,60.4,-2.7,3.49,0.91,0.72],[1,55.3,-10.8,3.39,4.76,0.97],[0,-24.7,11.2,7.49,1.64,1.25],[0,-16.3,-26.0,5.31,4.89,1.17],[3,-33.4,1.4,6.44,6.21,0.89],[3,-37.5,8.2,6.18,5.88,0.78],[1,-36.2,9.7,6.24,3.01,0.94],[2,-50.8,12.6,2.38,4.71,0.91],[3,-2.7,-25.1,5.23,5.94,0.63],[2,-57.8,7.1,1.77,0.92,0.92],[1,19.2,-11.7,6.71,0.13,0.82],[0,-48.6,19.5,2.51,5.47,1.12],[3,39.9,-22.6,2.98,3.15,0.69],[1,-45.2,-27.2,1.82,2.76,0.61],[2,36.6,-25.6,2.9,0.76,0.85],[1,-53.6,14.3,1.5,4.93,0.82],[0,-48.2,4.7,4.04,0.27,1.0],[0,-49.2,-3.7,4.2,5.73,1.28],[3,54.0,15.6,7.3,5.61,0.97],[2,-36.4,-4.1,5.98,2.78,0.65],[0,-52.3,-20.3,2.14,1.9,1.01],[3,-46.2,21.7,2.84,5.54,0.66],[0,57.2,-21.9,1.11,3.06,1.1],[0,60.0,26.0,1.27,6.24,1.25],[3,-17.6,-31.9,3.37,3.48,0.61],[3,-7.3,-37.7,1.86,1.86,0.81]];
+const PR_TREES = [[1,18.5,-33.4,3.62,3.66,0.64],[0,50.1,-22.3,1.97,0.44,1.12],[1,-50.1,-5.9,4.25,1.4,0.65],[1,15.6,35.0,4.73,0.31,0.83],[0,-34.1,4.4,6.52,0.91,1.04],[1,38.7,-25.0,2.69,1.18,0.83],[1,-49.3,16.6,2.38,1.29,0.62],[3,22.1,-5.7,6.74,5.8,0.79],[0,-16.9,-19.7,6.38,1.53,1.25],[3,9.1,2.0,7.53,1.81,0.89],[0,-10.0,20.1,8.19,2.65,1.37],[3,7.1,22.6,8.06,2.2,0.74],[0,-0.4,23.2,8.08,5.93,1.32],[0,-3.2,12.8,8.04,1.94,1.27],[2,9.5,14.2,7.94,2.42,0.71],[0,-4.7,-26.0,4.77,1.37,1.15],[2,-26.0,18.6,7.45,5.47,0.76],[1,-51.3,-4.0,3.8,0.86,0.71],[2,-8.5,3.9,7.83,4.29,0.99],[0,-14.6,-21.1,6.18,1.46,0.99],[1,-32.6,-1.2,6.6,1.77,0.67],[1,-43.4,2.7,4.74,5.99,0.83],[1,23.3,1.2,7.27,4.65,0.86],[1,-5.3,29.0,7.48,2.51,0.76],[0,-48.5,10.5,3.42,6.18,1.0],[1,-7.3,-30.5,4.39,0.0,0.62],[0,-16.7,-37.1,2.04,0.93,1.21],[3,-30.3,-11.9,4.07,0.72,0.79],[2,-1.5,37.4,4.97,0.54,0.79],[3,-48.7,-12.3,4.05,4.35,0.79],[1,2.0,-23.1,5.86,4.33,0.74],[3,50.7,20.2,9.38,5.42,0.99],[3,24.0,-18.7,5.95,2.23,0.96],[1,-33.9,3.3,6.41,1.4,0.73],[2,43.2,23.9,10.7,1.42,0.9],[0,2.2,-11.3,7.42,4.96,1.39],[1,-3.4,-24.0,5.38,2.81,0.98],[0,55.7,-10.6,3.42,2.95,0.95],[1,-19.9,-1.4,6.86,3.01,0.94],[0,18.7,23.4,7.24,0.75,1.32],[0,-13.6,16.5,7.71,1.12,1.14],[2,35.4,-13.1,5.33,4.67,0.79],[0,11.1,-2.7,7.46,3.74,1.21],[0,-3.1,34.2,6.53,0.82,1.17],[0,18.3,2.1,7.48,5.47,1.12],[3,39.9,-22.6,2.98,3.15,0.69],[1,32.3,-13.6,5.74,0.82,0.77],[2,50.2,-11.4,3.7,5.12,0.86],[1,2.1,25.6,7.61,0.95,0.65],[0,1.3,29.2,7.54,4.87,1.2],[0,14.6,-29.7,4.09,3.26,1.06],[0,6.8,22.2,8.11,0.36,1.34],[0,-49.2,-3.7,4.2,5.73,1.28],[1,-6.9,8.8,7.62,1.25,0.84],[2,-27.3,0.6,7.29,1.56,0.8],[3,2.8,29.4,7.43,5.61,0.97],[2,-36.4,-4.1,5.98,2.78,0.65],[0,-52.3,13.3,1.89,0.97,1.35],[0,26.5,12.5,8.51,0.86,1.03],[0,-3.9,19.3,8.19,3.06,1.1],[0,60.0,26.0,1.27,6.24,1.25],[3,-11.8,-6.2,7.64,4.54,0.73],[2,-58.8,4.2,2.26,2.41,0.88],[0,2.1,-16.0,7.08,5.77,0.96],[0,-33.2,29.4,4.72,0.25,1.03],[0,34.1,-18.0,5.17,5.34,1.31],[2,21.5,34.9,3.0,5.77,0.66],[0,8.6,15.7,7.98,5.02,1.04],[3,-38.8,30.9,2.88,3.98,0.98],[3,44.4,-3.6,5.16,2.62,1.0],[0,50.8,9.5,7.04,1.5,1.16],[0,-23.0,-15.2,6.53,3.14,1.04],[2,6.2,-24.3,5.57,2.81,0.7],[2,19.4,11.7,7.81,5.58,0.82],[0,57.6,-15.0,2.17,2.15,1.39],[0,40.7,16.2,13.76,2.18,1.1],[3,-52.5,18.8,1.16,0.35,0.77],[1,20.2,-9.3,6.9,1.77,0.87],[2,-5.0,-26.8,4.62,2.29,0.6],[3,-20.9,37.9,2.92,6.06,0.7],[0,-23.3,-11.2,6.95,0.53,1.07],[0,-27.1,12.2,7.38,0.03,1.15],[0,-12.3,-35.8,2.06,3.95,1.05],[1,43.2,-27.0,1.62,2.05,0.76],[0,27.4,11.2,8.51,4.49,1.31],[1,1.6,-5.5,7.43,3.29,0.66],[0,0.5,26.2,7.87,3.67,1.31],[0,48.1,14.3,11.1,0.26,0.94],[2,16.8,35.9,3.75,3.51,0.93],[0,15.6,9.9,7.56,0.02,1.14],[1,36.4,19.4,12.36,0.58,0.96],[2,3.2,19.2,7.89,0.47,0.7],[0,-28.7,17.9,7.09,4.08,1.02],[0,-4.9,27.0,7.73,4.29,1.14],[0,32.7,9.1,9.02,0.93,0.94],[3,-30.1,19.0,6.92,0.84,0.85],[0,-2.2,-1.1,7.83,4.24,1.25],[2,-25.6,1.3,7.18,4.82,0.79],[3,60.4,3.8,3.47,5.88,0.99],[1,-59.1,-3.2,2.45,2.82,0.99],[1,54.5,-22.6,1.74,4.69,0.64],[1,-29.2,-11.0,5.44,3.19,0.93],[0,47.4,15.9,12.03,5.5,1.15],[2,-13.0,-26.7,4.93,2.55,0.87],[2,27.8,-6.6,6.41,5.28,0.73],[0,41.5,-29.7,1.19,5.66,1.26],[2,-25.7,-10.0,6.61,5.46,0.76],[3,31.3,27.7,6.35,5.24,0.64],[0,-26.2,34.1,5.15,2.74,1.39],[2,-22.6,21.4,7.59,5.1,0.95],[1,16.0,32.3,5.73,4.52,0.82],[3,-6.0,19.8,8.26,5.73,0.79],[2,6.1,-25.7,5.19,1.87,0.74],[3,-29.4,12.2,7.11,4.2,0.79],[0,-46.5,11.2,4.18,5.69,1.0],[3,-0.4,-21.9,6.1,2.83,1.0],[0,-50.1,-12.4,3.74,2.31,1.06],[0,37.9,-23.3,3.18,2.59,1.27],[2,-10.5,1.9,7.65,4.72,0.71]];
 // [image, largeur, hauteur, zmin] des imposteurs (rendus Blender, marge 3 %)
 const PR_TREE_IMG = [['assets/arbre_island_tree_01.webp', 4.76, 5.03, -0.02], ['assets/arbre_pine_tree_01_a.webp', 7.6, 20.37, -0.08], ['assets/arbre_pine_tree_01_b.webp', 7.22, 14.88, -0.09], ['assets/arbre_pine_tree_01_c.webp', 7.63, 17.54, -0.09]];
-// lieux de l'île (repère Blender x, y, z)
-const PR_PLACES = [
- { k: 'quai', n: 1, name: 'Le quai', p: [-56, -42, 6], title: 'Le quai · les sources',
-   story: ["Ici arrive tout ce qui nourrit Insula : une quinzaine de sources publiques — ventes réelles, quartiers, DPE, copropriétés, risques, transports, commerces — et les annonces du jour."],
-   tech: ["DVF (DGFiP) · IRIS et urbanisme (IGN) · DPE (ADEME) · Insee · RNIC (Anah) · Géorisques · DGAC (bruit) · GTFS · SNCF · OpenStreetMap · SIES · Sitadel · cadastre · zonage TLV.", "Une vingtaine de scripts Python, un par source ; chaque fichier garde sa licence."] },
- { k: 'entrepot', n: 2, name: "L'entrepôt", p: [-30, -16, 14], title: "L'entrepôt · le relevé du soir",
-   story: ["Chaque soir, une routine relève les nouvelles annonces dans les 22 villes et lit la fiche complète de chacune : description, photos, charges, étage, DPE."],
-   tech: ["releve-du-jour.json → fiches.py todo → fiches-bienici.js (150 par soir) → maj_annonces.py → fiches.py merge → build.py (refuse une page cassée) → supabase_annonces.py push.", "Publication par sync.sh (launchd) : rien ne part si un test échoue."] },
- { k: 'atelier', n: 3, name: "L'atelier", p: [-8, -4, 18], title: "L'atelier · le calcul",
-   story: ["Le moteur fait les comptes : crédit, charges, impôts du meublé, revente dans quinze ans. Au bout, un seul chiffre : le rendement réel de notre apport."],
-   tech: ["Mensualité, assurance, notaire · LMNP réel ou micro, amortissements · loyer plafonné en zone tendue · interdiction de louer selon le DPE · revente selon la tendance de la ville · TRI sur 15 ans en 3 scénarios.", "Vérifié par tests/unit.js à chaque envoi."] },
- { k: 'insula', n: 4, name: "L'insula", p: [14, 2, 27], title: "L'insula · l'app", try: true,
-   story: ["Le cœur : une carte des 22 villes qui descend jusqu'aux quartiers, puis aux annonces, puis aux immeubles en 3D. Et pour chaque bien, une fiche qui dit tout — et ce qu'il faut vérifier avant de visiter."],
-   tech: ["Refonte v3 : Explorer · Nos biens · Projet · Réglages. MapLibre GL, JavaScript sans framework, une page assemblée par build.py, installable et hors ligne (service worker)."] },
- { k: 'village', n: 5, name: 'Le village', p: [44, 24, 12], title: 'Le village · 22 villes',
-   story: ["Vingt-deux maisons, une par ville comparée, de l'Ouest de la France. Même règle pour toutes : quand une donnée manque, l'app le dit."],
-   tech: ["« Une seule règle par donnée, la même pour toutes les villes. » Donnée absente : le bien prend le quartier, le quartier prend la ville. Aucune exception par ville dans le code."] },
- { k: 'commune', n: 6, name: 'La maison commune', p: [2, 20, 18], title: 'La maison commune · entre associés',
-   story: ["Nos biens : la liste commune des associés, avec nos avis, nos visites, nos offres. Et la situation de chacun (impôts, autres crédits), pour que le calcul soit le nôtre."],
-   tech: ["Supabase : tables « Nos biens », « annonces », « retours » ; vue en lecture seule annonces_publiques.", "Code de groupe après le « # » du lien : jamais envoyé au serveur ; la base n'en garde que l'empreinte."] },
- { k: 'antenne', n: 7, name: "L'antenne", p: [42, 18, 42], title: "L'antenne · parler à une IA",
-   story: ["On peut aussi poser ses questions à une IA : « quoi de neuf à Tours ? », et elle répond avec le calcul et les liens des annonces."],
-   tech: ["Serveur MCP (Node) : 10 outils — classement_villes, quartiers, annonces, fiche_annonce, nouveautes, simuler_bien, nos_biens, ajouter_bien, changer_statut, reglages. Même moteur de calcul que la page."] }
-];
-// ce que chaque lieu montre sur l'île (jour) et son cartouche (plan)
-const PR_VIS = {
- quai: { radio: "Le quai : ici arrivent les données. Chaque caisse, c'est une source publique — ventes réelles, quartiers, DPE, transports — plus les annonces du jour.", cart: ['1 · LE QUAI · SOURCES', 'DVF · IGN IRIS · ADEME DPE', 'Insee · RNIC · Géorisques', 'GTFS · SNCF · OSM · SIES', '~20 scripts Python'] },
- entrepot: { radio: "L'entrepôt : chaque soir, une routine relève les nouvelles annonces des 22 villes et lit leur fiche complète. Regarde les caisses qui montent du quai.", cart: ['2 · RELEVÉ DU SOIR', 'routine Claude · 22 villes', 'fiches.py → maj_annonces.py', '150 fiches / soir max', 'build.py refuse une page cassée'] },
- atelier: { radio: "L'atelier fait les comptes : crédit, impôts du meublé, revente dans quinze ans. Au tableau, la fiche d'un vrai studio à Tours.", cart: ['3 · MOTEUR DE CALCUL', 'crédit · LMNP · zone tendue', 'DPE · revente à 15 ans', 'TRI en 3 scénarios', 'tests/unit.js'] },
- insula: { radio: "L'insula, c'est l'app. Sur l'écran : de la carte jusqu'à la fiche d'un bien. Et tu peux l'essayer pour de vrai avec la longue-vue, en bas à droite.", cart: ['4 · L’APP (v3)', 'Explorer · Nos biens', 'Projet · Réglages', 'MapLibre GL · JS sans framework', 'PWA hors ligne'] },
- village: { radio: "Le village : vingt-deux maisons pour vingt-deux villes de l'Ouest. Sur le panneau, la carte qui les compare.", cart: ['5 · 22 VILLES', 'une règle par donnée', 'la même pour toutes', 'donnée absente → niveau au-dessus', 'Playwright : 55 tests e2e'] },
- commune: { radio: "La maison commune, c'est entre associés : la liste de nos biens, nos avis, nos visites, et la situation de chacun pour que le calcul soit le nôtre.", cart: ['6 · BASE PARTAGÉE', 'Supabase (Postgres)', 'vue annonces_publiques', 'code de groupe après « # »', 'jamais envoyé au serveur'] },
- antenne: { radio: "L'antenne parle aux IA : on demande « quoi de neuf à Tours ? » et on reçoit le calcul et les liens des annonces.", cart: ['7 · SERVEUR MCP', '10 outils (Node)', 'fiche_annonce · nouveautes', 'simuler_bien · nos_biens…', 'même moteur que la page'] }
-};
 const PR_RADIO = {
  ponton: "Elba, Elba, ici Louis-Marie. Bienvenue à bord ! C'est toi qui barres, moi je te guide à la radio. La carte marine, en haut à droite, montre tout le voyage. Quand tu es prêt, largue les amarres.",
  mer: "Cap au nord : l'île droit devant, c'est Insula, mon premier projet. Barre avec les flèches (ou ZQSD), ou clique sur l'île : le pilote auto t'y emmène.",
- approche: "Tu vois le quai, sur la gauche de l'île ? Approche doucement, je t'aide à accoster.",
- accoste: "Bien accosté ! Je voulais acheter un appartement avec des amis : il fallait comparer des villes, des quartiers, des annonces, avec des critères qui comptent vraiment. Alors j'ai construit Insula. Va voir la démo au cinéma en plein air, puis essaie l'app avec la longue-vue.",
- cinema: "Installe-toi : en une minute, tu vois comment on passe de la carte des villes à la fiche d'un studio, avec son vrai rendement sur quinze ans.",
- longuevue: "Regarde dans la longue-vue : c'est l'app pour de vrai. Tu peux t'en servir, rien ne casse. Reviens sur l'île quand tu veux.",
+ approche: "Tu vois l'immeuble blanc sur le quai, avec le panneau rouge au balcon ? C'est là. Approche doucement, je t'aide à accoster.",
+ accoste: "Bien accosté ! Avec des amis, on voulait acheter un petit appartement à louer. Il fallait comparer des villes, des quartiers, des annonces. Alors j'ai construit Insula. Le studio du premier est à vendre : monte le visiter, la porte est ouverte.",
+ panneau: "Studio de 18 mètres carrés, 9,4 % par an sur quinze ans, revente comprise. Ce chiffre, c'est Insula qui l'a calculé. Monte le voir : la porte est en bas, à droite.",
  archi: "Les coulisses : chaque soir, une routine relève les annonces, les fiches sont lues, le moteur fait les comptes, et rien n'est publié sans passer les tests. Une IA peut même interroger l'app.",
- plan: "Voilà l'envers du décor : chaque bâtiment est une brique du système, et les points lumineux suivent le trajet de la donnée. Clique sur un cartouche.",
+ plan: "Voilà l'envers du décor : le chemin de la donnée, des sources publiques jusqu'à l'app.",
  lieu: "Regarde bien, c'est ici que ça se passe."
 };
 const PR_CARNET = { kicker: 'CARNET DU PROJET · ÎLE N° 1', title: 'Insula',
@@ -58,6 +23,7 @@ class Component extends DCLogic {
 componentDidMount() { this.reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; this.narrow = innerWidth <= 760; try { this.visitedSet = JSON.parse(localStorage.getItem('elba-escales') || '{}'); } catch (e) { this.visitedSet = {}; } this.setState({ loading: true, loadMsg: 'chargement des modèles…', phase: 'archipel', radio: '', radioFrom: 'LOUIS-MARIE', showCard: false, plan: false, auto: false }); this.say(PR_RADIO.archipel); this.init(); }
 componentWillUnmount() { clearTimeout(this.retry); clearInterval(this.typer); cancelAnimationFrame(this.raf); if (this.ro) this.ro.disconnect(); if (this.kd) { window.removeEventListener('keydown', this.kd); window.removeEventListener('keyup', this.ku); } if (this.renderer) { this.renderer.dispose(); const c = this.renderer.domElement; if (c.parentNode) c.parentNode.removeChild(c); } }
 st() { return this.state || {}; }
+gestInsula() { try { return localStorage.getItem('elba-gestes') !== 'classique'; } catch (e) { return true; } }
 say(text, from, noLog) {
  if (!noLog) { this.radioLog = (this.radioLog || []).concat([[text, from || 'LOUIS-MARIE']]).slice(-6); this.radioIdx = this.radioLog.length - 1; }
  clearInterval(this.typer); let i = 0;
@@ -122,10 +88,11 @@ init() {
  const ray = new T.Raycaster(), ndc = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0);
  let down = null;
  r.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
- r.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: e.button === 2 || e.shiftKey, o: Object.assign({}, this.orb), cl: this.cabin ? this.cabin.look.clone() : null }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
+ r.domElement.addEventListener('pointerdown', (e) => { try { r.domElement.setPointerCapture(e.pointerId); } catch (er) {} document.body.classList.add('dragging'); down = { x: e.clientX, y: e.clientY, yaw: this.camYaw, pitch: this.camPitch, moved: false, pan: this.gestInsula() ? !(e.button === 2 || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) : (e.button === 2 || e.shiftKey), o: Object.assign({}, this.orb), cl: this.cabin ? this.cabin.look.clone() : null, cp: this.cabin ? this.cabin.cam.position.clone() : null, sl: this.stu ? this.stu.look.clone() : null, sp: this.cam.position.clone() }; if (this.orbitPh(this.st().phase)) Object.assign(this.orbW, { tx: this.orb.tx, tz: this.orb.tz, ty: this.orb.ty, yaw: this.orb.yaw, pitch: this.orb.pitch, dist: this.orb.dist }); });
  r.domElement.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 5) down.moved = true;
   const phx = this.st().phase;
-  if (phx === 'cabine') { if (down.moved && down.cl && this.cabCanLook()) this.cabTurn(down.cl, dx * 0.005, dy * 0.004); return; }
+  if (phx === 'cabine') { if (down.moved && down.cl && this.cabCanLook()) this.cabTurn(down.cl, dx * 0.005, dy * 0.004); else if (down.moved && down.cp && this.cabCanOrbit()) this.cabOrbit(down.cp, dx * 0.006, dy * 0.004); return; }
+  if (phx === 'studio') { if (down.moved && down.sl && this.stuCanLook()) this.stuTurn(down.sl, dx * 0.005, dy * 0.004); else if (down.moved && this.stuCanOrbit()) this.stuOrbit(down.sp, dx * 0.006, dy * 0.004); return; }
   if (this.orbitPh(phx)) { const o = this.orbW, O = this.orb, d0 = down.o;
    if (down.pan) { // clic droit / Maj + glisser = déplacer : le point saisi reste sous le curseur
     const rc = r.domElement.getBoundingClientRect(); const hitAt = (px, py) => { ndc.set(((px - rc.left) / rc.width) * 2 - 1, -((py - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam); const pl = new T.Plane(new T.Vector3(0, 1, 0), -O.ty); const h = new T.Vector3(); return ray.ray.intersectPlane(pl, h) ? h : null; };
@@ -135,30 +102,36 @@ init() {
    return; }
   this.camYaw = down.yaw - dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, down.pitch + dy * 0.004)); });
  r.domElement.addEventListener('wheel', (e) => { e.preventDefault(); const ph = this.st().phase; const isle = this.orbitPh(ph);
-  const pad = !e.ctrlKey && e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || (Math.abs(e.deltaY) < 40 && e.deltaY % 1 !== 0));
-  if (ph === 'cabine') { if (!this.cabCanLook()) return; if (pad) this.cabTurn(this.cabin.look.clone(), e.deltaX * 0.005, e.deltaY * 0.004); else this.cabZoom(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))) * 0.0015)); return; }
+  const tp = !e.ctrlKey && e.deltaMode === 0 && (Math.abs(e.deltaX) > 0.5 || (Math.abs(e.deltaY) < 40 && e.deltaY % 1 !== 0)); const ins = this.gestInsula(); const pad = !ins && tp, mul = ins && tp ? 2 : 1;
+  if (ph === 'studio' && this.stuCanOrbit()) { if (pad) this.stuOrbit(this.cam.position.clone(), -e.deltaX * 0.005, -e.deltaY * 0.004); else this.stuDolly(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1) * mul)) * 0.0015)); return; }
+  if (ph === 'cabine' && this.cabCanOrbit()) { if (pad) this.cabOrbit(this.cabin.cam.position.clone(), -e.deltaX * 0.005, -e.deltaY * 0.004); else this.cabDolly(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1) * mul)) * 0.0015)); return; }
+  if (ph === 'studio') { if (!this.stuCanLook()) return; if (pad) this.stuTurn(this.stu.look.clone(), e.deltaX * 0.005, e.deltaY * 0.004); else this.stuZoom(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1) * mul)) * 0.0015)); return; }
+  if (ph === 'cabine') { if (!this.cabCanLook()) return; if (pad) this.cabTurn(this.cabin.look.clone(), e.deltaX * 0.005, e.deltaY * 0.004); else this.cabZoom(Math.exp(Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1) * mul)) * 0.0015)); return; }
   if (pad) { // deux doigts sur le trackpad : pivoter, comme en glissant
    const dx = e.deltaX, dy = e.deltaY;
    if (isle) { const O = this.orb, o = this.orbW; o.yaw = O.yaw = O.yaw - dx * 0.006; o.pitch = O.pitch = Math.max(0.12, Math.min(1.35, O.pitch + dy * 0.004)); this.placeCam(); }
    else { this.camYaw -= dx * 0.005; this.camPitch = Math.max(0.05, Math.min(1.45, this.camPitch + dy * 0.004)); }
    return; }
-  const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1))); const f = Math.exp(d * 0.0012);
+  const d = Math.max(-60, Math.min(60, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * (e.ctrlKey ? 2.5 : 1) * mul)); const f = Math.exp(d * 0.0012);
   if (isle) { const L = this.distLim(ph); const want = this.orbW.dist * f; this.orbW.dist = Math.max(L[0], Math.min(L[1], want));
    if ((ph === 'accoste' || ph === 'escale') && want > L[1]) { this.zAcc = (this.zAcc || 0) + d; if (this.zAcc > 120) { this.zAcc = 0; this.archipel(); } } else if (ph === 'archipel' && want < L[0]) { this.zAcc = (this.zAcc || 0) - d; const k = this.islesHit(e.clientX, e.clientY); if (k && this.zAcc > 120) { this.zAcc = 0; this.visit(k); } } else this.zAcc = 0; } else this.camDist = Math.max(8, Math.min(70, this.camDist * f)); }, { passive: false });
   // pincer à deux doigts (écran tactile) : zoom, partout
  const ptrs = new Map(); let pinch = null;
- r.domElement.addEventListener('pointerdown', (e) => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) { down = null; const [a, b] = [...ptrs.values()]; pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, dist: this.orbW.dist, cam: this.camDist, fov: this.cabin ? this.cabin.cam.fov : 62, out: false }; } });
+ r.domElement.addEventListener('pointerdown', (e) => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) { down = null; const [a, b] = [...ptrs.values()]; pinch = { a0: Math.atan2(b.y - a.y, b.x - a.x), yaw0: this.orbW.yaw, d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, dist: this.orbW.dist, cam: this.camDist, fov: this.st().phase === 'studio' ? this.cam.fov : this.cabin ? this.cabin.cam.fov : 62, out: false }; } });
  r.domElement.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (!pinch || ptrs.size < 2) return;
   const [a, b] = [...ptrs.values()], k = Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0, ph = this.st().phase;
-  if (ph === 'cabine') { if (this.cabCanLook()) { this.cabin.cam.fov = Math.max(32, Math.min(78, pinch.fov / k)); this.cabin.cam.updateProjectionMatrix(); } }
-  else if (this.orbitPh(ph)) { const L = this.distLim(ph), want = pinch.dist / k; this.orbW.dist = Math.max(L[0], Math.min(L[1], want)); if ((ph === 'accoste' || ph === 'escale') && want > L[1] * 1.3 && !pinch.out) { pinch.out = true; this.archipel(); } }
+  if (ph === 'studio') { if (this.stuCanOrbit()) { if (!pinch.sd) pinch.sd = this.cam.position.distanceTo(this.stu.look); this.stuDolly(pinch.sd / k / this.cam.position.distanceTo(this.stu.look)); } else if (this.stuCanLook()) { this.cam.fov = Math.max(30, Math.min(70, pinch.fov / k)); this.cam.updateProjectionMatrix(); } }
+  else if (ph === 'cabine' && this.cabCanOrbit()) { if (!pinch.cd) pinch.cd = this.cabin.cam.position.distanceTo(this.cabin.look); this.cabDolly(pinch.cd / k / this.cabin.cam.position.distanceTo(this.cabin.look)); }
+  else if (ph === 'cabine') { if (this.cabCanLook()) { this.cabin.cam.fov = Math.max(32, Math.min(78, pinch.fov / k)); this.cabin.cam.updateProjectionMatrix(); } }
+  else if (this.orbitPh(ph)) { const L = this.distLim(ph), want = pinch.dist / k; this.orbW.dist = Math.max(L[0], Math.min(L[1], want)); if (this.gestInsula()) { this.orbW.yaw = this.orb.yaw = pinch.yaw0 + (Math.atan2(b.y - a.y, b.x - a.x) - pinch.a0); this.placeCam(); } if ((ph === 'accoste' || ph === 'escale') && want > L[1] * 1.3 && !pinch.out) { pinch.out = true; this.archipel(); } }
   else this.camDist = Math.max(8, Math.min(70, pinch.cam / k)); });
- const ptrUp = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
+ const ptrUp = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) document.body.classList.remove('dragging'); };
  r.domElement.addEventListener('pointerup', ptrUp); r.domElement.addEventListener('pointercancel', ptrUp);
  r.domElement.addEventListener('pointerup', (e) => { const d = down; down = null; if (!d || d.moved) return; const ph = this.st().phase;
   if (ph === 'accoste') { const hit = this.hitPlace(e.clientX, e.clientY); if (hit) this.focus(hit); return; }
   if (ph === 'archipel') { const k = this.islesHit(e.clientX, e.clientY); if (k) this.visit(k); return; }
   if (ph === 'cabine') { this.cabinClick(e.clientX, e.clientY); return; }
+  if (ph === 'studio') { this.studioClick(e.clientX, e.clientY); return; }
   if (ph !== 'mer' && ph !== 'approche' || !this.island) return;
   const other = this.islesHit(e.clientX, e.clientY); if (other && other !== 'insula') { const rc0 = r.domElement.getBoundingClientRect(); if (!this.st().auto) this.setState({ ask: { x: e.clientX - rc0.left, y: e.clientY - rc0.top, k: other } }); return; }
   const rc = r.domElement.getBoundingClientRect(); ndc.set(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam);
@@ -197,7 +170,7 @@ prepIsland(T) {
  // quai : son bout côté large (le plus loin du centre de l'île) et des points pour les collisions
  this.island.updateMatrixWorld(true);
  const q = this.island.getObjectByName('Quai'); const v = new T.Vector3(); let best = -1, tip = null; const pts = new Map(); const deckPts = [];
- if (q) q.traverse((o) => { if (!o.isMesh) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); if (v.y > 3.0 && v.y < 3.8) deckPts.push([v.x, v.z]); if (v.y < -1.5 || v.y > 4) continue; const rr = (v.x / 72) ** 2 + (v.z / 46) ** 2; if (rr > best) { best = rr; tip = v.clone(); } pts.set(Math.round(v.x * 2) + ',' + Math.round(v.z * 2), [v.x, v.z]); } });
+ if (q) q.traverse((o) => { if (!o.isMesh) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); if (v.y > 0.3 && v.y < 0.9) deckPts.push([v.x, v.z]); if (v.y < -1.5 || v.y > 2) continue; const rr = (v.x / 72) ** 2 + (v.z / 46) ** 2; if (rr > best) { best = rr; tip = v.clone(); } pts.set(Math.round(v.x * 2) + ',' + Math.round(v.z * 2), [v.x, v.z]); } });
  if (!tip) tip = new T.Vector3(-50, 0, 40);
  const o = new T.Vector2(tip.x / (72 * 72), tip.z / (46 * 46)).normalize();
  this.quaiPts = Array.from(pts.values()); this.out = o;
@@ -214,67 +187,27 @@ prepIsland(T) {
  for (let it = 0; it < 3; it++) { let dmin = 1e9; deck.forEach(([x, z]) => { const dd = Math.hypot(x - this.D.x, z - this.D.z); if (dd < dmin) dmin = dd; }); const corr = dmin - 1.55; this.D.x -= n.x * corr; this.D.z -= n.z * corr; }
  this.Dapp = { x: this.D.x + u.x * 16 + n.x * 0.8, z: this.D.z + u.z * 16 + n.z * 0.8 }; this.A = { x: this.D.x + u.x * 38 + n.x * 6, z: this.D.z + u.z * 38 + n.z * 6 };
  if (this.dest) { this.dest.style.left = this.cx(this.D.x) + 'px'; this.dest.style.top = this.cy(this.D.z) + 'px'; this.dest.style.display = 'block'; }
- this.buildLife(T); this.buildMarker(T); this.buildIsles(T);
+ this.buildQuay(T); this.buildMarker(T); this.buildIsles(T);
 }
 // hauteur du dessus de l'île (sol, quai, toits) en (x, z)
 topY(x, z, only) { const rc = this.rcY || (this.rcY = new window.THREE.Raycaster()); rc.set(new window.THREE.Vector3(x, 200, z), new window.THREE.Vector3(0, -1, 0)); const h = rc.intersectObject(only || this.island, true); return h.length ? h[0].point.y : 0; }
-placeOfObj(o) { while (o && o.parent && o.parent !== this.island) o = o.parent; const n = (o && o.name) || ''; if (o && o.userData.place) return o.userData.place;
- if (n.startsWith('MaisonCommune') || n.startsWith('Drapeau') || n.startsWith('Cylinder')) return 'commune'; if (n.startsWith('Maison')) return 'village'; if (n.startsWith('Quai')) return 'quai'; if (n.startsWith('Entrepot')) return 'entrepot'; if (n.startsWith('Atelier')) return 'atelier'; if (n.startsWith('Insula') || n.startsWith('Place')) return 'insula'; if (n.startsWith('Antenne') || n.startsWith('Sphere')) return 'antenne'; return null; }
+placeOfObj(o) { for (let x = o; x && x !== this.island; x = x.parent) { if (x.userData.place) return x.userData.place; const k = this.quayPlace(x.name || ''); if (k) return k; } return null; }
 hitPlace(cx, cy) { const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(); const v = new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); const rc = new T.Raycaster(); rc.setFromCamera(v, this.cam);
- const objs = [this.life]; const vis = (o) => { while (o) { if (!o.visible) return false; o = o.parent; } return true; }; const h = rc.intersectObjects(objs.filter(Boolean), true).filter((x) => vis(x.object)); for (const x of h) { let o = x.object; while (o && !o.userData.place && o.parent) { if (o.parent === this.island) break; o = o.parent; } const k = (o && o.userData.place) || this.placeOfObj(x.object); if (k) return k; if (x.object.name.startsWith('Ile')) return null; } return null; }
-buildLife(T) {
- const life = new T.Group(); this.life = life; this.planLife = new T.Group(); this.scene.add(life);
- const P = {}; PR_PLACES.forEach((pl) => { const [x, y, z] = B2T(...pl.p); P[pl.k] = { x, z, y, g: this.topY(x, z) }; }); this.P = P;
- const dir = new T.Vector2(-0.56, 0.83), sideV = new T.Vector2(0.83, 0.56); const face = Math.atan2(dir.x, dir.y);
- const wood = new T.MeshStandardMaterial({ color: new T.Color(0x3b2a1c).convertSRGBToLinear(), roughness: 0.8 });
- const tl = new T.TextureLoader(); this.focusPts = {};
- const clearTrees = (x, z, r) => this.trees.children.forEach((m) => { if (Math.hypot(m.position.x - x, m.position.z - z) < r) m.visible = false; });
- // --- cinéma en plein air : grand écran, bancs, faisceau du projecteur
- const W0 = 20, H0 = W0 / 1.6, lift = 2.5;
- const cx = P.insula.x + dir.x * 8 + sideV.x * 14, cz = P.insula.z + dir.y * 8 + sideV.y * 14, cg = this.topY(cx, cz);
- const cin = new T.Group(); cin.position.set(cx, cg, cz); cin.rotation.y = face; cin.userData.place = 'cinema';
- const fr = new T.Mesh(new T.BoxGeometry(W0 + 0.8, H0 + 0.8, 0.3), new T.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 })); fr.position.y = lift + H0 / 2; cin.add(fr);
- for (const sx of [-W0 / 2 + 1, 0, W0 / 2 - 1]) { const post = new T.Mesh(new T.BoxGeometry(0.35, lift + H0, 0.35), wood); post.position.set(sx, (lift + H0) / 2 - 0.6, -0.4); cin.add(post); }
- const poster = tl.load('assets/demo-poster.jpg'); poster.encoding = T.sRGBEncoding;
- const scr = new T.Mesh(new T.PlaneGeometry(W0, H0), new T.MeshBasicMaterial({ map: poster, toneMapped: false })); scr.position.set(0, lift + H0 / 2, 0.17); cin.add(scr);
- const v = document.createElement('video'); v.preload = 'none'; v.muted = true; v.loop = true; v.playsInline = true; this.video = v;
- v.addEventListener('playing', () => { const vt = new T.VideoTexture(v); vt.encoding = T.sRGBEncoding; scr.material.map = vt; scr.material.needsUpdate = true; }, { once: true });
- life.add(cin); clearTrees(cx, cz, W0 * 0.8);
- // bancs face à l'écran
- for (let row = 0; row < 4; row++) for (const lat of [-5.5, 0, 5.5]) { const d = 9 + row * 3.2; const x = cx + dir.x * d + sideV.x * lat, z = cz + dir.y * d + sideV.y * lat; const g = this.topY(x, z); const bn = new T.Mesh(new T.BoxGeometry(4.2, 0.5, 0.8), wood); bn.position.set(x, g + 0.45, z); bn.rotation.y = face; bn.userData.place = 'cinema'; life.add(bn); clearTrees(x, z, 3); }
- // faisceau
- const px = cx + dir.x * 24, pz = cz + dir.y * 24, pg = this.topY(px, pz) + 5; const proj = new T.Mesh(new T.BoxGeometry(1.2, 1, 1.6), new T.MeshStandardMaterial({ color: 0x222222 })); proj.position.set(px, pg, pz); proj.rotation.y = face; life.add(proj);
- const from = new T.Vector3(px, pg, pz), to = new T.Vector3(cx, cg + lift + H0 / 2, cz); const len = from.distanceTo(to);
- const beam = new T.Mesh(new T.CylinderGeometry(W0 * 0.42, 0.4, len, 4, 1, true), new T.MeshBasicMaterial({ color: 0xfff1c9, transparent: true, opacity: 0.07, depthWrite: false, side: T.DoubleSide, blending: T.AdditiveBlending }));
- beam.position.copy(from.clone().lerp(to, 0.5)); beam.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), to.clone().sub(from).normalize()); beam.rotateY(Math.PI / 4); life.add(beam); this.beam = beam;
- this.focusPts.cinema = { x: cx, y: cg + lift + H0 / 2, z: cz, d: 30, pitch: 0.12 };
- // --- longue-vue : sur la hauteur près du quai, tournée vers l'insula
- const o = this.out, tip = { x: this.D.x - o.x * 4.5, z: this.D.z - o.y * 4.5 }; const lx = tip.x - o.x * 22 + o.y * 7, lz = tip.z - o.y * 22 - o.x * 7, lg = this.topY(lx, lz);
- const lv = new T.Group(); lv.position.set(lx, lg, lz); lv.userData.place = 'longuevue';
- const brass = new T.MeshStandardMaterial({ color: new T.Color(0xb58a3a).convertSRGBToLinear(), metalness: 0.8, roughness: 0.35 });
- for (let i = 0; i < 3; i++) { const a = i * 2.094; const leg = new T.Mesh(new T.CylinderGeometry(0.06, 0.08, 1.9, 6), wood); leg.position.set(Math.cos(a) * 0.45, 0.85, Math.sin(a) * 0.45); leg.rotation.set(Math.sin(a) * 0.28, 0, -Math.cos(a) * 0.28); lv.add(leg); }
- const tube = new T.Mesh(new T.CylinderGeometry(0.16, 0.26, 2.2, 16), brass); tube.position.y = 1.95; tube.rotation.z = Math.PI / 2 - 0.12; const yawTo = Math.atan2(-(P.insula.z - lz), P.insula.x - lx); const tg = new T.Group(); tg.add(tube); tg.rotation.y = yawTo; lv.add(tg);
- const lens = new T.Mesh(new T.CircleGeometry(0.24, 20), new T.MeshBasicMaterial({ color: 0x7fe6ff })); lens.position.set(1.1, 2.08, 0); lens.rotation.y = Math.PI / 2; tg.add(lens);
- lv.scale.setScalar(1.6); life.add(lv); clearTrees(lx, lz, 4);
- this.focusPts.longuevue = { x: lx, y: lg + 3, z: lz, d: 11, pitch: 0.22, yaw: Math.atan2(-(P.insula.x - lx), -(P.insula.z - lz)) };
- // repères qui pulsent : les deux choses à faire ici
- this.pulses = []; [['cinema', cx + dir.x * 6, cz + dir.y * 6, 4], ['longuevue', lx, lz, 2.6]].forEach(([k, x, z, r]) => { const ring = new T.Mesh(new T.RingGeometry(r, r + 0.6, 48), new T.MeshBasicMaterial({ color: 0xffc94a, transparent: true, opacity: 0.85, side: T.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(x, this.topY(x, z) + 0.2, z); ring.userData.place = k; life.add(ring); this.pulses.push(ring); });
- this.poi = { cinema: { n: '▶', name: 'Cinéma en plein air · la démo' }, longuevue: { n: '◉', name: 'Longue-vue · essayer Insula' } };
-}
+ const objs = [this.life, this.island]; const vis = (o) => { while (o) { if (!o.visible) return false; o = o.parent; } return true; }; const h = rc.intersectObjects(objs.filter(Boolean), true).filter((x) => vis(x.object)); for (const x of h) { let o = x.object; while (o && !o.userData.place && o.parent) { if (o.parent === this.island) break; o = o.parent; } const k = (o && o.userData.place) || this.placeOfObj(x.object); if (k) return k; if (x.object.name.startsWith('Ile')) return null; } return null; }
 along(pts, seg, L, u) { let d = u * L; for (let i = 0; i < seg.length; i++) { if (d <= seg[i]) return pts[i].clone().lerp(pts[i + 1], d / seg[i]); d -= seg[i]; } return pts[pts.length - 1].clone(); }
 focus(k) {
+ if (k === 'porte') { this.seen('panneau'); this.enterStudio(); return; }
  const f = this.focusPts[k]; if (!f) return;
  Object.assign(this.orbW, { tx: f.x, tz: f.z, ty: f.y, yaw: f.yaw != null ? f.yaw : -0.59, pitch: f.pitch != null ? f.pitch : 0.2, dist: f.d });
  this.focused = k; this.seen(k); this.say(PR_RADIO[k], 'LOUIS-MARIE');
- if (k === 'cinema' && this.video) { if (!this.video.src) this.video.src = 'assets/demo-insula.webm'; try { this.video.currentTime = 0; } catch (e) {} this.video.play().catch(() => {}); }
  this.setState({ focus: k });
- if (k === 'longuevue') { clearTimeout(this.appT); this.appT = setTimeout(() => this.setState({ showApp: true }), 1400); }
 }
 overview() { Object.assign(this.orbW, { tx: 4, tz: -2, ty: 4, yaw: -0.59, pitch: this.st().plan ? 0.7 : 0.42, dist: 165 }); this.focused = null; this.setState({ focus: null }); }
 lifeStep(T, t, dt) {
  if (!this.life) return;
  if (this.pulses) this.pulses.forEach((r, i) => { const u = (t * 0.6 + i * 0.4) % 1; r.scale.setScalar(1 + u * 0.5); r.material.opacity = 0.85 * (1 - u); r.visible = this.st().phase === 'accoste' && r.userData.place !== this.focused; });
- if (this.beam) { this.beamK = (this.beamK == null ? 1 : this.beamK) + ((this.focused === 'cinema' ? 0 : 1) - (this.beamK == null ? 1 : this.beamK)) * Math.min(1, dt * 5); this.beam.material.opacity = (0.06 + 0.02 * Math.sin(t * 7) * Math.sin(t * 2.3)) * this.beamK; this.beam.visible = this.beamK > 0.02; }
+ const ph0 = this.st().phase; if ((ph0 === 'accoste' || ph0 === 'accostage') && !this.stuLoading) this.loadStudio();
+ if (this.stuLamp) this.stuLamp.intensity += ((ph0 === 'studio' ? 1.1 : 0) - this.stuLamp.intensity) * Math.min(1, dt * 3);
 }
 
 setPlan(on) {
@@ -333,7 +266,6 @@ pen(x, z) {
 }
 // on refuse seulement un pas qui s'enfonce dans l'obstacle : on peut toujours s'en dégager
 blocked(x, z, ox, oz) { const pn = this.pen(x, z); return pn > 0 && pn >= this.pen(ox, oz); }
-pick(i) { this.setState({ showCard: true, sel: i }); if (!this.st().plan) this.say(PR_PLACES[i].story[0], 'LOUIS-MARIE · ' + PR_PLACES[i].name.toUpperCase()); }
 step(T, dt) {
  const s = this.st(), b = this.b, k = this.keys; const t = this.clock.elapsedTime;
  this.sea.material.uniforms.t.value = t;
@@ -372,6 +304,7 @@ step(T, dt) {
  // caméra : derrière le bateau ; en montant, elle regarde le bateau lui-même
  const cam = this.cam;
  if (ph === 'descente' || ph === 'montee') this.portalCam(dt);
+ else if (ph === 'studio') this.studioStep(T, t, dt);
  else if (this.orbitPh(ph)) { const O = this.orb, W2 = this.orbW, k2 = this.reduced ? 1 : Math.min(1, dt * (ph === 'transit' ? 4 : 2.2)); if (W2.ty == null) W2.ty = 4; if (O.ty == null) O.ty = 4;
   for (const key of ['tx', 'tz', 'ty', 'pitch', 'dist']) O[key] += (W2[key] - O[key]) * k2; let dy = W2.yaw - O.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; O.yaw += dy * k2;
   this.placeCam(); }
@@ -389,7 +322,7 @@ step(T, dt) {
  this.lifeStep(T, t, dt); this.isleStep(T, t, dt, ph); this.markerStep(T, t, ph); this.nightStep(T, dt); if (ph === 'cabine') this.cabinStep(T, t, dt);
  if (ph === 'accoste' && this.mouse && this.island && (this.hovT = (this.hovT || 0) + dt) > 0.08) { this.hovT = 0; const k = this.hitPlace(this.mouse.x, this.mouse.y); const r0 = this.renderer.domElement.getBoundingClientRect(); this.renderer.domElement.style.cursor = k ? 'pointer' : 'grab';
   if (k) { const pl = this.poi[k]; this.tip.innerHTML = '<b>' + pl.n + '</b>' + pl.name; this.tip.style.display = 'block'; this.tip.style.left = (this.mouse.x - r0.left) + 'px'; this.tip.style.top = (this.mouse.y - r0.top - 14) + 'px'; } else this.tip.style.display = 'none'; }
- if (!['accoste', 'mer', 'approche', 'cabine'].includes(ph) && this.tip) this.tip.style.display = 'none';
+ if (!['accoste', 'mer', 'approche', 'cabine', 'studio'].includes(ph) && this.tip) this.tip.style.display = 'none';
  // étiquettes
  const show = ph === 'accoste'; const W = this.host.clientWidth, H = this.host.clientHeight;
  this.labels.forEach((L) => { if (!show) { L.el.style.display = 'none'; return; } const p = L.v.clone().project(cam); if (p.z > 1) { L.el.style.display = 'none'; return; } L.el.style.display = 'block'; L.el.style.left = ((p.x + 1) / 2 * W) + 'px'; L.el.style.top = ((1 - p.y) / 2 * H) + 'px'; });
@@ -399,7 +332,7 @@ step(T, dt) {
  this.routeLine.setAttribute('points', rt.map((p) => this.cx(p.x).toFixed(1) + ',' + this.cy(p.z).toFixed(1)).join(' '));
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist); if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
-whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; if (ph === 'escale') return this.isleK; if (ph === 'archipel') return 'archipel'; return null; }
+whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'studio') return 'insula'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; if (ph === 'escale') return this.isleK; if (ph === 'archipel') return 'archipel'; return null; }
 docked() { if (this.sailK) { const k = this.sailK; this.sailK = null; const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.orbFromCam(); this.flyTo(k); return; } const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); }
 renderVals() {
  const s = this.st(), ph = s.phase || 'ponton', plan = !!s.plan, sel = s.sel == null ? -1 : s.sel;
@@ -414,7 +347,8 @@ renderVals() {
  if ((ph === 'mer' || ph === 'approche') && !s.auto) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() });
  if (ph === 'mer' && !s.auto) { const d = this.sailDest || 'insula'; acts.push({ label: '⛵ Pilote auto → ' + PR_ISLES[d].name, cls: 'pr-btn', go: () => this.goSail(d) }); }
  if (ph === 'approche' && !s.auto) acts.push({ label: ('⚓ Accoster à ' + PR_ISLES[this.approachK || 'insula'].to).replace('à le ', 'au '), cls: 'pr-btn', go: () => this.finalApproach(this.approachK || 'insula') });
- if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!s.focus && !plan) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (!plan) { acts.push({ label: '▶ Cinéma', cls: 'pr-btn2', go: () => this.focus('cinema') }); acts.push({ label: '◉ Longue-vue', cls: 'pr-btn2', go: () => this.focus('longuevue') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: '⛵ Île suivante : Carte vivante', cls: 'pr-btn', go: () => this.sailTo('cartevivante') }); }
+ if (ph === 'studio') this.studioActs(acts);
+ if (ph === 'accoste') { if (s.focus && !plan) acts.push({ label: "← Vue d'ensemble", cls: 'pr-btn2', go: () => this.overview() }); if (!s.focus && !plan) acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.archipel() }); if (!plan) { if (s.focus !== 'panneau') acts.push({ label: '▤ Le panneau', cls: 'pr-btn2', go: () => this.focus('panneau') }); acts.push({ label: '⌂ Monter au studio', cls: s.focus === 'panneau' ? 'pr-btn' : 'pr-btn2', go: () => this.focus('porte') }); } acts.push({ label: plan ? "Revenir à l'île" : "Voir l'architecture", cls: 'pr-btn2', go: () => this.setPlan(!plan) }); acts.push({ label: '⛵ Île suivante : Carte vivante', cls: 'pr-btn', go: () => this.sailTo('cartevivante') }); }
  if (ph === 'nuit') { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.goTo('archipel') }); acts.push({ label: '☀ Revenir au jour', cls: 'pr-btn2', go: () => this.cancelNight() }); acts.push({ label: '⌄ Descendre dans la cabine', cls: 'pr-btn', go: () => this.enterCabin() }); }
  if (ph === 'cabine') { const f = s.cabFocus;
   if (f) acts.push({ label: '← Revenir', cls: 'pr-btn2', go: () => this.cabUnfocus() });
@@ -422,23 +356,21 @@ renderVals() {
   if (f === 'livre') acts.push({ label: '↷ Tourner la page', cls: 'pr-btn2', go: () => this.turnPage() });
   if (f === 'bouteilles') acts.push({ label: '→ Bouteille suivante', cls: 'pr-btn2', go: () => this.cabFocus('bouteilles') });
   if (!f) { acts.push({ label: "← L'archipel", cls: 'pr-btn2', go: () => this.goTo('archipel') }); acts.push({ label: '⌃ Remonter sur le pont', cls: 'pr-btn2', go: () => this.leaveCabin() }); acts.push({ label: '↺ Refaire la traversée', cls: 'pr-btn', go: () => this.goTo('ponton') }); } }
- const hint = ph === 'archipel' ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même' : ph === 'escale' ? "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · glissez pour regarder autour · Échap pour revenir' : ph === 'descente' || ph === 'montee' ? '' : ph === 'transit' ? 'Traversée express vers la destination · « Arriver tout de suite » pour sauter' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le cinéma ou la longue-vue" : 'Flèches ou ZQSD pour barrer · glissez pour tourner · pincez ou molette pour zoomer · cliquez sur une île pour y aller';
+ const hint = ph === 'archipel' ? (this.gestInsula() ? 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour déplacer · Ctrl ou clic droit + glisser pour tourner · « Embarquer » pour barrer Elba' : 'Cliquez sur une île (ou zoomez dessus) pour la survoler · glissez pour tourner · « Embarquer » pour barrer Elba vous-même') : ph === 'escale' ? (this.gestInsula() ? "Glissez pour déplacer · Ctrl ou clic droit + glisser pour tourner · deux doigts ou molette pour zoomer · dézoomez à fond pour revoir tout l'archipel" : "Glissez pour tourner · molette pour zoomer · dézoomez à fond pour revoir tout l'archipel") : ph === 'nuit' ? 'Glissez pour regarder autour du bateau · « Descendre dans la cabine »' : ph === 'cabine' ? 'Cliquez sur un objet : la carte, le coffre, le livre, les bouteilles, la photo, la VHF · glissez pour regarder autour · Échap pour revenir' : ph === 'descente' || ph === 'montee' ? '' : ph === 'transit' ? 'Traversée express vers la destination · « Arriver tout de suite » pour sauter' : ph === 'ponton' ? 'Glissez pour regarder autour · « Larguer les amarres » pour partir' : ph === 'accoste' ? (this.gestInsula() ? "Glissez pour déplacer · Ctrl ou clic droit + glisser pour tourner · deux doigts ou molette pour zoomer (à fond : tout l'archipel) · cliquez sur le panneau ou la porte" : "Glissez pour tourner · clic droit ou Maj + glisser pour déplacer · molette pour zoomer (à fond : tout l'archipel) · cliquez sur le panneau ou la porte") : ph === 'studio' ? (this.st().stuFocus ? "Glissez pour tourner autour · deux doigts ou molette pour approcher · Échap pour revenir" : "Cliquez sur un objet : l'ordinateur, les annonces, le carnet, la fiche du frigo, les clés · glissez pour regarder autour · deux doigts pour zoomer") : 'Flèches ou ZQSD pour barrer · glissez pour tourner · deux doigts, pincez ou molette pour zoomer · cliquez sur une île pour y aller';
  let card = Object.assign({ bg: 'rgba(251,247,238,.97)', fg: '#14253A', accent: '#B4412E', try: false }, PR_CARNET);
- if (sel >= 0) { const pl = PR_PLACES[sel]; card = { bg: plan ? 'rgba(13,59,122,.96)' : 'rgba(251,247,238,.97)', fg: plan ? '#FFFFFF' : '#14253A', accent: plan ? '#FFC94A' : '#B4412E', kicker: (plan ? 'MODE PLAN · BRIQUE ' : 'LIEU ') + pl.n, title: pl.title, paras: plan ? pl.tech : pl.story, try: !!pl.try, foot: plan ? 'Détail technique' : 'Passez en mode plan pour le détail technique.' }; }
- else if (plan) card = Object.assign({}, card, { bg: 'rgba(13,59,122,.96)', fg: '#FFFFFF', accent: '#FFC94A', kicker: 'MODE PLAN', title: 'Le trajet de la donnée', paras: ['Quai (sources) → entrepôt (relevé du soir) → atelier (calcul) → insula (app) → maison commune (base partagée). L\'antenne branche le tout sur une IA.', 'Cliquez sur un numéro pour le détail de chaque brique.'], foot: 'JavaScript · MapLibre · Python · Supabase · Playwright · GitHub Pages · MCP' });
  const touch = typeof window !== 'undefined' && ('ontouchstart' in window);
  return {
   setHost: (el) => { this.host = el; }, setLayer: (el) => { this.layer = el; }, setChart: (el) => { this.chartHost = el; },
   hint, radio: s.radio || '', radioFrom: s.radioFrom || 'LOUIS-MARIE', actions: acts,
   radioLinks: ph === 'cabine' && s.cabFocus === 'vhf' ? [['✉ louis-marie@du-cray.com', 'mailto:louis-marie@du-cray.com'], ['in · LinkedIn', 'https://www.linkedin.com/in/louismarie-perret-du-cray/'], ['⌥ GitHub', 'https://github.com/LM28000']] : [],
-  cabEsc: () => { if (ph === 'cabine' && s.cabFocus) { this.cabUnfocus(); return true; } return false; },
+  cabEsc: () => { if (ph === 'cabine' && s.cabFocus) { this.cabUnfocus(); return true; } if (ph === 'studio' && s.stuFocus && !s.showApp) { this.stuUnfocus(); return true; } return false; },
   showCard: !!s.showCard && ph === 'accoste', card, closeCard: () => this.setState({ showCard: false }),
   loading: s.loading !== false, loadMsg: s.loadMsg || '',
   showPads: touch && (ph === 'mer' || ph === 'approche'),
   ask: !!s.ask && (ph === 'mer' || ph === 'approche'), askX: s.ask ? Math.min(s.ask.x, 1100) : 0, askY: s.ask ? s.ask.y : 0, askText: s.ask ? PR_ISLES[s.ask.k || 'insula'].name + ' · île n° ' + PR_ISLES[s.ask.k || 'insula'].n + ' — y aller ?' : '', askGo: () => this.goSail((s.ask && s.ask.k) || 'insula'), askNo: () => this.setState({ ask: null }),
-  showApp: !!s.showApp && ph === 'accoste', closeApp: () => { this.setState({ showApp: false }); this.overview(); this.say("Alors, convaincu ? Tu peux y retourner quand tu veux avec la longue-vue."); },
-  showMap: !!s.showMap, openMap: () => { this.mapOpened = true; this.setState({ showMap: true }); }, closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => { const v = this.visitedSet || {}, here = this.whereAmI(); const parent = ['cinema', 'longuevue', 'archi'].includes(x.k) ? 'insula' : (['carte', 'coffre', 'recap', 'bouteilles', 'apropos', 'contact'].includes(x.k) ? 'cabine' : null);
-   const show = !x.sub || s.showAll || !!v[parent] || here === parent || !!v[x.k]; const hh = ['cinema', 'longuevue', 'archi'].includes(here) ? 'insula' : (ph === 'cabine' ? 'cabine' : here); return Object.assign({ done: !!v[x.k], here: x.k === hh, show }, x); }),
+  showApp: !!s.showApp && (ph === 'accoste' || ph === 'studio'), closeApp: () => { this.setState({ showApp: false }); if (ph === 'studio') this.say(PR_STU_RADIO.app); else this.overview(); },
+  showMap: !!s.showMap, openMap: () => { this.mapOpened = true; this.setState({ showMap: true }); }, closeMap: () => this.setState({ showMap: false }), goTo: (k) => this.goTo(k), stops: PR_STOPS.map((x) => { const v = this.visitedSet || {}, here = this.whereAmI(); const parent = ['studio', 'archi'].includes(x.k) ? 'insula' : (['carte', 'coffre', 'recap', 'bouteilles', 'apropos', 'contact'].includes(x.k) ? 'cabine' : null);
+   const show = !x.sub || s.showAll || !!v[parent] || here === parent || !!v[x.k]; const hh = ['studio', 'archi'].includes(here) ? 'insula' : (ph === 'cabine' ? 'cabine' : here); return Object.assign({ done: !!v[x.k], here: x.k === hh, show }, x); }),
   showText: !!s.showText, closeText: () => this.setState({ showText: false }), openText: () => this.setState({ showText: true, showMap: false }), goArch: () => this.goTo('archipel'),
   showAll: !!s.showAll, toggleAll: () => this.setState({ showAll: !s.showAll }),
   progress: PR_STOPS.filter((x) => (this.visitedSet || {})[x.k]).length + '/' + PR_STOPS.length,
