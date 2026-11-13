@@ -56,6 +56,7 @@ Object.assign(Component.prototype, {
     this.stuLamp = new T.PointLight(0xffd2a0, 0, 7, 2); this.stuLamp.position.copy(this.stuW(-1.6, 2.1, L.FLOOR + 2.2)); this.scene.add(this.stuLamp);
     // verres : translucides
     this.island.traverse((o) => { if (o.isMesh && o.material && /VerreClair/.test(o.material.name || '')) { o.material = new T.MeshStandardMaterial({ color: 0xdfe8ee, roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false }); o.userData.mat = o.material; o.renderOrder = 3; } });
+    this.buildQuayLife(T);
   },
   quayPlace(name) {
     if (/^(PanneauAVendre|PanneauDos|Attache|BalconDalle|Barreau|MainCourante|RetourGC|RetourBarreau|Console|PFDormant|PFVerre)/.test(name)) return 'panneau';

@@ -49,6 +49,7 @@ Sur le site, chaque arbre est fait de deux plans croisés qui portent ces images
 
 ```bash
 INSULA_DIR=~/immobilier-tool python3 scripts/scenes_textures.py  # écrans, fiche, porte-clés (captures d'Insula) -> assets/scenes/
+python3 scripts/quai_textures.py                                 # dalles et moellons du quai -> assets/quai_vie/gen/
 python3 scripts/studio_textures.py                               # panneau À VENDRE, plaque, carnet, annonces -> assets/studio/gen/
 $B -b --factory-startup -P scripts/ile_insula_v3.py -- preview   # île + immeuble + studio -> blender/insula_v3.blend, renders/v3_*.png
 $B -b blender/insula_v3.blend -P scripts/export_ile_v3.py        # -> assets/ile_insula.glb, assets/studio.glb, web/ile_arbres_v3.json
@@ -58,6 +59,7 @@ $B -b blender/insula_v3.blend -P scripts/export_ile_v3.py        # -> assets/ile
 - **L'immeuble** est construit par `immeuble.py`, dans son propre repère (voir [Architecture](architecture.md#repères)) :
   - les murs sont un seul volume, et le studio, la porte-fenêtre et les embrasures y sont creusés par booléens ;
   - les objets du studio portent la propriété `studio`, ce qui permet à l'export de les mettre dans `studio.glb`.
+- **La vie du quai** est construite par `quai_vie.py`, dans le repère de l'immeuble : terrasse de café, banc, vélos, hortensias, trois lampadaires, coin de pêche, bouée de sauvetage, et la bouée de chenal du bassin. Le site anime ensuite les mouettes, la fumée de la cheminée et la bouée de chenal, et allume les lampadaires la nuit (`js/quai.js`). Il retrouve ces objets par leur nom : `VieLanterne` (matériau des verres), `Vie_LampPerche_1` et `_2` (perchoirs des mouettes), `Vie_BoueeMer`.
 - **Après un export**, reportez dans le code :
   - la liste `web/ile_arbres_v3.json` dans `PR_TREES` (`js/scene.js`) ;
   - si l'immeuble a bougé, `web/studio_points.json` dans `PR_BLD` et `PR_STU_L` (`js/studio.js`).
@@ -70,6 +72,7 @@ $B -b blender/insula_v3.blend -P scripts/export_ile_v3.py        # -> assets/ile
 | `arbre_cotier.blend`, `pins.blend` | island_tree_01, pine_tree_01, Poly Haven | CC0 |
 | `umhlanga_sunrise_2k.hdr` | Poly Haven (ciel des rendus de contrôle) | CC0 |
 | `studio/<id>/<id>.gltf` | Poly Haven, glTF 1k : Sofa_01, painted_wooden_chair_01, side_table_01, desk_lamp_arm_01, modern_ceiling_lamp_01, anthurium_botany_01, vintage_electric_kettle, ceramic_vase_01, throw_pillows_01, hanging_picture_frame_01 | CC0 |
+| `quai_vie/<id>/<id>_1k.gltf` | Poly Haven, glTF 1k : outdoor_table_chair_set_01, painted_wooden_bench, planter_box_01, wooden_crate_01, wooden_crate_02, barrel_03, wicker_basket_01, wooden_bucket_01, lifebuoy, ocean_buoy | CC0 |
 | `cabine/tex/` | oak_wood_planks, plank_flooring_04, rough_linen, wood_plank_wall, Poly Haven (1k) | CC0 |
 
 Les modèles Poly Haven se téléchargent par leur API, par exemple `https://api.polyhaven.com/files/Sofa_01` (format `gltf`, résolution `1k`).

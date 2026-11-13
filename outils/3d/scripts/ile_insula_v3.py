@@ -5,6 +5,7 @@ import bpy, math, os, sys, random
 from mathutils import Vector, Matrix, noise
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import immeuble as IM
+import quai_vie as QV
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))  # racine du dépôt (le site)
@@ -13,7 +14,7 @@ ASSETS = os.path.join(ROOT, "assets"); OUT = os.path.join(ROOT, "renders")
 ELBA = os.path.join(SITE, "elba.glb")
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "preview" in argv
-VUES = next((a.split("=")[1].split(",") for a in argv if a.startswith("vues=")), ["approche", "quai", "panneau", "entree", "table", "baie"])
+VUES = next((a.split("=")[1].split(",") for a in argv if a.startswith("vues=")), ["approche", "quai", "vie", "terrasse", "peche", "panneau", "entree", "table", "baie"])
 random.seed(7)
 sc = bpy.context.scene
 for o in list(bpy.data.objects):
@@ -64,6 +65,10 @@ def h(x, y):
     d = seg_d(p, BLD + U * -3.0, ROOTJ)
     w = sstep(15.0, 8.0, d) * sstep(QUAI_S + 0.3, QUAI_S - 2.0, s)      # esplanade : seulement en arrière du quai
     z = z * (1 - w) + (GROUND - 0.02) * w
+    lx, ly = -(p - BLD).dot(N_), -(p - BLD).dot(U)            # repère de l'immeuble : sous le pavage, le terrain reste en dessous
+    if ly > -12.7:                                              # talus en pente douce autour de la dalle
+        edge = max(0.0, abs(lx) - 10.2, ly - 0.2)
+        z = min(z, GROUND - 0.12 + 0.7 * edge)
     wc = sstep(QUAI_S - 0.2, QUAI_S + 0.8, s) * sstep(17.0, 11.0, abs(lat))  # bassin devant le quai
     return z * (1 - wc) + min(z, -2.2) * wc
 
@@ -125,21 +130,21 @@ for p in me.polygons:
     p.use_smooth = True
 ile.data.materials.append(terrain_mat())
 # esplanade pavée devant l'immeuble (dalle fine posée sur le plat)
-pave = IM.mat("PavesQuai", (0.33, 0.31, 0.29), 0.85, bump=0.4, nscale=3)
-bpy.ops.mesh.primitive_plane_add(size=1); esp = bpy.context.active_object; esp.name = "Esplanade"
-e0 = BLD + U * 1.5; e1 = Vector((QX, QY, 0)) + U * (QUAI_S - 0.7); c_ = (e0 + e1) / 2
-esp.location = (c_.x, c_.y, GROUND + 0.01); esp.rotation_euler.z = math.atan2(U.y, U.x)
-esp.scale = ((e1 - e0).length, 20, 1); esp.data.materials.append(pave)
+pave = QV.tex_mat("PavesQuai", "dalles.png", 2.0)
+bpy.ops.mesh.primitive_cube_add(size=1); esp = bpy.context.active_object; esp.name = "Esplanade"   # dalle de 30 cm : ses bords font bordure
+e0 = BLD + U * 0.05; e1 = Vector((QX, QY, 0)) + U * (QUAI_S - 0.7); c_ = (e0 + e1) / 2
+esp.location = (c_.x, c_.y, GROUND + 0.01 - 0.15); esp.rotation_euler.z = math.atan2(U.y, U.x)
+esp.scale = ((e1 - e0).length, 20, 0.3); esp.data.materials.append(pave); QV.apply_scale(esp); QV.uv_metres(esp)
 
 # mur de quai en granit le long du bord, de -12 à +12 m de part et d'autre du ponton
-mq = IM.mat("GranitQuai", (0.36, 0.35, 0.33), 0.85, bump=0.5, nscale=4)
+mq = QV.tex_mat("GranitQuai", "moellons.png", 2.0)
 bpy.ops.mesh.primitive_cube_add(size=1); wq = bpy.context.active_object; wq.name = "MurQuai"
 c0 = Vector((QX, QY, 0)) + U * (QUAI_S - 0.35)
-wq.location = (c0.x, c0.y, (GROUND - 2.4) / 2); wq.rotation_euler.z = math.atan2(U.y, U.x); wq.scale = (0.7, 26, GROUND + 2.4); wq.data.materials.append(mq)
+wq.location = (c0.x, c0.y, (GROUND - 2.4) / 2); wq.rotation_euler.z = math.atan2(U.y, U.x); wq.scale = (0.7, 26, GROUND + 2.4); wq.data.materials.append(mq); QV.apply_scale(wq); QV.uv_metres(wq)
 bpy.ops.mesh.primitive_cube_add(size=1); cq = bpy.context.active_object; cq.name = "Couronnement"
-cq.location = (c0.x + U.x * 0.05, c0.y + U.y * 0.05, GROUND + 0.06); cq.rotation_euler.z = math.atan2(U.y, U.x); cq.scale = (0.85, 26, 0.16); cq.data.materials.append(mq)
-for i in range(5):
-    bp_ = c0 + U * 0.25 + N_ * (-10 + i * 5)
+cq.location = (c0.x + U.x * 0.05, c0.y + U.y * 0.05, GROUND + 0.06); cq.rotation_euler.z = math.atan2(U.y, U.x); cq.scale = (0.85, 26, 0.16); cq.data.materials.append(mq); QV.apply_scale(cq); QV.uv_metres(cq)
+for lat_b in (-10, -5, 2.0, 5.5, 10):     # pas de bitte au pied de la passerelle (lat 0)
+    bp_ = c0 + U * 0.25 + N_ * lat_b
     bpy.ops.mesh.primitive_cylinder_add(radius=0.18, depth=0.5, location=(bp_.x, bp_.y, GROUND + 0.38), vertices=16); bpy.context.active_object.data.materials.append(IM.mat("BitteFonte", (0.05, 0.05, 0.06), 0.4))
 
 # passerelle en bois : du couronnement du quai jusqu'au plancher du ponton
@@ -175,6 +180,8 @@ place(C_QUAI, "Quai", (QX, QY, DECK - J_DECK), QROT)
 # l'immeuble et son studio
 B = IM.build(sc, None, None, with_interior=True)
 B.root.location = (BLD.x, BLD.y, GROUND); B.root.rotation_euler.z = BROT
+QV.build(sc, B.root)
+BM_ = Vector((QX, QY, 0)) + U * 9.0 - N_ * 9.0; QV.bouee_mer(sc, (BM_.x, BM_.y, 0.0))   # bouée de chenal dans le bassin
 MW = Matrix.Translation((BLD.x, BLD.y, GROUND)) @ Matrix.Rotation(BROT, 4, "Z")
 def W(p):
     return MW @ Vector(p)
@@ -257,6 +264,9 @@ P = IM.POINTS
 TX, TY = -1.75, 1.2
 shoot("approche", BLD + U * 62 + N_ * 26 + Vector((0, 0, 13)), BLD + Vector((0, 0, 5)), 42)
 shoot("quai", Vector((QX, QY, 0)) + U * 9 - N_ * 11 + Vector((0, 0, 6.5)), W((0.0, 0, 5.4)), 30)
+shoot("vie", W((-1.0, -15.5, 1.7)), W((0.5, -4, 1.0)), 24)
+shoot("terrasse", W((-3.2, -8.5, 1.65)), W((-6.5, -2.5, 0.7)), 28)
+shoot("peche", W((1.5, -13.6, 1.6)), W((6.8, -10.2, 0.4)), 26)
 shoot("panneau", W((IM.BAY_A - 2.5, -8.5, 1.65)), W((IM.BAY_A + 0.8, -1, IM.FLOOR + 0.9)), 30)
 shoot("entree", W(P["entree"]), W((IM.BAY_A + 0.2, 0.6, IM.FLOOR + 1.0)), 17)
 shoot("table", W((TX + 0.05, TY + 1.05, IM.TABLE + 0.6)), W((TX + 0.02, TY + 0.02, IM.TABLE)), 30, dof=5.0)

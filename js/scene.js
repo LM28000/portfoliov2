@@ -207,6 +207,7 @@ lifeStep(T, t, dt) {
  if (!this.life) return;
  if (this.pulses) this.pulses.forEach((r, i) => { const u = (t * 0.6 + i * 0.4) % 1; r.scale.setScalar(1 + u * 0.5); r.material.opacity = 0.85 * (1 - u); r.visible = this.st().phase === 'accoste' && r.userData.place !== this.focused; });
  const ph0 = this.st().phase; if ((ph0 === 'accoste' || ph0 === 'accostage') && !this.stuLoading) this.loadStudio();
+ this.quayLifeStep(T, t, dt);
  if (this.stuLamp) this.stuLamp.intensity += ((ph0 === 'studio' ? 1.1 : 0) - this.stuLamp.intensity) * Math.min(1, dt * 3);
 }
 

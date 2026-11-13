@@ -1,5 +1,10 @@
 # Journal des changements
 
+## 13 novembre 2026 : un quai habité
+
+- **Le quai d'Insula prend vie.** Des dalles de granit à la place de la dalle grise, et un mur de quai en moellons. Une terrasse de café avec deux tasses, un banc, deux vélos, des hortensias de part et d'autre de la porte, trois lampadaires en fonte, et un coin de pêche avec casiers, caisses, tonneau et cordage.
+- **Ce qui bouge :** des mouettes posées sur les lampadaires et d'autres qui tournent au-dessus du port, la fumée de la cheminée, la bouée de chenal qui tangue. Les lampadaires s'allument à la tombée de la nuit.
+
 ## 13 novembre 2026 : Insula, le studio à vendre
 
 - **L'île d'Insula refaite.** Les bâtiments décoratifs, le cinéma et la longue-vue disparaissent. Il ne reste qu'un immeuble au pied du ponton, avec un panneau « À vendre » au balcon. Le ponton est abaissé à mi-hauteur de la coque d'Elba, avec une passerelle depuis le quai.
