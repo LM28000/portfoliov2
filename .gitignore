@@ -1,1 +1,14 @@
 .DS_Store
+__pycache__/
+*.blend1
+# outils
+outils/node_modules/
+outils/tests/captures/
+outils/video/out/
+outils/audio/phrases.json
+# dossier de travail 3D (lourd, hors dépôt : voir docs/modeles-3d.md)
+outils/3d/assets/
+outils/3d/blender/
+outils/3d/renders/
+outils/3d/web/
+outils/3d/video/

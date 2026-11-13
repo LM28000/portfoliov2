@@ -1,0 +1,14 @@
+{
+  "name": "elba-outils",
+  "private": true,
+  "description": "Outils du site louis-marie.du-cray.eu : vérifications, parcours de test, CV en PDF, démo vidéo d'Insula, voix de la VHF.",
+  "scripts": {
+    "verifier": "node verifier.cjs",
+    "parcours": "node tests/parcours.cjs",
+    "cv": "node cv/make_pdf.js ../assets/cv-louis-marie-perret-du-cray.pdf",
+    "demo": "node video/demo.js"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
+}
