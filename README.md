@@ -9,7 +9,6 @@
   <img alt="three.js r128" src="https://img.shields.io/badge/three.js-r128-1f4b66">
   <img alt="Sans framework ni étape de build" src="https://img.shields.io/badge/build-aucun-1f4b66">
   <a href="LICENSE"><img alt="Licence du code : MIT" src="https://img.shields.io/badge/licence%20du%20code-MIT-1f4b66"></a>
-  <a href="https://github.com/LM28000/portfoliov2/actions/workflows/verifier.yml"><img alt="Vérifications" src="https://github.com/LM28000/portfoliov2/actions/workflows/verifier.yml/badge.svg"></a>
 </p>
 
 Mon site personnel est un monde marin en 3D. On embarque à bord d'*Elba*, mon voilier (un Flirt de 1977), et on navigue d'île en île. Chaque île est un de mes projets. Je guide la traversée à la radio, et on finit dans la cabine, où l'on apprend qui je suis.

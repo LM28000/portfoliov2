@@ -46,10 +46,18 @@ for o in bpy.data.objects:
             d = o.modifiers.new("Dec", "DECIMATE"); d.ratio = r
         elif r and o.name.endswith("_lid"):
             d = o.modifiers.new("Dec", "DECIMATE"); d.ratio = r
-BIG = ("carte", "lin_marine", "teck_placage", "teck_houx", "plank_flooring", "wood_plank_wall", "oak_wood", "livre", "photo")
+# ni rugosité ni métal en image : le site n'a pas de carte d'environnement, ces images ne servent à rien
+for m in bpy.data.materials:
+    if not m.use_nodes: continue
+    for n in m.node_tree.nodes:
+        if n.type == "BSDF_PRINCIPLED":
+            for k in ("Metallic", "Roughness"):
+                for l in list(n.inputs[k].links): m.node_tree.links.remove(l)
+LISIBLE = ("livre", "photo")                                   # écrits lus de près
+BOIS = ("lin_marine", "teck_placage", "teck_houx", "plank_flooring", "wood_plank_wall", "oak_wood")
 for im in bpy.data.images:
     try:
-        w, h = im.size; lim = 2048 if "carte" in im.name else (1024 if any(k in im.name for k in BIG) else 512)
+        w, h = im.size; lim = 2048 if "carte" in im.name else 1024 if any(k in im.name for k in LISIBLE) else 768 if any(k in im.name for k in BOIS) else 256 if "antern" in im.name else 512
         if max(w, h) > lim: f = lim / max(w, h); im.scale(int(w * f), int(h * f))
     except Exception as e: print("img", im.name, e)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_apply=True, export_yup=True, export_cameras=False, export_lights=False,

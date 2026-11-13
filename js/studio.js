@@ -21,7 +21,7 @@ const PR_STU_RADIO = {
 const PR_STU_TEXT = {
   ordi: "L'ordinateur montre la démo d'Insula. En s'approchant, la vraie app s'affiche sur l'écran et se manipule directement. Bouton : ouvrir l'app dans un onglet.",
   annonces: "Trois annonces imprimées à Saint-Nazaire : 18 m², 62 000 €, 9,4 % par an sur 15 ans (annoté « celui-là ! ») ; 16 m², 55 000 €, 8,3 % (« à visiter ») ; 20 m², 64 000 €, 8 % (« bof »).",
-  carnet: "Le carnet des amis. Notre projet : un studio ou un T2 meublé, près d'une fac ou d'une gare, moins de 80 000 € tout compris, rendement au-dessus de 5 %. Les biens qu'on suit : Saint-Nazaire Gavy Océanis, visité ; Saint-Nazaire Trébale, à voir ; Brest Menez Paul. On vote : Gavy Océanis.",
+  carnet: "Le carnet des amis. Notre projet : un studio ou un T2 meublé, près d'une fac ou d'une gare, moins de 80 000 € tout compris, rendement au-dessus de 5 %. Les biens qu'on suit : Saint-Nazaire Gavy Océanis, visité (Antoine : « on fonce ! », Camille : « bruit ? ») ; Saint-Nazaire Trébale, à voir ; Brest Menez Paul. On vote : Gavy Océanis.",
   frigo: "La fiche du studio de Saint-Nazaire, quartier Gavy Océanis : 62 000 €, 18 m², rendement 9,4 % par an sur 15 ans en scénario central, cash-flow de +5 € par mois, mensualité de 327 €.",
   cles: "Les clés, avec le porte-clés Insula. La baie donne sur le quai, où Elba attend."
 };

@@ -50,7 +50,7 @@ def page(lines, title):
     return pg.filter(ImageFilter.GaussianBlur(0.4))
 BLUE, GRN, RD, PEN = (30, 52, 110), (20, 110, 60), (170, 30, 30), (40, 40, 48)
 gauche = page([
-    ("Ce qu'on cherche (tous les 3)", BLUE, 50),
+    ("Camille, Antoine et moi, on cherche :", BLUE, 48),
     ("- un studio ou un T2, meublé", PEN, 46),
     ("- près d'une fac ou d'une gare", PEN, 46),
     ("- moins de 80 k€ tout compris", PEN, 46),
@@ -69,7 +69,7 @@ droite = page([
     ("Saint-Nazaire · Gavy Océanis", BLUE, 50),
     ("18 m² · 62 k€ · 9,4 %", GRN, 48),
     ("visité : ok   offre ?", PEN, 46),
-    ("A : on fonce   C : bruit ?", PEN, 44),
+    ("Antoine : on fonce !  Camille : bruit ?", PEN, 42),
     ("", PEN, 46),
     ("Saint-Nazaire · Trébale", BLUE, 50),
     ("16 m² · 55 k€ · 8,3 %", GRN, 48),

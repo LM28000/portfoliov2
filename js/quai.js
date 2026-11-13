@@ -5,7 +5,10 @@ Object.assign(Component.prototype, {
   buildQuayLife(T) {
     const Q = { gulls: [], puffs: [], lamps: [], buoy: null };
     // lanternes des lampadaires (matériau « VieLanterne »)
-    this.island.traverse((o) => { if (o.isMesh && /^VieLanterne/.test((o.material && o.material.name) || '') && !Q.lamps.includes(o.material)) { o.material.emissive = new T.Color(0xffb866); Q.lamps.push(o.material); } });
+    this.island.traverse((o) => { if (o.isMesh && /^VieLanterne/.test((o.material && o.material.name) || '') && !Q.lamps.includes(o.material)) { o.material.emissive = new T.Color(0xffa040); Q.lamps.push(o.material); } });
+    // une flaque de lumière chaude sous chaque lanterne (ajoutées dès le départ, éteintes : pas de recompilation des shaders à la nuit)
+    Q.pools = [0, 1, 2].map((k) => { const v = this.island.getObjectByName('Vie_LanterneVerre_' + k); if (!v) return null; const w = new T.Vector3(); v.getWorldPosition(w); v.geometry.computeBoundingBox(); v.geometry.boundingBox.getCenter(w); v.localToWorld(w);
+      const l = new T.PointLight(0xffa755, 0, 9, 1.2); l.position.copy(w); this.life.add(l); return l; }).filter(Boolean);
     Q.buoy = this.island.getObjectByName('Vie_BoueeMer'); if (Q.buoy) Q.buoy.userData.y0 = Q.buoy.position.y;
     // mouettes : corps, tête, deux ailes articulées à l'épaule
     const white = new T.MeshLambertMaterial({ color: 0xf4f4f0 }), grey = new T.MeshLambertMaterial({ color: 0xaab2ba, side: T.DoubleSide }), beak = new T.MeshLambertMaterial({ color: 0xe8b23a });
@@ -15,10 +18,10 @@ Object.assign(Component.prototype, {
       const head = new T.Mesh(headG, white); head.position.set(0, 0.07, 0.22); g.add(head); const b = new T.Mesh(beakG, beak); b.rotation.x = Math.PI / 2; b.position.set(0, 0.06, 0.3); g.add(b);
       const tail = new T.Mesh(tailG, grey); tail.rotation.x = -Math.PI / 2; tail.position.set(0, 0.01, -0.26); tail.scale.set(1, 1, 0.25); g.add(tail);
       const wl = new T.Group(), wr = new T.Group(); const ml = new T.Mesh(wingG, grey), mr = new T.Mesh(wingG, grey); mr.scale.x = -1; wl.add(ml); wr.add(mr);
-      wl.position.set(0.05, 0.04, 0.02); wr.position.set(-0.05, 0.04, 0.02); g.add(wl, wr); g.userData = { wl, wr, head }; this.life.add(g); return g; };
+      wl.position.set(0.05, 0.04, 0.02); wr.position.set(-0.05, 0.04, 0.02); g.add(wl, wr); g.userData = { wl, wr, head }; g.scale.setScalar(1.5); this.life.add(g); return g; };
     // posées sur le perchoir de deux lampadaires
     ['Vie_LampPerche_1', 'Vie_LampPerche_2'].forEach((n, i) => { const p = this.island.getObjectByName(n); if (!p) return; const w = new T.Vector3(); p.getWorldPosition(w);
-      const g = gull(); g.position.set(w.x, w.y + 0.13, w.z); g.rotation.y = i ? 2.2 : -0.6; g.userData.wl.rotation.z = g.userData.wr.rotation.z = 0; g.userData.wl.scale.setScalar(0.42); g.userData.wr.scale.setScalar(0.42);
+      const g = gull(); g.position.set(w.x, w.y + 0.2, w.z); g.rotation.y = i ? 2.2 : -0.6; g.userData.wl.rotation.z = g.userData.wr.rotation.z = 0; g.userData.wl.scale.setScalar(0.42); g.userData.wr.scale.setScalar(0.42);
       g.userData.wl.rotation.y = 1.25; g.userData.wr.rotation.y = -1.25; g.userData.perch = { yaw: g.rotation.y, ph: i * 3.1 }; Q.gulls.push(g); });
     // en vol, en cercles au-dessus du port
     const c = this.stuW(0, -9, 0);
@@ -32,7 +35,7 @@ Object.assign(Component.prototype, {
   },
   quayLifeStep(T, t, dt) {
     const Q = this.quay; if (!Q) return; const n = this.night || 0, e = n * n * (3 - 2 * n);
-    Q.lamps.forEach((m) => { m.emissiveIntensity = 2.2 * e; });
+    Q.lamps.forEach((m) => { m.emissiveIntensity = 1.3 * e; }); Q.pools.forEach((l) => { l.intensity = 1.5 * e; });
     if (Q.buoy) { const b = Q.buoy; b.position.y = b.userData.y0 + 0.12 * Math.sin(t * 1.25); b.rotation.x = 0.07 * Math.sin(t * 0.9 + 1); b.rotation.z = 0.06 * Math.sin(t * 1.1); }
     Q.gulls.forEach((g) => { const u = g.userData;
       if (u.perch) { const k = Math.sin(t * 0.35 + u.ph); g.rotation.y = u.perch.yaw + (k > 0.6 ? 0.9 : k < -0.7 ? -0.7 : 0); u.head.position.y = 0.07 + 0.012 * Math.max(0, Math.sin(t * 2.4 + u.ph)); return; }
