@@ -21,7 +21,9 @@ Object.assign(PR_RADIO, {
 Object.assign(Component.prototype, {
   srvPh(ph) { return ph === 'mue' || ph === 'plongee' || ph === 'fond' || ph === 'remonte'; },
   srvBerth() { const I = PR_ISLES.serveur; return { x: I.x - 4, z: I.z + I.rz + 16, h: Math.PI / 2 }; },
-  srvVC() { const B = this.srvBerth(); return { x: B.x + 2, y: PR_FOND.prof, z: B.z + 22 }; },
+  // E : là où le sous-marin s'arrête, à -11,5 m, nez au sud ; le village est devant lui, un peu à droite
+  srvEnd() { const B = this.srvBerth(); return { x: B.x + 14, y: -11.5, z: B.z + 12 }; },
+  srvVC() { const E = this.srvEnd(); return { x: E.x - 7, y: PR_FOND.prof, z: E.z + 8 }; },
   // ---------- chargement (à l'approche de l'île du serveur)
   loadFond() {
     if (this.fondLoading) return; this.fondLoading = true; const T = window.THREE, L = new T.GLTFLoader(); if (T.MeshoptDecoder) L.setMeshoptDecoder(T.MeshoptDecoder);
@@ -37,7 +39,7 @@ Object.assign(Component.prototype, {
     L.load('assets/elba_sousmarin.glb', (g) => {
       const rig = g.scene; rig.visible = false; this.subRig = rig; if (this.boat) this.boat.add(rig);
       this.subMix = new T.AnimationMixer(rig); g.animations.forEach((c) => { const a = this.subMix.clipAction(c); a.play(); a.paused = false; }); this.subMix.setTime(0);
-      this.subHull = rig.getObjectByName('Coque'); this.subSM = rig.getObjectByName('CoqueSousMarin'); if (this.subSM) this.subSM.visible = false;
+      this.subProp = rig.getObjectByName('HeliceRot'); this.subHull = rig.getObjectByName('Coque'); this.subSM = rig.getObjectByName('CoqueSousMarin'); if (this.subSM) this.subSM.visible = false;
       const mats = {}; rig.traverse((o) => { if (!o.isMesh) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m && m.name) (mats[m.name] = mats[m.name] || []).push(m); }); o.castShadow = o.receiveShadow = true; });
       const keep = (m) => ({ m, c: m.color.clone(), r: m.roughness });
       this.subFondus = ['Rouf', 'Hublot', 'Bois'].flatMap((n) => (mats[n] || []).map(keep)); this.subBlanc = (mats.PontBlanc || [])[0] ? mats.PontBlanc[0].color.clone() : new T.Color(0.8, 0.8, 0.77);
@@ -92,16 +94,19 @@ Object.assign(Component.prototype, {
     const b = this.b; Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1, dist: 30, pitch: 0.22, yaw: this.orb.yaw });
     this.setState({ phase: 'mue', panel: null });
   },
-  faireSurface() { this.fondFocus = null; this.subDir = -1; this.setState({ phase: 'remonte', panel: null }); this.say(PR_RADIO.surface, 'LOUIS-MARIE · LE SERVEUR'); },
+  faireSurface() { this.fondFocus = null; this.subDir = -1; this.subUp = 0; this.setState({ phase: 'remonte', panel: null }); this.say(PR_RADIO.surface, 'LOUIS-MARIE · LE SERVEUR'); },
   fondFocusK(k) { const c = this.caps && this.caps[k]; if (!c) return; const p = new window.THREE.Vector3(); c.getWorldPosition(p); this.fondFocus = k;
     Object.assign(this.orbW, { tx: p.x, tz: p.z, ty: p.y + 0.4, dist: k === 'Noeud' ? 16 : 12, pitch: 0.22 });
     const [n, list, txt] = PR_CAISSONS[k]; this.setState({ panel: { kicker: k === 'Noeud' ? 'LE NŒUD CENTRAL' : 'UN CAISSON', title: n, list: list.map((x) => [x, '']), paras: [txt] } }); this.say(n + ' : ' + txt, 'LOUIS-MARIE · LE SERVEUR'); },
   fondOverview() { const V = this.srvVC(); this.fondFocus = null; Object.assign(this.orbW, { tx: V.x, tz: V.z, ty: V.y + 2, dist: 38, pitch: 0.3 }); this.setState({ panel: null }); },
   fondHit(cx, cy) { if (!this.fondG) return null; const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(), rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
     const h = rc.intersectObject(this.fondG, true); for (const x of h) { let o = x.object; while (o && !PR_CAISSONS[o.name]) o = o.parent; if (o) return o.name; } return null; },
-  // la route de descente : on quitte la bouée en virant, et on arrive au-dessus du village
-  diveCurve() { if (this.diveC) return this.diveC; const T = window.THREE, B = this.srvBerth(), V = this.srvVC();
-    this.diveC = new T.CatmullRomCurve3([[B.x, 0, B.z], [B.x, -2.5, B.z - 7], [B.x + 9, -6, B.z - 4], [B.x + 11, -9, B.z + 7], [V.x - 3, -11.5, V.z - 7]].map(([x, y, z]) => new T.Vector3(x, y, z)), false, 'centripetal'); return this.diveC; },
+  // les routes : une seule courbe de Bézier chacune, nez au nord à la bouée, nez au sud au-dessus du village.
+  // Le sous-marin part et arrive à vitesse nulle : son cap et son assiette ne peuvent pas sauter.
+  diveCurve() { if (this.diveC) return this.diveC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), v = (x, y, z) => new T.Vector3(x, y, z);
+    this.diveC = new T.CubicBezierCurve3(v(B.x, 0, B.z), v(B.x, -1, B.z - 15), v(E.x, E.y + 0.5, E.z - 13), v(E.x, E.y, E.z)); return this.diveC; },
+  upCurve() { if (this.upC) return this.upC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), v = (x, y, z) => new T.Vector3(x, y, z);
+    this.upC = new T.CubicBezierCurve3(v(E.x, E.y, E.z), v(E.x, E.y + 1, E.z + 13), v(B.x, -1, B.z + 15), v(B.x, 0, B.z)); return this.upC; },
   // ---------- à chaque image
   fondStep(T, t, dt, ph) {
     const I = PR_ISLES.serveur; if (!this.fondLoading && (this.isleK === 'serveur' || this.sailDest === 'serveur' || this.transitK === 'serveur' || Math.hypot(this.b.x - I.x, this.b.z - I.z) < 260)) this.loadFond();
@@ -120,18 +125,27 @@ Object.assign(Component.prototype, {
     const N = PR_FOND.noir; this.subNoirs.forEach((f) => { f.m.color.copy(f.c).lerp(new T.Color(N[0], N[1], N[2]), kc); f.m.roughness = f.r + (0.58 - f.r) * kc; });
     this.subAF.forEach((f) => f.m.color.copy(f.c).lerp(new T.Color(0.42, 0.07, 0.04), kc));
     this.subHub.forEach((m) => { m.emissive.setRGB(1.0, 0.72, 0.42); m.emissiveIntensity = 4 * kf; }); this.subPhare.forEach((m) => { m.emissive.setRGB(0.85, 0.95, 1.0); m.emissiveIntensity = 8 * kf; });
-    // 2. la descente, puis le fond
-    const C = this.diveCurve(), b = this.b;
+    // 2. la descente, le fond, la remontée : position, cap, assiette et hélice varient toujours en douceur
+    const b = this.b, bo = this.boat;
     if (ph === 'plongee') { this.subMove = Math.min(1, this.subMove + dt / PR_FOND.descente); if (this.subMove >= 1) { this.setState({ phase: 'fond' }); this.fondOverview(); this.say(PR_RADIO.fond, 'LOUIS-MARIE · LE SERVEUR'); } }
-    if (ph === 'remonte' && this.subMove > 0) this.subMove = Math.max(0, this.subMove - dt / PR_FOND.descente);
-    const u = ss(0, 1, this.subMove);
-    if (this.subMove > 0) { const p = C.getPointAt(u), tg = C.getTangentAt(Math.min(0.999, Math.max(0.001, u))); const bo = this.boat;
-      const hover = ph === 'fond' ? 0.25 * Math.sin(t * 0.6) : 0; bo.position.set(p.x, p.y + hover, p.z); bo.rotation.set(0, 0, 0);
-      const h = Math.atan2(-tg.z, tg.x) * (ph === 'remonte' ? 1 : 1); b.x = p.x; b.z = p.z; b.h = h; bo.rotateY(h); bo.rotateZ(Math.asin(Math.max(-0.4, Math.min(0.4, tg.y))) * (this.subDir < 0 ? 1 : 1)); }
-    if (ph === 'mue' || ph === 'plongee' || ph === 'remonte') { if (this.subMove > 0 || ph !== 'remonte') Object.assign(this.orbW, { tx: this.boat.position.x, tz: this.boat.position.z, ty: this.boat.position.y + 1, dist: Math.max(this.orbW.dist, ph === 'mue' ? 24 : 20) }); }
+    if (ph === 'remonte' && this.subUp < 1) { this.subUp = Math.min(1, this.subUp + dt / PR_FOND.descente); if (this.subUp >= 1) this.subMove = 0; }
+    let C = null, u = 0, fade = 0;          // fade : 0 en surface (le bateau flotte), 1 en plongée
+    if (ph === 'remonte' && this.subUp < 1) { C = this.upCurve(); u = ss(0, 1, this.subUp); fade = 1 - ss(0.85, 1, u); }
+    else if (this.subMove > 0) { C = this.diveCurve(); u = ss(0, 1, this.subMove); fade = ss(0, 0.15, u); }
+    this.hovA = (this.hovA || 0) + ((ph === 'fond' ? 0.25 : 0) - (this.hovA || 0)) * Math.min(1, dt * 0.8);
+    if (C) { const p = C.getPointAt(u), tg = C.getTangentAt(Math.min(0.999, Math.max(0.001, u)));
+      const nofl = 1 - fade, bobY = (0.05 * Math.sin(t * 1.3) - 0.05) * nofl;
+      bo.position.set(p.x, p.y + bobY + this.hovA * Math.sin(t * 0.6), p.z); bo.rotation.set(0, 0, 0);
+      const h = Math.atan2(-tg.z, tg.x); b.x = p.x; b.z = p.z; b.h = h;
+      const want = Math.asin(Math.max(-0.4, Math.min(0.4, tg.y))) * fade; this.subPitch = (this.subPitch || 0) + (want - (this.subPitch || 0)) * Math.min(1, dt * 1.2);
+      bo.rotateY(h); bo.rotateX(0.02 * Math.sin(t * 1.1) * nofl); bo.rotateZ(this.subPitch + 0.015 * Math.sin(t * 0.9) * nofl); }
+    else this.subPitch = 0;
+    if (ph === 'mue' || ph === 'plongee' || ph === 'remonte') Object.assign(this.orbW, { tx: bo.position.x, tz: bo.position.z, ty: bo.position.y + 1, dist: Math.max(this.orbW.dist, ph === 'mue' ? 24 : 20) });
+    // hélice : elle se met à tourner à la fin de la mue, tourne pendant la plongée, ralentit au fond
+    if (this.subProp) { const sp = ss(0.84, 1, st), w = C ? 7 : ph === 'fond' ? 2.5 : 7 * sp; this.propW = (this.propW || 0) + (w - (this.propW || 0)) * Math.min(1, dt * 1.2); this.propA = ((this.propA || 0) + this.propW * dt) % (Math.PI * 2000); this.subProp.rotation.x = this.propA; }
     if (this.subSpot) this.subSpot.intensity = kf * 60 * LUXP / 4 * (this.camEau || 0);
     // bulles : derrière le sous-marin pendant la plongée
-    if (this.bub) { const A = this.bub.geometry.attributes.position; const moving = (ph === 'plongee' || ph === 'remonte') && this.subMove > 0 && this.subMove < 1;
+    if (this.bub) { const A = this.bub.geometry.attributes.position; const moving = !!C && u > 0 && u < 1;
       for (let i = 0; i < 120; i++) { let y = A.getY(i); if (y > -0.2 || y === 0) { if (moving && Math.random() < 0.15) { const bo = this.boat.position; A.setXYZ(i, bo.x + (Math.random() - 0.5) * 2 - Math.cos(b.h) * 5, bo.y + (Math.random() - 0.5), bo.z + (Math.random() - 0.5) * 2 + Math.sin(b.h) * 5); } else A.setY(i, 0); continue; } A.setY(i, y + dt * (0.8 + (i % 5) * 0.15)); A.setX(i, A.getX(i) + Math.sin(t * 3 + i) * dt * 0.2); }
       A.needsUpdate = true; }
     // 3. sous l'eau ?
