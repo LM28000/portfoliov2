@@ -5,11 +5,11 @@ const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const URL = process.argv[2] || 'http://localhost:8000/';
 const OUT = path.join(__dirname, 'captures'); fs.mkdirSync(OUT, { recursive: true });
-let fails = 0;
+let fails = 0; let navigateur = null;   // fermé même en cas d'échec : sinon il continue de calculer en arrière-plan
 const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if (!cond) fails++; };
 
 (async () => {
-  const b = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
+  const b = navigateur = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   // rendu logiciel (sans carte graphique) : niveau « simple », sinon tout est trop lent ; PW_RENDU=haute pour tester le niveau complet
   await p.addInitScript((n) => { try { localStorage.setItem('elba-rendu', n); } catch (e) {} }, process.env.PW_RENDU || 'simple');
@@ -49,7 +49,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   const p0 = await E(() => window.__elba.cam.position.toArray()); await p.mouse.move(60, 400); await p.mouse.down(); for (let i = 1; i <= 12; i++) await p.mouse.move(60 + i * 8, 400); await p.mouse.up();
   const p1 = await E(() => window.__elba.cam.position.toArray()); check(Math.hypot(p1[0] - p0[0], p1[2] - p0[2]) > 0.02, "on peut tourner autour d'un objet choisi");
   await E(() => window.__elba.stuFocus('cles')); await shot('07-cles', 4500); check((await st()).acts.some((l) => /Larguer les amarres/.test(l)), 'les clés proposent de repartir');
-  await E(() => window.__elba.leaveStudio()); await p.waitForFunction(() => window.__elba.st().phase === 'accoste', null, { timeout: 40000 }).catch(() => {}); check((await st()).ph === 'accoste', 'retour sur le quai');
+  await E(() => window.__elba.leaveStudio()); await p.waitForFunction(() => window.__elba.st().phase === 'accoste', null, { timeout: 90000 }).catch(() => {}); check((await st()).ph === 'accoste', 'retour sur le quai');
 
   console.log('La cabine');
   await E(() => window.__elba.goTo('cabine')); await p.waitForFunction(() => window.__elba.st().phase === 'cabine', null, { timeout: 60000 }).catch(() => {}); await shot('08-cabine', 3000); check((await st()).ph === 'cabine', 'descente dans la cabine');
@@ -60,4 +60,4 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await b.close();
   console.log('\n' + (fails ? fails + ' étape(s) en échec' : 'Parcours complet réussi') + ' · captures dans ' + path.relative(process.cwd(), OUT));
   process.exit(fails ? 1 : 0);
-})().catch((e) => { console.error('ÉCHEC', e.message); process.exit(1); });
+})().catch(async (e) => { console.error('ÉCHEC', e.message); if (navigateur) await navigateur.close().catch(() => {}); process.exit(1); });

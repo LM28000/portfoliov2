@@ -3,6 +3,7 @@
 ## 14 novembre 2026 : nouveau moteur, ombres en temps réel
 
 - **Une passe de finition** en qualité « haute » : léger halo sur le soleil, la lune et les lanternes, recoins assombris à l'extérieur. La mer et le ciel écrivent maintenant des valeurs de lumière, converties comme le reste de la scène. Coupée dans le studio.
+- **Le lissage des bords** de la finition passe en SMAA : avec le halo, le lissage d'origine (MSAA) faisait clignoter l'écran en noir dans Chrome.
 - **Les ombres** suivent le point regardé et couvrent toute l'île quand on recule : elles ne disparaissent plus en se déplaçant.
 
 - **three.js r187** à la place de r128 : un seul script dans `vendor/`, construit par `outils/moteur`. Le site reste sans étape de construction.
