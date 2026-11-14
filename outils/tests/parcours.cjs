@@ -31,6 +31,8 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.goTo('insula')); await p.waitForTimeout(12000);
   let s = await st(); check(s.ph === 'accoste', 'accosté à Insula'); check(s.acts.includes('⌂ Monter au studio'), 'bouton « Monter au studio »'); await shot('02-quai');
   const drag = async (mods) => { for (const m of mods) await p.keyboard.down(m); await p.mouse.move(500, 450); await p.mouse.down(); for (let i = 1; i <= 10; i++) await p.mouse.move(500 + i * 15, 450 + i * 4); await p.mouse.up(); for (const m of mods) await p.keyboard.up(m); await p.waitForTimeout(300); };
+  // attendre que la caméra ait fini d'arriver (sinon sa rotation se mêle au geste testé)
+  await p.waitForFunction(() => { const C = window.__elba; return Math.abs(C.orb.yaw - C.orbW.yaw) < 0.003 && Math.abs(C.orb.dist - C.orbW.dist) < 0.05; }, null, { timeout: 60000 }).catch(() => {});
   let a = await orb(); await drag([]); let c = await orb();
   check(Math.hypot(c.tx - a.tx, c.tz - a.tz) > 1 && Math.abs(c.yaw - a.yaw) < 0.01, 'glisser = déplacer (sans tourner)');
   a = c; await drag(['Control']); c = await orb(); check(Math.abs(c.yaw - a.yaw) > 0.1 && Math.hypot(c.tx - a.tx, c.tz - a.tz) < 0.01, 'Ctrl + glisser = tourner (sans déplacer)');
@@ -41,7 +43,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.focus('porte')); await p.waitForFunction(() => window.__elba.stu && !window.__elba.stu.path && window.__elba.st().phase === 'studio', null, { timeout: 60000 });
   await shot('04-studio'); check((await st()).ph === 'studio', 'entrée dans le studio par la porte-fenêtre');
   for (const k of ['annonces', 'carnet', 'frigo']) { await E((k) => window.__elba.stuFocus(k), k); await shot('05-' + k, 2500); check((await st()).sf === k, 'objet : ' + k); }
-  await E(() => window.__elba.stuFocus('ordi')); await p.waitForTimeout(6000); await shot('06-ordinateur');
+  await E(() => window.__elba.stuFocus('ordi')); await p.waitForFunction(() => { const w = window.__elba.stu.web; return w.style.display === 'block' && w.style.transform.startsWith('matrix3d'); }, null, { timeout: 60000 }).catch(() => {}); await shot('06-ordinateur', 3000);
   const web = await E(() => { const w = window.__elba.stu.web; return { on: w.style.display === 'block', src: w.querySelector('iframe').src, tf: w.style.transform }; });
   check(web.on && /insula\.du-cray\.eu/.test(web.src) && web.tf.startsWith('matrix3d'), "la vraie app est posée sur l'écran du portable");
   const p0 = await E(() => window.__elba.cam.position.toArray()); await p.mouse.move(60, 400); await p.mouse.down(); for (let i = 1; i <= 12; i++) await p.mouse.move(60 + i * 8, 400); await p.mouse.up();
