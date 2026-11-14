@@ -2,7 +2,8 @@
    ombres du soleil en temps réel autour de ce qu'on regarde, et une passe de finition (occultation ambiante, léger halo).
    Deux niveaux : « haute » sur ordinateur, « simple » sur téléphone ou machine modeste (ni passe de finition, ni ombres).
    localStorage « elba-rendu » = 'haute' | 'simple' force un niveau. */
-const PR_RENDU = { finition: false, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.12, haloSeuil: 2.2 };
+const PR_RENDU = { finition: /[?&]finition=1/.test(location.search),   /* désactivée par défaut (clignotements noirs à corriger) ; ?finition=1 pour l'essayer */
+  exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.12, haloSeuil: 2.2 };
 Object.assign(Component.prototype, {
   renduNiveau() {
     let f = null; try { f = localStorage.getItem('elba-rendu'); } catch (e) {}
@@ -26,15 +27,17 @@ Object.assign(Component.prototype, {
     s.shadow.bias = -0.0004; s.shadow.normalBias = 0.04; s.shadow.radius = 3; scene.add(s.target); this.sunDir = s.position.clone().normalize();
     // passe de finition : occultation ambiante (dehors seulement) et léger halo sur les lumières vives
     if (!PR_RENDU.finition) return;
-    const pr = r.getPixelRatio(), rt = new T.WebGLRenderTarget(W * pr, H * pr, { type: T.HalfFloatType, samples: 4 });
+    // essais : ?finition=1 puis &ao=0 (sans occultation), &halo=0 (sans halo), &msaa=0 (sans lissage multi-échantillons), &flottant=0 (tampon 8 bits)
+    const sans = (k) => new RegExp('[?&]' + k + '=0').test(location.search);
+    const pr = r.getPixelRatio(), rt = new T.WebGLRenderTarget(W * pr, H * pr, { type: sans('flottant') ? T.UnsignedByteType : T.HalfFloatType, samples: sans('msaa') ? 0 : 4 });
     const comp = new T.EffectComposer(r, rt); const rp = new T.RenderPass(scene, cam); comp.addPass(rp);
     const ao = new T.GTAOPass(scene, cam, W, H); ao.output = T.GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
     ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.0, thickness: 1.0, scale: 1.0, samples: 16, distanceFallOff: 1.0 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
     // l'occultation ignore aussi les sprites (fumée), le transparent (verres, anneaux), le ciel et la mer
     ao._overrideVisibility = function () { const cache = this._visibilityCache; this.scene.traverse((o) => { if (!o.visible) return; const m = o.material;
       if (o.isPoints || o.isLine || o.isLine2 || o.isSprite || (o.isMesh && m && ((m.transparent && !m.alphaTest) || m.isShaderMaterial))) { o.visible = false; cache.push(o); } }); };
-    comp.addPass(ao);
-    const halo = new T.UnrealBloomPass(new T.Vector2(W, H), PR_RENDU.halo, 0.35, PR_RENDU.haloSeuil); comp.addPass(halo);
+    if (!sans('ao')) comp.addPass(ao); else ao.enabled = false;
+    const halo = new T.UnrealBloomPass(new T.Vector2(W, H), PR_RENDU.halo, 0.35, PR_RENDU.haloSeuil); if (!sans('halo')) comp.addPass(halo); else halo.enabled = false;
     comp.addPass(new T.OutputPass());
     Object.assign(this.rendu, { comp, rp, ao, halo });
   },
@@ -66,6 +69,6 @@ Object.assign(Component.prototype, {
   },
   renduFrame(scene, cam, expo) {
     const r = this.renderer, R = this.rendu; r.toneMappingExposure = expo;
-    if (R && R.comp) { R.rp.scene = scene; R.rp.camera = cam; const dehors = scene === this.scene && this.st().phase !== 'studio'; R.ao.enabled = dehors; R.halo.enabled = this.st().phase !== 'studio'; /* intérieurs : profondeur trop étirée (3 cm à 3 km) */ R.comp.render(); } else r.render(scene, cam);
+    if (R && R.comp) { R.rp.scene = scene; R.rp.camera = cam; const dehors = scene === this.scene && this.st().phase !== 'studio'; if (R.comp.passes.includes(R.ao)) R.ao.enabled = dehors; if (R.comp.passes.includes(R.halo)) R.halo.enabled = this.st().phase !== 'studio'; /* intérieurs : profondeur trop étirée (3 cm à 3 km) */ R.comp.render(); } else r.render(scene, cam);
   }
 });
