@@ -50,7 +50,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.leaveStudio()); await p.waitForFunction(() => window.__elba.st().phase === 'accoste', null, { timeout: 40000 }).catch(() => {}); check((await st()).ph === 'accoste', 'retour sur le quai');
 
   console.log('La cabine');
-  await E(() => window.__elba.goTo('cabine')); await p.waitForTimeout(15000); await shot('08-cabine'); check((await st()).ph === 'cabine', 'descente dans la cabine');
+  await E(() => window.__elba.goTo('cabine')); await p.waitForFunction(() => window.__elba.st().phase === 'cabine', null, { timeout: 60000 }).catch(() => {}); await shot('08-cabine', 3000); check((await st()).ph === 'cabine', 'descente dans la cabine');
   await E(() => window.__elba.goTo('studio')); await p.waitForTimeout(12000); check((await st()).ph === 'studio', 'retour au studio par la carte du voyage');
   check(await E(() => (window.__elba.night || 0) < 0.05), 'le studio se visite de jour');
 
