@@ -73,7 +73,7 @@ def export(objs, path):
     for o in objs:
         o.select_set(True)
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True, use_selection=True,
-                              export_image_format="JPEG", export_jpeg_quality=82, export_cameras=False, export_lights=False)
+                              export_image_format="JPEG", export_jpeg_quality=82, export_cameras=False, export_lights=False, export_extras=True)
     print("GLB", path, round(os.path.getsize(path) / 1e6, 2), "Mo", len(objs), "objets")
 export(studio, os.path.join(SITE, "studio.glb"))
 export([o for o in sc.objects if not o.get("studio")], os.path.join(SITE, "ile_insula.glb"))

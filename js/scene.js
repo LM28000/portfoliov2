@@ -38,7 +38,7 @@ init() {
  if (!T || !T.GLTFLoader || !this.host || !this.layer) { this.retry = setTimeout(() => this.init(), 200); return; }
  const host = this.host; let W = host.clientWidth || 1440, H = host.clientHeight || 900;
  const r = new T.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); r.setSize(W, H);
- r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+ T.ColorManagement.enabled = false; r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
  host.appendChild(r.domElement); this.renderer = r;
  const scene = new T.Scene(); this.scene = scene;
  const FOG = new T.Color(0xeed3bd).convertSRGBToLinear(); this.fogDay = FOG.clone(); scene.fog = new T.Fog(FOG, 220, 1350);
@@ -49,8 +49,8 @@ init() {
   vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
   fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform vec3 sun; uniform float glow; varying vec3 vP; void main(){ vec3 d = normalize(vP); float h = clamp(d.y,0.0,1.0); vec3 c = mix(hor, top, pow(h,0.55)); float s = max(dot(d,sun),0.0); c += (vec3(1.0,0.8,0.6)*pow(s,300.0)*1.2 + vec3(1.0,0.65,0.45)*pow(s,12.0)*0.12)*glow; gl_FragColor = vec4(c,1.0); }' }));
  scene.add(sky); this.sky = sky;
- const hemi = new T.HemisphereLight(0xcfe0ff, 0x6b5a48, 0.75); scene.add(hemi); this.hemi = hemi;
- const sun = new T.DirectionalLight(0xffe2c4, 1.35); sun.position.set(-160, 120, -300); scene.add(sun); this.sunL = sun;
+ const hemi = new T.HemisphereLight(0xcfe0ff, 0x6b5a48, 0.75 * LUX); scene.add(hemi); this.hemi = hemi;
+ const sun = new T.DirectionalLight(0xffe2c4, 1.35 * LUX); sun.position.set(-160, 120, -300); scene.add(sun); this.sunL = sun;
  // mer
  const sea = new T.Mesh(new T.PlaneGeometry(3000, 3000, 220, 220), new T.ShaderMaterial({ fog: true,
   uniforms: T.UniformsUtils.merge([T.UniformsLib.fog, { t: { value: 0 }, deep: { value: new T.Color(0x0d3a5c) }, shallow: { value: new T.Color(0x2f7f9a) }, skyc: { value: new T.Color(0xf0d2b8) }, sunDir: { value: new T.Vector3(-0.35, 0.2, -0.93).normalize() }, spec: { value: new T.Color(1.0, 0.85, 0.65) } }]),
@@ -65,7 +65,7 @@ init() {
  for (let i = -12; i <= 12; i += 6) { const bol = new T.Mesh(new T.CylinderGeometry(0.12, 0.14, 0.35, 10), wood); bol.position.set(1.15, 0.55, i); ponton.add(bol); }
  ponton.position.copy(P0); scene.add(ponton); this.ponton = ponton;
  // arbres (imposteurs croisés)
- const tl = new T.TextureLoader(); const treeMats = PR_TREE_IMG.map((d) => { const tx = tl.load(d[0]); tx.encoding = T.sRGBEncoding; return new T.MeshLambertMaterial({ map: tx, alphaTest: 0.45, side: T.DoubleSide, transparent: false }); }); this.treeMats = treeMats;
+ const tl = new T.TextureLoader(); const treeMats = PR_TREE_IMG.map((d) => { const tx = tl.load(d[0]); tx.colorSpace = T.SRGBColorSpace; return new T.MeshLambertMaterial({ map: tx, alphaTest: 0.45, side: T.DoubleSide, transparent: false }); }); this.treeMats = treeMats;
  const trees = new T.Group();
  PR_TREES.forEach(([k, x, y, z, rot, s]) => { const [img, w, h, z0] = PR_TREE_IMG[k]; const hh = Math.max(h, w) * 1.03, ww = h >= w ? hh * (w / h) * 1.0 : hh; const g = new T.PlaneGeometry(ww, h >= w ? hh : hh * h / w);
   for (let a = 0; a < 2; a++) { const m = new T.Mesh(g, treeMats[k]); const [tx, ty, tz] = B2T(x, y, z); m.position.set(tx, ty + (z0 + h / 2) * s, tz); m.scale.setScalar(s); m.rotation.y = rot + a * Math.PI / 2; trees.add(m); } });
@@ -76,7 +76,7 @@ init() {
   const boat = new T.Group(); const m = g.scene; boat.add(m); scene.add(boat); this.boat = boat;
   m.traverse((o) => { if (o.isMesh && o.material && o.material.name && o.material.name.startsWith('feu')) o.material.emissiveIntensity = 2; });
   this.setState({ loadMsg: "l'île d'Insula…" });
-  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.setState({ loading: false }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
+  loader.load('assets/ile_insula.glb', (gi) => { this.island = gi.scene; scene.add(gi.scene); this.prepIsland(T); this.bakeIsland(T); this.renduOmbres(T, scene); this.setState({ loading: false }); }, (ev) => { if (ev.total) this.setState({ loadMsg: "l'île d'Insula : " + Math.round(100 * ev.loaded / ev.total) + ' %' }); }, (e) => this.setState({ loadMsg: 'erreur île : ' + e }));
  }, undefined, (e) => this.setState({ loadMsg: 'erreur bateau : ' + e }));
  // état du bateau
  this.P0 = P0; this.b = { x: P0.x + 3.0, z: P0.z - 4, h: Math.PI / 2, v: 0, turn: 0, thr: 0, auto: null }; this.route = []; this.path = null; this.camDist = 16;
@@ -136,7 +136,7 @@ init() {
   const other = this.islesHit(e.clientX, e.clientY); if (other && other !== 'insula') { const rc0 = r.domElement.getBoundingClientRect(); if (!this.st().auto) this.setState({ ask: { x: e.clientX - rc0.left, y: e.clientY - rc0.top, k: other } }); return; }
   const rc = r.domElement.getBoundingClientRect(); ndc.set(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1); ray.setFromCamera(ndc, cam);
   const hit = ray.intersectObject(this.island, true).length || ray.intersectObject(this.trees, true).length || (this.marker && ray.intersectObject(this.marker, true).length); if (hit && !this.st().auto) this.setState({ ask: { x: e.clientX - rc.left, y: e.clientY - rc.top, k: 'insula' } }); else this.setState({ ask: null }); });
- this.ro = new ResizeObserver(() => { W = host.clientWidth || W; H = host.clientHeight || H; r.setSize(W, H); cam.aspect = W / H; cam.updateProjectionMatrix(); }); this.ro.observe(host);
+ this.ro = new ResizeObserver(() => { W = host.clientWidth || W; H = host.clientHeight || H; r.setSize(W, H); this.renduTaille(W, H); cam.aspect = W / H; cam.updateProjectionMatrix(); }); this.ro.observe(host);
  // étiquettes des lieux (DOM géré à la main, mis à jour à chaque image)
  this.labels = [];
  this.tip = document.createElement('div'); this.tip.className = 'pr-lbl'; this.tip.style.display = 'none'; this.tip.style.pointerEvents = 'none'; this.layer.appendChild(this.tip);
@@ -151,8 +151,9 @@ init() {
  this.dest = document.createElement('div'); this.dest.style.cssText = 'position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:2px solid #B4412E;background:#FFC94A;display:none'; this.chart.appendChild(this.dest);
  this.dot = document.createElement('div'); this.dot.style.cssText = 'position:absolute;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:13px solid #B4412E;margin:-7px 0 0 -5px;transform-origin:5px 7px';
  this.chart.appendChild(this.dot); this.chartHost.appendChild(this.chart);
- this.clock = new T.Clock();
- const tick = () => { this.raf = requestAnimationFrame(tick); this.step(T, Math.min(0.05, this.clock.getDelta())); this.portalPre(r); if (this.st().phase === 'cabine' && this.cabin) { r.toneMappingExposure = 0.95; r.clippingPlanes = this.portalClip && this.cabin.cam.position.x < PR_PORTAL.cab[0] + 0.02 ? this.portalClip : []; r.render(this.cabin.scene, this.cabin.cam); r.clippingPlanes = []; } else { r.toneMappingExposure = 1.05; r.render(scene, cam); } };
+ this.setupRendu(T, r, scene, cam, W, H);
+ this.clock = new T.Timer(); this.clock.connect(document);
+ const tick = () => { this.raf = requestAnimationFrame(tick); this.clock.update(); this.step(T, Math.min(0.05, this.clock.getDelta())); this.portalPre(r); this.renduStep(); if (this.st().phase === 'cabine' && this.cabin) { r.clippingPlanes = this.portalClip && this.cabin.cam.position.x < PR_PORTAL.cab[0] + 0.02 ? this.portalClip : []; this.renduFrame(this.cabin.scene, this.cabin.cam, PR_RENDU.expoCabine); r.clippingPlanes = []; } else this.renduFrame(scene, cam, PR_RENDU.exposition); };
  tick();
 }
 prepIsland(T) {
@@ -207,8 +208,8 @@ lifeStep(T, t, dt) {
  if (!this.life) return;
  if (this.pulses) this.pulses.forEach((r, i) => { const u = (t * 0.6 + i * 0.4) % 1; r.scale.setScalar(1 + u * 0.5); r.material.opacity = 0.85 * (1 - u); r.visible = this.st().phase === 'accoste' && r.userData.place !== this.focused; });
  const ph0 = this.st().phase; if ((ph0 === 'accoste' || ph0 === 'accostage') && !this.stuLoading) this.loadStudio();
- this.quayLifeStep(T, t, dt);
- if (this.stuLamp) this.stuLamp.intensity += ((ph0 === 'studio' ? 1.1 : 0) - this.stuLamp.intensity) * Math.min(1, dt * 3);
+ this.quayLifeStep(T, t, dt); this.bakeStep();
+ if (this.stuLamp) this.stuLamp.intensity += ((ph0 === 'studio' ? 1.1 * LUXP : 0) - this.stuLamp.intensity) * Math.min(1, dt * 3);
 }
 
 setPlan(on) {
@@ -268,7 +269,7 @@ pen(x, z) {
 // on refuse seulement un pas qui s'enfonce dans l'obstacle : on peut toujours s'en dégager
 blocked(x, z, ox, oz) { const pn = this.pen(x, z); return pn > 0 && pn >= this.pen(ox, oz); }
 step(T, dt) {
- const s = this.st(), b = this.b, k = this.keys; const t = this.clock.elapsedTime;
+ const s = this.st(), b = this.b, k = this.keys; const t = this.clock.getElapsed();
  this.sea.material.uniforms.t.value = t;
  const ph = s.phase;
  if (ph !== this.lastPh) { this.lastPh = ph; if (this.narrow && ph) { this.setState({ hintOn: true }); clearTimeout(this.hintT); this.hintT = setTimeout(() => this.setState({ hintOn: false }), 6000); } }

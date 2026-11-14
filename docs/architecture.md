@@ -14,6 +14,9 @@ Le site est une page statique. `index.html` charge three.js, puis les fichiers d
 | `js/descente.js` | Descendre dans la cabine sans fondu. L'ouverture de la descente sert de « portail », qui montre la vraie cabine. |
 | `js/studio.js` | L'escale d'Insula : l'immeuble du quai, son panneau et le studio témoin (`assets/studio.glb`). |
 | `js/audio.js` | Musique, ambiance marine générée et voix de la VHF. |
+| `js/quai.js` | La vie du quai d'Insula : mouettes, fumée, bouée de chenal, lampadaires la nuit. |
+| `js/rendu.js` | Le rendu : ombres du soleil, lumière d'environnement, niveau de qualité (« haute » ou « simple », forcé par `localStorage elba-rendu`). |
+| `js/lumiere.js` | Éclairage figé (lumière calculée dans Blender par `cuire_ile.py`). Désactivé sur l'île, gardé pour les intérieurs. |
 | `js/main.js` | Branche `Component` sur la page. Il affiche la radio, les boutons, la carte du voyage, la version texte et l'app, et il gère Échap. |
 
 Les fichiers 2 à 8 complètent la même classe avec `Object.assign(Component.prototype, { … })`. Chaque partie reste lisible seule, et toutes partagent le même état.
@@ -53,7 +56,13 @@ La carte du voyage (`goTo` dans `cabin.js`) permet de sauter d'un lieu à l'autr
 5. le survol (curseur et étiquette) ;
 6. la carte marine.
 
-Ensuite, la scène principale est rendue, ou la scène de la cabine quand on y est.
+Ensuite, `renduStep()` recentre la boîte d'ombre du soleil sur le point du sol au centre de l'écran, et refait la carte d'environnement quand la nuit avance. Puis `renduFrame()` rend la scène principale, ou celle de la cabine quand on y est.
+
+## Le moteur
+
+`vendor/three.bundle.js` contient three.js r187 et les modules utiles (chargeur glTF, textures KTX2, décodeur Meshopt, passes de rendu, environnement). Il est construit par `outils/moteur` (`npm install && npm run construire`) et exposé en global (`window.THREE`). Les fichiers de `js/` restent de simples scripts, sans étape de construction à la mise en ligne.
+
+Le site garde deux conventions de l'époque r128, posées dans `js/shim.js` : la gestion automatique des couleurs est coupée (les couleurs sont converties à la main), et les intensités des lumières sont écrites dans l'ancienne échelle, multipliées par `LUX` (soleil, ciel) ou `LUXP` (lampes).
 
 ## Repères
 
@@ -73,10 +82,10 @@ L'app reste donc à sa place quand on tourne autour du portable, et on clique de
 
 | Quand | Quoi | Poids |
 |---|---|---|
-| À l'ouverture | `elba.glb`, `ile_insula.glb`, arbres (imposteurs WebP) | ~2 Mo |
+| À l'ouverture | `vendor/three.bundle.js`, `elba.glb`, `ile_insula.glb`, arbres (imposteurs WebP) | ~4,5 Mo |
 | À l'arrivée au quai d'Insula | `studio.glb` | ~4 Mo |
 | En entrant dans le studio | `demo-insula.webm`, la démo qui tourne sur le portable | ~7 Mo |
-| Quand la nuit tombe | `cabine.glb` | ~8 Mo |
+| Quand la nuit tombe | `cabine.glb` | ~6 Mo |
 
 Les fichiers de la page sont versionnés (`?v=N` dans `index.html`), pour qu'un navigateur ne garde pas une ancienne version en cache. Augmentez `N` à chaque changement de `js/` ou de `style.css`. `outils/verifier.cjs` vérifie qu'il n'y en a qu'un seul.
 

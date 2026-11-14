@@ -1,0 +1,12 @@
+{
+  "name": "portfolio-moteur",
+  "private": true,
+  "description": "Construit vendor/three.bundle.js (three.js et ses modules en un seul script global).",
+  "scripts": {
+    "construire": "esbuild entree.js --bundle --minify --format=iife --target=es2020 --legal-comments=eof --define:import.meta.url=__THREE_URL --banner:js=\"var __THREE_URL=(document.currentScript&&document.currentScript.src)||location.href;\" --outfile=../../vendor/three.bundle.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "three": "0.187.0"
+  }
+}

@@ -1,5 +1,13 @@
 # Journal des changements
 
+## 14 novembre 2026 : nouveau moteur, ombres en temps réel
+
+- **three.js r187** à la place de r128 : un seul script dans `vendor/`, construit par `outils/moteur`. Le site reste sans étape de construction.
+- **Les ombres du soleil en temps réel** : arbres, immeuble, Elba et objets du quai projettent leurs ombres sur le terrain et le pavage.
+- **Une lumière d'environnement** tirée du ciel du site, qui suit la tombée de la nuit.
+- **Deux niveaux de qualité** : « haute » sur ordinateur, « simple » sur téléphone (l'ancien rendu, plus léger).
+- **Le carnet des amis** a des prénoms (inventés), les lampadaires éclairent le quai la nuit, les mouettes sont plus visibles, la cabine est allégée (5,7 Mo).
+
 ## 13 novembre 2026 : un quai habité
 
 - **Le quai d'Insula prend vie.** Des dalles de granit à la place de la dalle grise, et un mur de quai en moellons. Une terrasse de café avec deux tasses, un banc, deux vélos, des hortensias de part et d'autre de la porte, trois lampadaires en fonte, et un coin de pêche avec casiers, caisses, tonneau et cordage.

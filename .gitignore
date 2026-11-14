@@ -2,7 +2,7 @@
 __pycache__/
 *.blend1
 # outils
-outils/node_modules/
+node_modules/
 outils/tests/captures/
 outils/video/out/
 outils/audio/phrases.json

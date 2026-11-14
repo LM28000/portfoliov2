@@ -42,7 +42,7 @@ Object.assign(Component.prototype, {
       if (k === 'cartevivante') {
         // grand écran incliné : la vraie carte, deux vues qui alternent
         const W = 36, H = W / 1.6; const scr = new T.Group(); scr.position.set(I.x, top + 1.5, I.z - 2); scr.rotation.x = -0.55;
-        this.cvTex = [1, 2].map((n) => { const t = tl.load('assets/carte-vivante-' + n + '.jpg'); t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; });
+        this.cvTex = [1, 2].map((n) => { const t = tl.load('assets/carte-vivante-' + n + '.jpg'); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t; });
         const fr = new T.Mesh(new T.BoxGeometry(W + 1, H + 1, 0.5), new T.MeshStandardMaterial({ color: 0x151a22, roughness: 0.5 })); fr.position.y = H / 2; scr.add(fr);
         const pl = new T.Mesh(new T.PlaneGeometry(W, H), new T.MeshBasicMaterial({ map: this.cvTex[0], toneMapped: false })); pl.position.set(0, H / 2, 0.27); scr.add(pl); this.cvScreen = pl; g.add(scr);
         for (const sx of [-W / 2 + 2, W / 2 - 2]) { const post = new T.Mesh(new T.BoxGeometry(0.6, 9, 0.6), wood); post.position.set(I.x + sx, top + 3, I.z - 2 - 6); g.add(post); }
@@ -66,7 +66,7 @@ Object.assign(Component.prototype, {
         this.srvLeds = [];
         PR_SRV_ROWS.forEach(([a, b], i) => { const y = 92 + i * 40; x.fillStyle = '#1a2330'; x.fillRect(24, y - 28, 992, 34); x.fillStyle = '#7FE6FF'; x.font = '700 22px JetBrains Mono, monospace'; x.fillText(a, 40, y); x.fillStyle = '#F4EFE6'; x.font = '600 23px Inter, sans-serif'; x.fillText(b, 300, y);
           for (let j = 0; j < 5; j++) { const lx = 860 + j * 30, ly = y - 11; x.fillStyle = '#05080c'; x.beginPath(); x.arc(lx, ly, 8, 0, 7); x.fill(); this.srvLeds.push([lx, ly]); } });
-        const tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
+        const tex = new T.CanvasTexture(cv); tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 4;
         const face = new T.Mesh(new T.PlaneGeometry(bw - 1, (bw - 1) * 400 / 1040), new T.MeshBasicMaterial({ map: tex, toneMapped: false })); const fz = I.z - 3 + bd / 2 + 0.03, fy = by + bh / 2 + 0.3; face.position.set(I.x, fy, fz); g.add(face);
         const fw = bw - 1, fh = fw * 400 / 1040; const im = new T.InstancedMesh(new T.CircleGeometry(fw / 1040 * 8, 10), new T.MeshBasicMaterial({ toneMapped: false }), this.srvLeds.length); const m4 = new T.Matrix4();
         this.srvLeds.forEach(([lx, ly], i) => { m4.makeTranslation(I.x + (lx / 1040 - 0.5) * fw, fy + (0.5 - ly / 400) * fh, fz + 0.02); im.setMatrixAt(i, m4); im.setColorAt(i, new T.Color(0x39ff7a)); });

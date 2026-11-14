@@ -6,7 +6,7 @@ Les mêmes crédits sont affichés sur le site (carte du voyage, puis « Crédit
 
 | Élément | Auteur, source | Licence |
 |---|---|---|
-| Moteur 3D | [three.js](https://threejs.org) r128 et GLTFLoader | MIT |
+| Moteur 3D | [three.js](https://threejs.org) r187 et ses modules (chargeurs, passes de rendu) | MIT |
 | Ponton d'Insula | « river jetty and boatyard », floor2727 (Sketchfab) | CC-BY 4.0 |
 | Arbres | island_tree_01, pine_tree_01, [Poly Haven](https://polyhaven.com) | CC0 |
 | Meubles du studio | Sofa_01, painted_wooden_chair_01, side_table_01, desk_lamp_arm_01, modern_ceiling_lamp_01, anthurium_botany_01, vintage_electric_kettle, ceramic_vase_01, throw_pillows_01, hanging_picture_frame_01 (Poly Haven) | CC0 |

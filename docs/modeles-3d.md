@@ -60,6 +60,7 @@ $B -b blender/insula_v3.blend -P scripts/export_ile_v3.py        # -> assets/ile
   - les murs sont un seul volume, et le studio, la porte-fenêtre et les embrasures y sont creusés par booléens ;
   - les objets du studio portent la propriété `studio`, ce qui permet à l'export de les mettre dans `studio.glb`.
 - **La vie du quai** est construite par `quai_vie.py`, dans le repère de l'immeuble : terrasse de café, banc, vélos, hortensias, trois lampadaires, coin de pêche, bouée de sauvetage, et la bouée de chenal du bassin. Le site anime ensuite les mouettes, la fumée de la cheminée et la bouée de chenal, et allume les lampadaires la nuit (`js/quai.js`). Il retrouve ces objets par leur nom : `VieLanterne` (matériau des verres), `Vie_LampPerche_1` et `_2` (perchoirs des mouettes), `Vie_BoueeMer`.
+- **L'éclairage figé** (facultatif, désactivé sur l'île) : `cuire_ile.py` calcule la lumière dans Blender et écrit `blender/insula_v3_cuit.blend` et deux textures de lumière ; exporter ensuite depuis ce fichier. Voir `js/lumiere.js`.
 - **Après un export**, reportez dans le code :
   - la liste `web/ile_arbres_v3.json` dans `PR_TREES` (`js/scene.js`) ;
   - si l'immeuble a bougé, `web/studio_points.json` dans `PR_BLD` et `PR_STU_L` (`js/studio.js`).

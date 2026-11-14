@@ -4,6 +4,7 @@ Tout ce qui fabrique ou vérifie le contenu de `assets/`. La page n'en charge ri
 
 | Dossier | Contenu | Documentation |
 |---|---|---|
+| `moteur/` | construit `vendor/three.bundle.js` : three.js et ses modules en un seul script (`npm install && npm run construire`) | [Architecture](../docs/architecture.md#le-moteur) |
 | `verifier.cjs` | vérifications rapides, sans dépendance (lancées aussi par GitHub) | [Publication](../docs/publication.md) |
 | `tests/parcours.cjs` | parcours complet dans Chrome : archipel, gestes, Insula, studio, cabine | [Publication](../docs/publication.md) |
 | `3d/scripts/` | modèles Blender : Elba, l'île d'Insula et son studio, la cabine, les arbres | [Les modèles 3D](../docs/modeles-3d.md) |

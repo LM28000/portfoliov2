@@ -74,7 +74,7 @@ Object.assign(Component.prototype, {
       (e) => { this.stuLoading = false; this.setState({ loading: false }); this.say("Impossible d'ouvrir le studio (" + e + ')'); });
   },
   buildStudio(T, root) {
-    this.scene.add(root); root.updateMatrixWorld(true);
+    this.scene.add(root); root.updateMatrixWorld(true); this.renduOmbres(T, root);
     const find = (re) => { let r = null; root.traverse((o) => { if (!r && re.test(o.name)) r = o; }); return r; };
     root.traverse((o) => { if (!o.isMesh || !o.material) return; const n = o.material.name || '';
       if (/glass/i.test(n)) { o.material = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.2, depthWrite: false }); o.renderOrder = 3; }
@@ -82,7 +82,7 @@ Object.assign(Component.prototype, {
       // le papier se lit tel quel, sans reflet ni surexposition
       if (/^(Fiche|Annonce|CarnetG|CarnetD|PorteClesTxt)/.test(o.name) && o.material.map) o.material = new T.MeshBasicMaterial({ map: o.material.map, color: 0xe6e2da }); });
     // écran : l'affiche de la démo, puis la vidéo quand on est dans le studio
-    const scr = find(/^PC_ecran/); const tl = new T.TextureLoader(); const poster = tl.load('assets/demo-poster.jpg'); poster.encoding = T.sRGBEncoding; poster.flipY = false;
+    const scr = find(/^PC_ecran/); const tl = new T.TextureLoader(); const poster = tl.load('assets/demo-poster.jpg'); poster.colorSpace = T.SRGBColorSpace; poster.flipY = false;
     let corners = null;
     if (scr) { scr.material = new T.MeshBasicMaterial({ map: poster, toneMapped: false });
       // coins de l'écran dans son repère, repérés par leurs UV (glTF : (0, 0) = en haut à gauche de l'image)
@@ -90,7 +90,7 @@ Object.assign(Component.prototype, {
       for (let i = 0; i < pa.count; i++) { const u = uv.getX(i) > 0.5 ? 'R' : 'L', w = uv.getY(i) > 0.5 ? 'B' : 'T'; corners[w + u] = new T.Vector3(pa.getX(i), pa.getY(i), pa.getZ(i)); } }
     const web = document.createElement('div'); web.className = 'stu-web'; const frame = document.createElement('iframe'); frame.title = 'Insula, la vraie app'; frame.setAttribute('allow', 'clipboard-write'); web.appendChild(frame); this.layer.insertBefore(web, this.layer.firstChild);
     const v = document.createElement('video'); v.preload = 'none'; v.muted = true; v.loop = true; v.playsInline = true;
-    v.addEventListener('playing', () => { if (!scr) return; const vt = new T.VideoTexture(v); vt.encoding = T.sRGBEncoding; vt.flipY = false; scr.material.map = vt; scr.material.needsUpdate = true; }, { once: true });
+    v.addEventListener('playing', () => { if (!scr) return; const vt = new T.VideoTexture(v); vt.colorSpace = T.SRGBColorSpace; vt.flipY = false; scr.material.map = vt; scr.material.needsUpdate = true; }, { once: true });
     const sheets = [0, 1, 2].map((i) => find(new RegExp('^Annonce' + i))).filter(Boolean).map((o) => ({ o, home: o.position.clone(), homeQ: o.quaternion.clone() }));
     // repères dorés au-dessus de chaque objet
     const L = PR_STU_L, spots = { ordi: [-2.05, 1.05, L.TABLE + 0.34], annonces: [L.TX + 0.4, L.TY, L.TABLE + 0.08], carnet: [L.TX + 0.05, L.TY + 0.22, L.TABLE + 0.08], frigo: [L.RX1 - 0.68, 3.52, L.FLOOR + 1.62], cles: [L.TX - 0.55, L.TY + 0.26, L.TABLE + 0.08] };

@@ -133,9 +133,9 @@ Object.assign(Component.prototype, {
     const U = this.sky.material.uniforms; mix('top', U.top.value); mix('hor', U.hor.value); U.glow.value = 1 - e;
     const S = this.sea.material.uniforms; mix('deep', S.deep.value); mix('shallow', S.shallow.value); mix('skyc', S.skyc.value); mix('spec', S.spec.value);
     S.sunDir.value.set(-0.35, 0.42 * e + 0.2 * (1 - e), -0.93).normalize();
-    mix('fog', this.scene.fog.color); mix('hemi', this.hemi.color); this.hemi.intensity = 0.75 - 0.5 * e; mix('sun', this.sunL.color); this.sunL.intensity = 1.35 - 1.0 * e;
+    mix('fog', this.scene.fog.color); mix('hemi', this.hemi.color); this.hemi.intensity = (0.75 - 0.5 * e) * LUX * (this.hemiBase || 1); mix('sun', this.sunL.color); this.sunL.intensity = (1.35 - 1.0 * e) * LUX;
     this.stars.material.opacity = Math.max(0, e * 1.2 - 0.2); this.moon.material.opacity = e;
-    this.boatLamp.intensity = 1.6 * e; this.boatLamp.position.set(this.b.x, 1.8, this.b.z); this.boatWin.forEach((m) => { m.emissiveIntensity = 1.8 * e; });
+    this.boatLamp.intensity = 1.6 * e * LUXP; this.boatLamp.position.set(this.b.x, 1.8, this.b.z); this.boatWin.forEach((m) => { m.emissiveIntensity = 1.8 * e; });
     if (this.boat) this.boat.traverse((o) => { if (o.isMesh && o.material && /^feu/.test(o.material.name || '')) o.material.emissiveIntensity = 2 + 4 * e; });
   },
   fade(onMid) {

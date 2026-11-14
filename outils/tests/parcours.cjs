@@ -11,6 +11,8 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
 (async () => {
   const b = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+  // rendu logiciel (sans carte graphique) : niveau « simple », sinon tout est trop lent ; PW_RENDU=haute pour tester le niveau complet
+  await p.addInitScript((n) => { try { localStorage.setItem('elba-rendu', n); } catch (e) {} }, process.env.PW_RENDU || 'simple');
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/favicon|net::ERR/.test(m.text())) errs.push(m.text()); });
   await p.goto(URL, { waitUntil: 'load' });
   await p.waitForFunction(() => window.__elba && window.__elba.island && window.__elba.st().loading === false, null, { timeout: 180000 });

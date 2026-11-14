@@ -35,7 +35,7 @@ Object.assign(Component.prototype, {
   },
   quayLifeStep(T, t, dt) {
     const Q = this.quay; if (!Q) return; const n = this.night || 0, e = n * n * (3 - 2 * n);
-    Q.lamps.forEach((m) => { m.emissiveIntensity = 1.3 * e; }); Q.pools.forEach((l) => { l.intensity = 1.5 * e; });
+    Q.lamps.forEach((m) => { m.emissiveIntensity = 1.3 * e; }); Q.pools.forEach((l) => { l.intensity = 1.5 * e * LUXP; });
     if (Q.buoy) { const b = Q.buoy; b.position.y = b.userData.y0 + 0.12 * Math.sin(t * 1.25); b.rotation.x = 0.07 * Math.sin(t * 0.9 + 1); b.rotation.z = 0.06 * Math.sin(t * 1.1); }
     Q.gulls.forEach((g) => { const u = g.userData;
       if (u.perch) { const k = Math.sin(t * 0.35 + u.ph); g.rotation.y = u.perch.yaw + (k > 0.6 ? 0.9 : k < -0.7 ? -0.7 : 0); u.head.position.y = 0.07 + 0.012 * Math.max(0, Math.sin(t * 2.4 + u.ph)); return; }

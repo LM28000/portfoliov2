@@ -48,7 +48,7 @@ Object.assign(Component.prototype, {
   paperTex(w, h, draw) {
     const T = window.THREE, c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
     const grd = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.75); grd.addColorStop(0, '#f1e6cc'); grd.addColorStop(1, '#cdb88f'); g.fillStyle = grd; g.fillRect(0, 0, w, h);
-    draw(g, w, h); const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t;
+    draw(g, w, h); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
   },
   wrap(g, text, maxW) { const words = text.split(' '), lines = []; let cur = ''; words.forEach((w) => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; },
   bookSpread(n) { const t = this.bookSpread0(n); t.flipY = false; return t; },
@@ -86,9 +86,9 @@ Object.assign(Component.prototype, {
   buildCabin3d(T, root) {
     const scene = new T.Scene(); scene.background = new T.Color(0x05070c); scene.add(root);
     const cam = new T.PerspectiveCamera(62, this.host.clientWidth / this.host.clientHeight, 0.03, 40);
-    const lamp = (x, y, z, c, i, d) => { const l = new T.PointLight(c, i, d || 6, 2); l.position.set(x, y, z); scene.add(l); return l; };
+    const lamp = (x, y, z, c, i, d) => { const l = new T.PointLight(c, i * LUX, d || 6, 2); l.position.set(x, y, z); scene.add(l); return l; };
     const L = { table: lamp(0.05, 1.38, 0, 0xff9a4a, 1.9, 4.5), cartes: lamp(-1.6, 1.15, 0.6, 0xff9a50, 0.9, 2.2), avant: lamp(2.3, 1.2, 0, 0xff9a50, 0.6, 3), fond: lamp(-1.8, 1.6, 0, 0xffb07a, 0.35, 3.5), coffre: lamp(2.1, 0.95, 0.1, 0xffc07a, 0, 1.6) };
-    scene.add(new T.HemisphereLight(0x4a62a0, 0x2a180a, 0.28)); scene.add(new T.AmbientLight(0xffd8b0, 0.07));
+    scene.add(new T.HemisphereLight(0x4a62a0, 0x2a180a, 0.28 * LUX)); scene.add(new T.AmbientLight(0xffd8b0, 0.07 * LUX));
     const find = (re) => { let r = null; root.traverse((o) => { if (!r && re.test(o.name)) r = o; }); return r; };
     const all = (re) => { const r = []; root.traverse((o) => { if (re.test(o.name)) r.push(o); }); return r; };
     // verre des bouteilles et des fenêtres : translucide (le verre de Blender ne passe pas tel quel)
@@ -201,7 +201,7 @@ Object.assign(Component.prototype, {
     // progressions des animations (0 → 1 quand l'objet est actif, retour sinon)
     for (const k of ['coffre', 'photo', 'vhf', 'bouteilles', 'carte']) { const on = C.focus === k && C.camT > 0.55; C.prog[k] = this.reduced ? (on ? 1 : 0) : Math.max(0, Math.min(1, (C.prog[k] || 0) + (on ? dt / 1.1 : -dt / 0.7))); }
     const P = (k) => ease(C.prog[k] || 0);
-    if (C.lidPivot) { C.lidPivot.rotation.z = -1.75 * P('coffre'); C.L.coffre.intensity = 1.6 * P('coffre'); }
+    if (C.lidPivot) { C.lidPivot.rotation.z = -1.75 * P('coffre'); C.L.coffre.intensity = 1.6 * P('coffre') * LUX; }
     if (C.framePivot) { const e = P('photo'); C.framePivot.position.copy(C.framePos).add(new T.Vector3(-0.28 * Math.min(1, e * 2), 0.02 * Math.min(1, e * 2), 0)); C.framePivot.rotation.y = Math.PI * Math.max(0, (e - 0.35) / 0.65); }
     if (C.hand && C.handHome) { const e = P('vhf'); C.hand.position.copy(C.handHome).add(new T.Vector3(0.05 * e, 0.07 * e, 0)); }
     if (C.screen) { const on = C.focus === 'vhf'; C.screen.material.emissiveIntensity = on ? (Math.sin(t * 6) > 0 ? 1.6 : 0.6) : 1; }
@@ -218,7 +218,7 @@ Object.assign(Component.prototype, {
     C.scroll.visible = es > 0.01; C.scroll.position.set(-0.06, 1.36, 0.8); C.scroll.lookAt(C.cam.position); C.scroll.scale.set(1, Math.max(0.02, es), 1); C.scroll.material.opacity = Math.min(1, es * 2);
     // repères, lanterne qui vacille, roulis
     C.dots.forEach((d, i) => { d.visible = !C.focus; d.material.opacity = 0.55 + 0.45 * Math.sin(t * 3 + i); d.scale.setScalar(1 + 0.25 * Math.sin(t * 3 + i)); });
-    C.L.table.intensity = 1.85 + 0.15 * Math.sin(t * 9) * Math.sin(t * 2.3);
+    C.L.table.intensity = (1.85 + 0.15 * Math.sin(t * 9) * Math.sin(t * 2.3)) * LUX;
     C.root.rotation.x = this.reduced ? 0 : 0.012 * Math.sin(t * 0.7);
     // survol
     if (this.mouse && (this.cabHov = (this.cabHov || 0) + 1) % 5 === 0) {

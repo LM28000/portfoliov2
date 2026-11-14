@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://louis-marie.du-cray.eu"><img alt="Site" src="https://img.shields.io/badge/site-louis--marie.du--cray.eu-1f4b66"></a>
-  <img alt="three.js r128" src="https://img.shields.io/badge/three.js-r128-1f4b66">
+  <img alt="three.js r187" src="https://img.shields.io/badge/three.js-r187-1f4b66">
   <img alt="Sans framework ni étape de build" src="https://img.shields.io/badge/build-aucun-1f4b66">
   <a href="LICENSE"><img alt="Licence du code : MIT" src="https://img.shields.io/badge/licence%20du%20code-MIT-1f4b66"></a>
 </p>
@@ -41,7 +41,7 @@ Une version texte (« Tout voir en 1 minute », depuis l'archipel) résume tout.
 python3 -m http.server 8000      # dans ce dossier, puis http://localhost:8000
 ```
 
-Rien à installer ni à construire : la page charge `vendor/three.min.js` et les fichiers de `js/` tels quels.
+Rien à installer ni à construire : la page charge `vendor/three.bundle.js` et les fichiers de `js/` tels quels.
 
 Pour les vérifications et le parcours de test (Node 20 ou plus) :
 
@@ -57,7 +57,7 @@ npm run parcours                 # parcours complet dans Chrome (le site doit to
 index.html            la page : couche HTML (radio, boutons, carte du voyage, version texte)
 style.css
 js/                   le monde 3D, un fichier par partie (voir docs/architecture.md)
-vendor/               three.js r128 et GLTFLoader
+vendor/               three.js r187 et ses modules, en un seul script (construit par outils/moteur)
 assets/               modèles glTF, textures, vidéo, musique, voix de la VHF, CV en PDF
 docs/                 documentation et captures
 outils/               tout ce qui fabrique assets/ : scripts Blender, voix, CV, vidéo, vérifications, tests
@@ -78,7 +78,7 @@ outils/               tout ce qui fabrique assets/ : scripts Blender, voix, CV, 
 
 ## Pile technique
 
-- **Rendu** : [three.js](https://threejs.org) r128, sans framework. Une seule classe `Component` est répartie sur plusieurs fichiers. `main.js` reporte son état sur le HTML.
+- **Rendu** : [three.js](https://threejs.org) r187, sans framework. Ombres du soleil en temps réel et lumière d'environnement tirée du ciel (`js/rendu.js`), en deux niveaux de qualité. Une seule classe `Component` est répartie sur plusieurs fichiers. `main.js` reporte son état sur le HTML.
 - **Modèles** : Blender 5, construits par des scripts Python (`outils/3d/scripts`) puis exportés en glTF binaire. Les meubles et les arbres viennent de [Poly Haven](https://polyhaven.com) (CC0).
 - **Son** : Web Audio. L'ambiance marine est générée dans le navigateur, la musique est du domaine public, et la voix de la VHF est une synthèse [Piper](https://github.com/rhasspy/piper).
 - **Hébergement** : Cloudflare, déployé à chaque envoi sur `main`.
