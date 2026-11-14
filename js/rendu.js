@@ -2,7 +2,7 @@
    ombres du soleil en temps réel autour de ce qu'on regarde, et une passe de finition (occultation ambiante, léger halo).
    Deux niveaux : « haute » sur ordinateur, « simple » sur téléphone ou machine modeste (ni passe de finition, ni ombres).
    localStorage « elba-rendu » = 'haute' | 'simple' force un niveau. */
-const PR_RENDU = { finition: true, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.12, haloSeuil: 2.2 };
+const PR_RENDU = { finition: false, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.12, haloSeuil: 2.2 };
 Object.assign(Component.prototype, {
   renduNiveau() {
     let f = null; try { f = localStorage.getItem('elba-rendu'); } catch (e) {}
