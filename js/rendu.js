@@ -27,9 +27,9 @@ Object.assign(Component.prototype, {
     s.shadow.bias = -0.0004; s.shadow.normalBias = 0.04; s.shadow.radius = 3; scene.add(s.target); this.sunDir = s.position.clone().normalize();
     // passe de finition : occultation ambiante (dehors seulement) et léger halo sur les lumières vives
     if (!PR_RENDU.finition) return;
-    // essais : ?finition=1 puis &ao=0 (sans occultation), &halo=0 (sans halo), &msaa=0 (sans lissage multi-échantillons), &flottant=0 (tampon 8 bits)
+    // essais : ?finition=1 puis &ao=0 (sans occultation), &halo=0 (sans halo), &smaa=0 (sans lissage), &msaa=1 (ancien lissage), &flottant=0 (tampon 8 bits)
     const sans = (k) => new RegExp('[?&]' + k + '=0').test(location.search);
-    const pr = r.getPixelRatio(), rt = new T.WebGLRenderTarget(W * pr, H * pr, { type: sans('flottant') ? T.UnsignedByteType : T.HalfFloatType, samples: sans('msaa') ? 0 : 4 });
+    const pr = r.getPixelRatio(), rt = new T.WebGLRenderTarget(W * pr, H * pr, { type: sans('flottant') ? T.UnsignedByteType : T.HalfFloatType, samples: /[?&]msaa=1/.test(location.search) ? 4 : 0 });   /* pas de MSAA : avec le halo, il fait clignoter l'écran en noir dans Chrome ; lissage SMAA à la fin */
     const comp = new T.EffectComposer(r, rt); const rp = new T.RenderPass(scene, cam); comp.addPass(rp);
     const ao = new T.GTAOPass(scene, cam, W, H); ao.output = T.GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
     ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.0, thickness: 1.0, scale: 1.0, samples: 16, distanceFallOff: 1.0 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
@@ -39,6 +39,7 @@ Object.assign(Component.prototype, {
     if (!sans('ao')) comp.addPass(ao); else ao.enabled = false;
     const halo = new T.UnrealBloomPass(new T.Vector2(W, H), PR_RENDU.halo, 0.35, PR_RENDU.haloSeuil); if (!sans('halo')) comp.addPass(halo); else halo.enabled = false;
     comp.addPass(new T.OutputPass());
+    if (!sans('smaa')) comp.addPass(new T.SMAAPass(W * pr, H * pr));
     Object.assign(this.rendu, { comp, rp, ao, halo });
   },
   renduEnv() {
