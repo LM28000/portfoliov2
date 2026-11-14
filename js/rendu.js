@@ -2,7 +2,7 @@
    ombres du soleil en temps réel autour de ce qu'on regarde, et une passe de finition (occultation ambiante, léger halo).
    Deux niveaux : « haute » sur ordinateur, « simple » sur téléphone ou machine modeste (ni passe de finition, ni ombres).
    localStorage « elba-rendu » = 'haute' | 'simple' force un niveau. */
-const PR_RENDU = { finition: false, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 70, carteOmbre: 2048, halo: 0.22 };
+const PR_RENDU = { finition: false, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.22 };
 Object.assign(Component.prototype, {
   renduNiveau() {
     let f = null; try { f = localStorage.getItem('elba-rendu'); } catch (e) {}
@@ -50,9 +50,15 @@ Object.assign(Component.prototype, {
     const R = this.rendu; if (!R) return;
     const n = this.night || 0; if (Math.abs(n - (this.envNight == null ? -1 : this.envNight)) > 0.04) { this.envNight = n; this.renduEnv(); }
     if (R.haute && this.sunL) { const T = window.THREE, s = this.sunL, c = this.cam, d = this.sunDir;
-      // le point du sol au centre de l'écran (ou 25 m devant la caméra si on regarde l'horizon)
-      const fw = new T.Vector3(); c.getWorldDirection(fw); let k = fw.y < -0.05 ? -c.position.y / fw.y : 25; k = Math.min(k, 160);
-      const fx = c.position.x + fw.x * k, fz = c.position.z + fw.z * k, g = 0.5;
+      // centre de la boîte d'ombre : le point autour duquel la caméra tourne (îles, archipel),
+      // sinon le point du sol au centre de l'écran (ou 25 m devant si on regarde l'horizon)
+      let fx, fz, dist; const O = this.orb;
+      if (O && this.orbitPh(this.st().phase)) { fx = O.tx; fz = O.tz; dist = O.dist; }
+      else { const fw = new T.Vector3(); c.getWorldDirection(fw); let k = fw.y < -0.05 ? -c.position.y / fw.y : 25; k = Math.min(k, 160); fx = c.position.x + fw.x * k; fz = c.position.z + fw.z * k; dist = k; }
+      // la boîte grandit avec le recul (par paliers, pour ne pas recalculer à chaque image) : de 60 m à toute l'île, puis l'archipel
+      let size = 60; while (size < Math.min(PR_RENDU.ombreMax, dist * 1.6)) size *= 1.5;
+      const cs = s.shadow.camera; if (cs.right * 2 !== size) { cs.left = cs.bottom = -size / 2; cs.right = cs.top = size / 2; cs.updateProjectionMatrix(); }
+      const g = size / PR_RENDU.carteOmbre * 2;                       // aligné sur les texels : pas de scintillement en se déplaçant
       s.target.position.set(Math.round(fx / g) * g, 0, Math.round(fz / g) * g); s.position.copy(s.target.position).addScaledVector(d, 400); }
   },
   renduFrame(scene, cam, expo) {

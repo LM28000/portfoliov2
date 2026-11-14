@@ -12,7 +12,7 @@ Object.assign(Component.prototype, {
     if (this.portal || !this.boat) return; const T = window.THREE;
     const mat = new T.ShaderMaterial({ uniforms: { map: { value: null }, res: { value: new T.Vector2(1, 1) }, live: { value: 0 }, glow: { value: 0 } },
       vertexShader: 'void main(){ gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: 'uniform sampler2D map; uniform vec2 res; uniform float live; uniform float glow; void main(){ vec3 c = live > 0.5 ? texture2D(map, gl_FragCoord.xy / res).rgb : vec3(0.09, 0.055, 0.03) * (0.5 + 1.5 * glow); gl_FragColor = linearToOutputTexel(vec4(c, 1.0)); }' });
+      fragmentShader: 'uniform sampler2D map; uniform vec2 res; uniform float live; uniform float glow; void main(){ vec3 c = live > 0.5 ? texture2D(map, gl_FragCoord.xy / res).rgb : vec3(0.09, 0.055, 0.03) * (0.5 + 1.5 * glow); gl_FragColor = vec4(c, 1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n }' });
     const m = new T.Mesh(new T.PlaneGeometry(PR_PORTAL.w, PR_PORTAL.h), mat); m.position.set(...PR_PORTAL.ext); m.rotation.y = -Math.PI / 2; m.name = 'Descente';
     // encadrement en bois
     const fr = new T.Mesh(new T.PlaneGeometry(PR_PORTAL.w + 0.08, PR_PORTAL.h + 0.06), new T.MeshStandardMaterial({ color: 0x6b3f1d, roughness: 0.7 })); fr.position.set(PR_PORTAL.ext[0] + 0.004, PR_PORTAL.ext[1], 0); fr.rotation.y = -Math.PI / 2;
