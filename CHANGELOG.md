@@ -2,6 +2,9 @@
 
 ## 14 novembre 2026 : nouveau moteur, ombres en temps réel
 
+- **Une passe de finition** en qualité « haute » : léger halo sur le soleil, la lune et les lanternes, recoins assombris à l'extérieur. La mer et le ciel écrivent maintenant des valeurs de lumière, converties comme le reste de la scène. Coupée dans le studio.
+- **Les ombres** suivent le point regardé et couvrent toute l'île quand on recule : elles ne disparaissent plus en se déplaçant.
+
 - **three.js r187** à la place de r128 : un seul script dans `vendor/`, construit par `outils/moteur`. Le site reste sans étape de construction.
 - **Les ombres du soleil en temps réel** : arbres, immeuble, Elba et objets du quai projettent leurs ombres sur le terrain et le pavage.
 - **Une lumière d'environnement** tirée du ciel du site, qui suit la tombée de la nuit.

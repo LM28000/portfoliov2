@@ -28,7 +28,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
     check(Math.abs((await orb()).yaw - y0) > 3, 'une rotation passe à travers une étiquette d’île sans être bloquée'); }
 
   console.log('Insula : le quai');
-  await E(() => window.__elba.goTo('insula')); await p.waitForTimeout(12000);
+  await E(() => window.__elba.goTo('insula')); await p.waitForFunction(() => window.__elba.st().phase === 'accoste', null, { timeout: 90000 }).catch(() => {}); await p.waitForTimeout(1500);
   let s = await st(); check(s.ph === 'accoste', 'accosté à Insula'); check(s.acts.includes('⌂ Monter au studio'), 'bouton « Monter au studio »'); await shot('02-quai');
   const drag = async (mods) => { for (const m of mods) await p.keyboard.down(m); await p.mouse.move(500, 450); await p.mouse.down(); for (let i = 1; i <= 10; i++) await p.mouse.move(500 + i * 15, 450 + i * 4); await p.mouse.up(); for (const m of mods) await p.keyboard.up(m); await p.waitForTimeout(300); };
   // attendre que la caméra ait fini d'arriver (sinon sa rotation se mêle au geste testé)

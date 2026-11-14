@@ -1,8 +1,8 @@
-/* Le rendu « premium » : couleurs AgX (comme dans Blender), lumière d'environnement tirée du ciel du site,
+/* Le rendu « premium » : lumière d'environnement tirée du ciel du site,
    ombres du soleil en temps réel autour de ce qu'on regarde, et une passe de finition (occultation ambiante, léger halo).
    Deux niveaux : « haute » sur ordinateur, « simple » sur téléphone ou machine modeste (ni passe de finition, ni ombres).
    localStorage « elba-rendu » = 'haute' | 'simple' force un niveau. */
-const PR_RENDU = { finition: false, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.22 };
+const PR_RENDU = { finition: true, exposition: 1.05, expoCabine: 0.95, env: 0.38, hemi: 0.7, ombre: 60, ombreMax: 420, carteOmbre: 2048, halo: 0.12, haloSeuil: 2.2 };
 Object.assign(Component.prototype, {
   renduNiveau() {
     let f = null; try { f = localStorage.getItem('elba-rendu'); } catch (e) {}
@@ -12,7 +12,7 @@ Object.assign(Component.prototype, {
   },
   setupRendu(T, r, scene, cam, W, H) {
     const haute = this.renduNiveau() === 'haute'; this.rendu = { haute };
-    r.toneMapping = PR_RENDU.finition ? T.AgXToneMapping : T.ACESFilmicToneMapping; r.toneMappingExposure = PR_RENDU.exposition;
+    r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = PR_RENDU.exposition;
     // lumière d'environnement : le ciel du site, capturé en carte de réflexion (refaite quand la nuit tombe)
     this.pmrem = new T.PMREMGenerator(r); this.envScene = new T.Scene();
     const skyCopy = new T.Mesh(this.sky.geometry, this.sky.material); skyCopy.scale.copy(this.sky.scale); this.envScene.add(skyCopy);
@@ -24,14 +24,17 @@ Object.assign(Component.prototype, {
     const s = this.sunL; s.castShadow = true; s.shadow.mapSize.set(PR_RENDU.carteOmbre, PR_RENDU.carteOmbre);
     const c = s.shadow.camera, h = PR_RENDU.ombre / 2; c.left = -h; c.right = h; c.top = h; c.bottom = -h; c.near = 1; c.far = 900; c.updateProjectionMatrix();
     s.shadow.bias = -0.0004; s.shadow.normalBias = 0.04; s.shadow.radius = 3; scene.add(s.target); this.sunDir = s.position.clone().normalize();
-    // passe de finition (désactivée : la mer et le ciel, en shaders maison, n'y sont pas encore adaptés)
+    // passe de finition : occultation ambiante (dehors seulement) et léger halo sur les lumières vives
     if (!PR_RENDU.finition) return;
     const pr = r.getPixelRatio(), rt = new T.WebGLRenderTarget(W * pr, H * pr, { type: T.HalfFloatType, samples: 4 });
     const comp = new T.EffectComposer(r, rt); const rp = new T.RenderPass(scene, cam); comp.addPass(rp);
     const ao = new T.GTAOPass(scene, cam, W, H); ao.output = T.GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
-    ao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.5, thickness: 2.0, scale: 1.0, samples: 16 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.0, thickness: 1.0, scale: 1.0, samples: 16, distanceFallOff: 1.0 }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    // l'occultation ignore aussi les sprites (fumée), le transparent (verres, anneaux), le ciel et la mer
+    ao._overrideVisibility = function () { const cache = this._visibilityCache; this.scene.traverse((o) => { if (!o.visible) return; const m = o.material;
+      if (o.isPoints || o.isLine || o.isLine2 || o.isSprite || (o.isMesh && m && ((m.transparent && !m.alphaTest) || m.isShaderMaterial))) { o.visible = false; cache.push(o); } }); };
     comp.addPass(ao);
-    const halo = new T.UnrealBloomPass(new T.Vector2(W, H), PR_RENDU.halo, 0.5, 0.92); comp.addPass(halo);
+    const halo = new T.UnrealBloomPass(new T.Vector2(W, H), PR_RENDU.halo, 0.35, PR_RENDU.haloSeuil); comp.addPass(halo);
     comp.addPass(new T.OutputPass());
     Object.assign(this.rendu, { comp, rp, ao, halo });
   },
@@ -63,6 +66,6 @@ Object.assign(Component.prototype, {
   },
   renduFrame(scene, cam, expo) {
     const r = this.renderer, R = this.rendu; r.toneMappingExposure = expo;
-    if (R && R.comp) { R.rp.scene = scene; R.rp.camera = cam; R.ao.enabled = scene === this.scene; R.comp.render(); } else r.render(scene, cam);
+    if (R && R.comp) { R.rp.scene = scene; R.rp.camera = cam; const dehors = scene === this.scene && this.st().phase !== 'studio'; R.ao.enabled = dehors; R.halo.enabled = this.st().phase !== 'studio'; /* intérieurs : profondeur trop étirée (3 cm à 3 km) */ R.comp.render(); } else r.render(scene, cam);
   }
 });
