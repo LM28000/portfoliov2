@@ -56,6 +56,15 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.goTo('studio')); await p.waitForTimeout(12000); check((await st()).ph === 'studio', 'retour au studio par la carte du voyage');
   check(await E(() => (window.__elba.night || 0) < 0.05), 'le studio se visite de jour');
 
+  console.log('Le serveur : la plongée');
+  await E(() => window.__elba.goTo('serveur')); await p.waitForFunction(() => window.__elba.st().phase === 'escale' && window.__elba.subRig && window.__elba.fondG, null, { timeout: 120000 }).catch(() => {});
+  s = await st(); check(s.ph === 'escale' && s.acts.includes('↓ Plonger avec Elba'), 'escale à la bouée, bouton « Plonger »'); await shot('09-bouee');
+  await E(() => window.__elba.plonger()); await p.waitForFunction(() => window.__elba.st().phase === 'fond', null, { timeout: 120000 }).catch(() => {});
+  check((await st()).ph === 'fond' && await E(() => window.__elba.cam.position.y < -1 && window.__elba.subSM.visible), 'Elba devenue sous-marin, au fond'); await shot('10-village', 3000);
+  await E(() => window.__elba.fondFocusK('Caisson4')); await p.waitForTimeout(1500); check(await E(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION'), 'un caisson ouvre sa fiche');
+  await E(() => window.__elba.faireSurface()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 120000 }).catch(() => {});
+  check((await st()).ph === 'escale' && await E(() => !window.__elba.subRig.visible && window.__elba.cam.position.y > 0), 'retour en surface, Elba redevenue voilier'); await shot('11-surface');
+
   check(errs.length === 0, 'aucune erreur dans la console' + (errs.length ? ' : ' + errs.slice(0, 3).join(' | ') : ''));
   await b.close();
   console.log('\n' + (fails ? fails + ' étape(s) en échec' : 'Parcours complet réussi') + ' · captures dans ' + path.relative(process.cwd(), OUT));

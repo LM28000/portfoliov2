@@ -1,5 +1,12 @@
 # Journal des changements
 
+## 14 novembre 2026 : la plongée au serveur
+
+- **L'île du serveur change.** Le bâtiment en béton laisse place à un îlot nu et à une bouée jaune à voyant en X, la marque qui signale un câble ou une installation sous l'eau. Elba s'arrête à côté.
+- **« Plonger avec Elba » :** la coque d'Elba se déforme, sans coupure, en un vrai sous-marin. Les voiles, les câbles et le mât rentrent, puis le pont s'aplanit, la quille et le moteur rentrent. La coque s'étire et vire au noir. Enfin, le kiosque, les ailerons et l'hélice sortent. La caméra reste libre pendant la transformation.
+- **Sous l'eau :** brouillard bleu-vert, surface vue d'en dessous, reflets du soleil sur le sable, rayons de lumière, poissons et bulles. À vingt mètres, sept caissons, un par famille de services, sont reliés à un nœud central. Un clic sur un caisson ouvre sa fiche. « Faire surface » rejoue tout à l'envers.
+- **Deux modèles chargés seulement à l'approche de l'île** : `elba_sousmarin.glb` (2 Mo) et `fond.glb` (1 Mo). Le parcours de test couvre la plongée.
+
 ## 14 novembre 2026 : nouveau moteur, ombres en temps réel
 
 - **Une passe de finition** en qualité « haute » : léger halo sur le soleil, la lune et les lanternes, recoins assombris à l'extérieur. La mer et le ciel écrivent maintenant des valeurs de lumière, converties comme le reste de la scène. Coupée dans le studio.

@@ -23,7 +23,7 @@ Pas de fiches qui s'ouvrent : on clique sur les objets, la caméra s'en approche
 | **Le ponton** | On prend la barre d'Elba (flèches ou ZQSD), ou on laisse le pilote auto. |
 | **Insula** | Un immeuble sur le quai, avec un panneau « À vendre » au balcon. On monte au studio témoin : la vraie app sur l'écran du portable, les annonces imprimées, le carnet des amis, la fiche sur le frigo. |
 | **Carte vivante** | La France en temps réel : trains, avions, météo. |
-| **Le serveur** | Mon serveur maison et sa trentaine de services. |
+| **Le serveur** | Mon serveur maison et sa trentaine de services. On y plonge : Elba devient sous-marin et descend jusqu'au village de caissons. |
 | **La cabine** | Mon parcours sur une carte marine, mon CV dans un coffre, des anecdotes en bouteille, le livre de bord du visiteur, et la VHF pour me contacter. |
 
 <p align="center">

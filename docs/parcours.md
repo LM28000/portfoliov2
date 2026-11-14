@@ -37,7 +37,7 @@ L'île est là pour montrer **la question à laquelle répond Insula** : « on v
 <br clear="right">
 
 ### 4. La Carte vivante (île n° 2) et le serveur (île n° 3)
-Ces deux îles se survolent. La Carte vivante tourne seulement sur mon réseau local : son île montre donc des captures et un lien vers le code. Le serveur liste ses services.
+La Carte vivante tourne seulement sur mon réseau local : son île montre donc des captures et un lien vers le code. Au serveur, Elba s'arrête à une bouée jaune. « Plonger avec Elba » la transforme en sous-marin, et l'on descend jusqu'à un village de caissons posé à vingt mètres de fond, un par famille de services. Un clic sur un caisson ouvre sa fiche ; « Faire surface » remonte.
 
 ### 5. La cabine
 On descend par l'ouverture du rouf. On y trouve :
