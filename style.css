@@ -206,3 +206,11 @@ body.dragging .isle-lbl, body.dragging .boat-pin { pointer-events: none; }
 /* l'app réelle, posée sur l'écran du portable du studio */
 .stu-web { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: auto; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); display: none; }
 .stu-web iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* étiquettes des tiroirs du serveur : accrochées à chaque tiroir du caisson ouvert */
+.tiroir-lbl { position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 8px)); display: block; padding: 6px 10px 7px; border: 1px solid #c9a24a; border-radius: 8px; background: rgba(10,20,30,.88); color: #fff; text-align: left; cursor: pointer; pointer-events: auto; font-family: Inter, sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.35); white-space: nowrap; }
+.tiroir-lbl b { display: block; font: 600 14px/1.2 Inter, sans-serif; }
+.tiroir-lbl small { display: block; font: 500 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .04em; color: #e6c983; text-transform: uppercase; }
+.tiroir-lbl span { display: none; max-width: 220px; white-space: normal; margin-top: 4px; font-size: 12.5px; line-height: 1.35; color: #d8e4ea; }
+.tiroir-lbl.sel span { display: block; } .tiroir-lbl:hover, .tiroir-lbl.sel { box-shadow: 0 0 0 3px var(--sun), 0 6px 18px rgba(0,0,0,.35); }
+body:not(.ph-fond) .tiroir-lbl { display: none !important; }

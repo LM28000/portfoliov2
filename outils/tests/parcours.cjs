@@ -62,8 +62,9 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.plonger()); await p.waitForFunction(() => window.__elba.st().phase === 'fond', null, { timeout: 240000 }).catch(() => {});
   { const f = await E(() => { const C = window.__elba; return { ph: C.st().phase, y: +C.cam.position.y.toFixed(1), sm: !!(C.subSM && C.subSM.visible), t: +(C.subT || 0).toFixed(2) }; });
     check(f.ph === 'fond' && f.y < -1 && f.sm, 'Elba devenue sous-marin, au fond' + (f.ph === 'fond' && f.y < -1 && f.sm ? '' : ' : ' + JSON.stringify(f))); } await shot('10-village', 3000);
-  await E(() => window.__elba.manGo(3)); await p.waitForFunction(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION', null, { timeout: 60000 }).catch(() => {}); await shot('10b-caisson', 1500);
-  check(await E(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION' && window.__elba.manOpen[3] > 0.9), 'le manège tourne, le caisson de devant s’ouvre et montre sa fiche');
+  await E(() => window.__elba.manGo(3)); await p.waitForFunction(() => window.__elba.manOpen[3] > 0.95, null, { timeout: 120000 }).catch(() => {}); await p.waitForTimeout(1500); await shot('10b-caisson', 1500);
+  const lbl2 = await E(() => (window.__elba.tirLbl || []).filter((e) => e.el.style.display === 'block').map((e) => e.el.querySelector('b').textContent));
+  check(lbl2.join() === 'Grafana,Uptime Kuma,Scrutiny,Dozzle', 'le manège tourne, le caisson de devant s’ouvre, ses tiroirs portent leurs étiquettes' + (lbl2.length ? '' : ' (aucune)'));
   await E(() => window.__elba.faireSurface()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 240000 }).catch(() => {});
   check((await st()).ph === 'escale' && await E(() => !window.__elba.subRig.visible && window.__elba.cam.position.y > 0), 'retour en surface, Elba redevenue voilier'); await shot('11-surface');
 

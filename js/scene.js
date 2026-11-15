@@ -335,7 +335,7 @@ step(T, dt) {
  this.routeLine.setAttribute('points', rt.map((p) => this.cx(p.x).toFixed(1) + ',' + this.cy(p.z).toFixed(1)).join(' '));
 }
 placeCam() { const O = this.orb, cam = this.cam, cp = Math.cos(O.pitch); cam.position.set(O.tx + Math.sin(O.yaw) * cp * O.dist, O.ty + Math.sin(O.pitch) * O.dist, O.tz + Math.cos(O.yaw) * cp * O.dist);
- const ph = this.st().phase; if (this.srvPh(ph) && O.ty < -1.5) cam.position.y = Math.max(PR_FOND.prof + 1.5, Math.min(ph === 'fond' ? -1 : 60, cam.position.y)); else if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
+ const ph = this.st().phase; if (ph === 'plongee' || (this.srvPh(ph) && O.ty < -1.5)) cam.position.y = Math.max(PR_FOND.prof + 1.5, Math.min(ph === 'fond' ? -1 : 60, cam.position.y)); else if (cam.position.y < 1.5) cam.position.y = 1.5; cam.lookAt(O.tx, O.ty, O.tz); }
 whereAmI() { const s = this.st(), ph = s.phase; if (ph === 'cabine') return s.cabFocus ? PR_CAB_SEEN[s.cabFocus] : 'cabine'; if (ph === 'nuit') return 'nuit'; if (ph === 'studio') return 'insula'; if (ph === 'accoste') return s.plan ? 'archi' : (this.focused || 'insula'); if (ph === 'ponton') return 'ponton'; if (ph === 'escale') return this.isleK; if (ph === 'archipel') return 'archipel'; return null; }
 docked() { if (this.sailK) { const k = this.sailK; this.sailK = null; const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.orbFromCam(); this.flyTo(k); return; } const c = this.cam.position, O = this.orb; O.tx = this.b.x; O.tz = this.b.z; O.ty = 2; O.dist = Math.max(30, Math.hypot(c.x - this.b.x, c.z - this.b.z)); O.yaw = Math.atan2(c.x - this.b.x, c.z - this.b.z); O.pitch = 0.3; this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); }
 renderVals() {
@@ -380,7 +380,7 @@ renderVals() {
   showAll: !!s.showAll, toggleAll: () => this.setState({ showAll: !s.showAll }),
   progress: PR_STOPS.filter((x) => (this.visitedSet || {})[x.k]).length + '/' + PR_STOPS.length,
   pulseChart: this.narrow && !s.showMap && !this.mapOpened, phase: ph, hintOn: !!s.hintOn, objText: s.objText || '', radioPrev: () => this.radioPrev(),
-  showArchi: !!s.plan && ph === 'accoste', panel: ph === 'fond' ? (s.panel || null) : null,
+  showArchi: !!s.plan && ph === 'accoste', panel: null,
   padL: () => { this.pad = 'L'; }, padR: () => { this.pad = 'R'; }, padU: () => { this.pad = 'U'; }, padOff: () => { this.pad = null; }
  };
 }

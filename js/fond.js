@@ -12,6 +12,10 @@ const PR_CAISSONS = [
   { n: 'SUPERVISION', s: ['Grafana', 'Uptime Kuma', 'Scrutiny', 'Dozzle'], t: 'Uptime Kuma surveille tous les services. Grafana pour les tableaux de bord, Scrutiny pour la santé des disques, Dozzle pour les journaux.', liens: [0, 1, 2, 4, 'N'] },
   { n: 'SAUVEGARDES', s: ['Kopia'], t: 'Kopia sauvegarde toutes les données Docker.', liens: [0, 1, 2, 3, 'N'] }
 ];
+const PR_ROLES = { Headscale: ['VPN', 'Mon VPN : on entre par lui.'], Authentik: ['connexion unique', 'Une seule connexion pour Nextcloud, Matrix et Portainer.'], Vaultwarden: ['mots de passe', 'Le coffre à mots de passe, chez moi.'],
+  Nextcloud: ['cloud privé', 'Mes fichiers, derrière la connexion unique.'], Matrix: ['messagerie', 'Ma messagerie, derrière la connexion unique.'], Ollama: ['IA locale', 'Des modèles de langue qui tournent sur ma machine.'],
+  Grafana: ['tableaux de bord', "Les tableaux de bord de la machine."], 'Uptime Kuma': ['disponibilité', 'Surveille tous les services.'], Scrutiny: ['santé des disques', 'Suit la santé de chaque disque.'], Dozzle: ['journaux', 'Les journaux de tous les conteneurs, en direct.'],
+  Kopia: ['sauvegardes', 'Sauvegarde toutes les données Docker.'] };
 const PR_NOEUD = { n: 'PILOTAGE', s: ['Portainer', 'Docker', 'git'], t: 'Le nœud central : Portainer pilote tous les conteneurs. Chaque service est décrit dans un fichier versionné dans git.' };
 Object.assign(PR_RADIO, {
   serveur: "Bienvenue à la base. Mon serveur maison est en dessous : ses services tournent dans un manège de caissons, au fond. Clique sur « Plonger » : Elba se transforme en sous-marin dans le bassin.",
@@ -111,9 +115,9 @@ Object.assign(Component.prototype, {
   },
   faireSurface() { this.manNode = false; this.subDir = -1; this.subUp = 0; this.setState({ phase: 'remonte', panel: null }); this.say(PR_RADIO.surface, 'LOUIS-MARIE · LE SERVEUR'); },
   // le manège : un cran à gauche ou à droite, ou directement un caisson
-  manGo(i) { if (!this.manCap) return; this.manIdx = ((i % 5) + 5) % 5; this.manNode = false; this.setState({ panel: null }); this.fondOverview(); },
+  manGo(i) { if (!this.manCap) return; this.manIdx = ((i % 5) + 5) % 5; this.manNode = false; this.camKey = null; },
   manStep(d) { this.manGo((this.manIdx || 0) + d); },
-  manNodeOn() { this.manNode = true; const P = PR_NOEUD; this.setState({ panel: { kicker: 'LE NŒUD CENTRAL', title: P.n, list: P.s.map((x) => [x, '']), paras: [P.t] } }); this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · LE SERVEUR'); },
+  manNodeOn() { this.manNode = true; const P = PR_NOEUD, V = this.srvVC(); Object.assign(this.orbW, { tx: V.x, tz: V.z, ty: V.y + 4, dist: 26, pitch: 0.35 }); this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · LE NŒUD CENTRAL'); },
   fondOverview() { const V = this.srvVC(); Object.assign(this.orbW, { tx: V.x, tz: V.z - 9.4, ty: V.y + 2.4, dist: 15, pitch: 0.24, yaw: Math.PI + 0.22 }); },
   fondHit(cx, cy) { if (!this.fondG) return null; const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(), rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
     const h = rc.intersectObject(this.fondG, true); for (const x of h) { let o = x.object; while (o && o !== this.fondG) { const m = /^Caisson(\d)$/.exec(o.name); if (m) return +m[1]; if (/^(Tour|DomeTour|PlaqueTour|GravureTour|HublotTour)/.test(o.name)) return 'N'; o = o.parent; } } return null; },
@@ -131,7 +135,11 @@ Object.assign(Component.prototype, {
     const ko = ss(0, 1, this.manOpen[this.manIdx]); this.manLight.intensity = ko * 14 * LUXP / 4 * (this.camEau || 0);
     // fiche du caisson ouvert
     const P = PR_CAISSONS[this.manIdx], panelK = ko > 0.6 ? this.manIdx : null;
-    if (!this.manNode && this.panelK !== panelK) { this.panelK = panelK; this.setState({ panel: panelK == null ? null : { kicker: 'CAISSON ' + (panelK + 1) + ' / 5', title: P.n, list: P.s.map((x) => [x, '']), paras: [P.t] } }); if (panelK != null) this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · LE SERVEUR'); }
+    if (!this.manNode && this.panelK !== panelK) { this.panelK = panelK; this.tiroirSel = null; if (panelK != null) this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · CAISSON ' + (panelK + 1) + ' / 5'); }
+    // la caméra entre dans le caisson ouvert, et recule quand le manège tourne
+    if (ph === 'fond' && !this.manNode) { const inn = ko > 0.25, key = (inn ? 'in' : 'out') + this.manIdx;
+      if (this.camKey !== key) { this.camKey = key; const V = this.srvVC(); Object.assign(this.orbW, inn ? { tx: V.x, tz: V.z - 9.0, ty: V.y + 2.35, dist: 6.2, pitch: 0.1 } : { tx: V.x, tz: V.z - 9.4, ty: V.y + 2.4, dist: 15, pitch: 0.24 }); } }   /* une consigne par changement : la caméra reste libre */
+    this.tiroirsStep(T, ph === 'fond' && !this.manNode && ko > 0.7 ? this.manIdx : null, dt);
     if (this.manNode) this.panelK = 'N';
     // câbles et impulsions : depuis le caisson ouvert vers le nœud, puis vers les caissons desservis
     const src = this.manNode ? 'N' : this.manIdx, liens = this.manNode ? [0, 1, 2, 3, 4] : P.liens, kl = this.manNode ? 1 : ko;
@@ -150,6 +158,32 @@ Object.assign(Component.prototype, {
     for (; n < this.manPul.length; n++) this.manPul[n].visible = false;
     if (this.manGlow) this.manGlow.forEach((l, i) => { const on = tg.includes(i) && kl > 0.3; l.position.copy(pt(i, 9.4)).setY(2.4).applyAxisAngle(new T.Vector3(0, 1, 0), this.manA); l.intensity += ((on ? (2.2 + 0.6 * Math.sin(t * 3 + i)) * LUXP / 4 * (this.camEau || 0) : 0) - l.intensity) * Math.min(1, dt * 4); });
     if (this.manLed) this.manLed.forEach((m, i) => { m.emissiveIntensity = (Math.sin(t * (3 + i) + i) > -0.6 ? 1 : 0.15) * (m.userData.e0 || (m.userData.e0 = m.emissiveIntensity || 1)); });
+  },
+  // étiquettes nettes accrochées aux tiroirs du caisson ouvert ; un clic fait coulisser le tiroir et dit ce que j'ai configuré
+  tiroirsStep(T, idx, dt) {
+    if (!this.tirLbl) this.tirLbl = [];
+    if (idx == null) { this.tirLbl.forEach((e) => { e.el.style.display = 'none'; }); this.tirLblIdx = null; this.tiroirPull(T, null, dt); return; }
+    const P = PR_CAISSONS[idx], n = P.s.length, cap = this.manCap[idx];
+    if (this.tirLblIdx !== idx) { this.tirLblIdx = idx; this.tirLbl.forEach((e) => e.el.remove()); this.tirLbl = [];
+      const w = Math.min(1.5, (7 - 1.6) / n - 0.15);
+      P.s.forEach((sv, j) => { const x = -(n - 1) * (w + 0.15) / 2 + j * (w + 0.15); const el = document.createElement('button'); el.className = 'tiroir-lbl'; const R = PR_ROLES[sv] || [sv, ''];
+        el.innerHTML = '<b></b><small></small><span></span>'; el.querySelector('b').textContent = sv; el.querySelector('small').textContent = R[0]; el.querySelector('span').textContent = R[1];
+        el.onclick = (e) => { e.stopPropagation(); this.tiroirSel = this.tiroirSel === j ? null : j; this.say(sv + ' : ' + R[1], 'LOUIS-MARIE · ' + P.n); };
+        el.addEventListener('wheel', (e) => { e.preventDefault(); this.renderer.domElement.dispatchEvent(new WheelEvent('wheel', e)); }, { passive: false });
+        this.layer.appendChild(el); this.tirLbl.push({ el, x, j }); }); }
+    const Wd = this.host.clientWidth, Hd = this.host.clientHeight, v = new T.Vector3();
+    this.tirLbl.forEach((L) => { v.set(L.x, 0.62, -0.25 - (this.tiroirSel === L.j ? 0.35 : 0)); cap.localToWorld(v); v.project(this.cam);
+      if (v.z > 1) { L.el.style.display = 'none'; return; } L.el.style.display = 'block'; L.el.style.left = ((v.x + 1) / 2 * Wd) + 'px'; L.el.style.top = ((1 - v.y) / 2 * Hd) + 'px'; L.el.classList.toggle('sel', this.tiroirSel === L.j); });
+    this.tiroirPull(T, this.tiroirSel != null ? { cap, x: this.tirLbl[this.tiroirSel] ? this.tirLbl[this.tiroirSel].x : 0, w: Math.min(1.5, (7 - 1.6) / n - 0.15) } : null, dt);
+  },
+  // le tiroir choisi sort de 35 cm (rangée du haut : tiroir, étiquette, nom, voyant, poignée)
+  tiroirPull(T, S, dt) {
+    if (!this.manCap) return; const k0 = this.pullK || 0; this.pullK = k0 + ((S ? 1 : 0) - k0) * Math.min(1, dt * 5);
+    if (S && (!this.pullObjs || this.pullCap !== S.cap || this.pullX !== S.x)) { if (this.pullObjs) this.pullObjs.forEach(([o, z0]) => { o.position.z = z0; });
+      this.pullCap = S.cap; this.pullX = S.x; this.pullK = 0; this.pullObjs = [];
+      S.cap.children.forEach((o) => { const p = o.position; if (Math.abs(p.x - S.x) < S.w / 2 + 0.05 && p.y > 0.12 && p.y < 0.8 && p.z > -0.62 && p.z < -0.15 && /^(Tiroir|Etiquette|Nom|Led|Poignee)/.test(o.name)) this.pullObjs.push([o, p.z]); }); }
+    if (this.pullObjs) this.pullObjs.forEach(([o, z0]) => { o.position.z = z0 + 0.35 * this.pullK; });
+    if (!S && this.pullK < 0.01 && this.pullObjs) { this.pullObjs.forEach(([o, z0]) => { o.position.z = z0; }); this.pullObjs = null; }
   },
   // les routes, toutes faites de courbes de Bézier : le sous-marin part et arrive à vitesse nulle, son cap et son assiette ne sautent pas.
   // Plongée : tout droit dans le bassin, on descend par le fond du bassin, on passe sous la coque et on vient se ranger à gauche du manège, nez à l'est.
@@ -196,9 +230,15 @@ Object.assign(Component.prototype, {
       const want = Math.asin(Math.max(-0.4, Math.min(0.4, tg.y))) * fade; this.subPitch = (this.subPitch || 0) + (want - (this.subPitch || 0)) * Math.min(1, dt * 1.2);
       bo.rotateY(h); bo.rotateX(0.02 * Math.sin(t * 1.1) * nofl); bo.rotateZ(this.subPitch + 0.015 * Math.sin(t * 0.9) * nofl); }
     else this.subPitch = (this.subPitch || 0) * Math.max(0, 1 - dt * 2);
-    if (ph === 'mue' || (ph === 'plongee' && this.subMove < 1) || ph === 'remonte') Object.assign(this.orbW, {   /* arrivé au fond : le cadrage du manège prend la main */ tx: bo.position.x, tz: bo.position.z, ty: bo.position.y + 1, dist: Math.max(this.orbW.dist, ph === 'mue' ? 28 : 20) });
-    // en plongée, la caméra suit le sous-marin sous l'eau : son inclinaison baisse pour rester sous la surface
-    if (ph === 'plongee' && bo.position.y < -1.5) { const W = this.orbW, pmax = Math.asin(Math.max(0.06, Math.min(0.9, (-1.6 - W.ty) / W.dist))); if (W.pitch > pmax) W.pitch = pmax; }
+    if (ph === 'mue' || (ph === 'plongee' && this.subMove < 1) || ph === 'remonte') Object.assign(this.orbW, { tx: bo.position.x, tz: bo.position.z, ty: bo.position.y + 1 });   /* la cible suit le sous-marin (arrivé au fond, le manège prend la main) ; angle et distance restent libres */
+    // la caméra ne passe jamais derrière la base : à la fin de la mue elle descend à l'entrée du bassin (côté large, entre les deux étraves),
+    // passe sous l'eau et regarde le sous-marin sortir du bassin par en dessous ; puis elle tourne vers le manège en le suivant
+    // (des consignes données une seule fois : la caméra s'y rend en douceur, et reste libre entre deux)
+    const cue = (k, o) => { if (!this.camCues) this.camCues = {}; if (!this.camCues[k]) { this.camCues[k] = 1; Object.assign(this.orbW, o); } };
+    if (ph === 'mue' && st > 0.72) cue('mue-bas', { yaw: -Math.PI / 2, pitch: 0.1, dist: 24 });
+    if (ph === 'plongee' && this.subMove > 0.02) cue('sous-bassin', { yaw: -Math.PI / 2, pitch: -0.32, dist: 24 });
+    if (ph === 'plongee' && this.subMove > 0.5) cue('vers-manege', { yaw: Math.PI + 0.22, pitch: 0.24, dist: 18 });
+    if (ph === 'fond' || ph === 'escale') this.camCues = null;
     // hélice : elle se met à tourner à la fin de la mue, tourne pendant la plongée, ralentit au fond
     if (this.subProp) { const sp = ss(0.84, 1, st), w = C ? 7 : ph === 'fond' ? 2.5 : 7 * sp; this.propW = (this.propW || 0) + (w - (this.propW || 0)) * Math.min(1, dt * 1.2); this.propA = ((this.propA || 0) + this.propW * dt) % (Math.PI * 2000); this.subProp.rotation.x = this.propA; }
     if (this.subSpot) this.subSpot.intensity = kf * 60 * LUXP / 4 * (this.camEau || 0);
