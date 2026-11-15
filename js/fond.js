@@ -238,6 +238,11 @@ Object.assign(Component.prototype, {
     if (ph === 'mue' && st > 0.72) cue('mue-bas', { yaw: -Math.PI / 2, pitch: 0.1, dist: 24 });
     if (ph === 'plongee' && this.subMove > 0.02) cue('sous-bassin', { yaw: -Math.PI / 2, pitch: -0.32, dist: 24 });
     if (ph === 'plongee' && this.subMove > 0.5) cue('vers-manege', { yaw: Math.PI + 0.22, pitch: 0.24, dist: 18 });
+    // la remontée, en miroir : on suit le sous-marin, on le regarde remonter dans le bassin par en dessous, on ressort de l'eau à l'entrée du bassin
+    if (ph === 'remonte' && this.subUp > 0.01) cue('rem-suivi', { dist: 22, pitch: 0.2 });
+    if (ph === 'remonte' && this.subUp > 0.6) cue('rem-sous-bassin', { yaw: -Math.PI / 2, pitch: -0.3, dist: 24 });
+    if (ph === 'remonte' && this.subUp > 0.95) cue('rem-surface', { yaw: -Math.PI / 2, pitch: 0.14, dist: 24 });
+    if (ph === 'remonte' && this.subUp >= 1 && st < 0.8) cue('rem-haut', { pitch: 0.48, dist: 30 });
     if (ph === 'fond' || ph === 'escale') this.camCues = null;
     // hélice : elle se met à tourner à la fin de la mue, tourne pendant la plongée, ralentit au fond
     if (this.subProp) { const sp = ss(0.84, 1, st), w = C ? 7 : ph === 'fond' ? 2.5 : 7 * sp; this.propW = (this.propW || 0) + (w - (this.propW || 0)) * Math.min(1, dt * 1.2); this.propA = ((this.propA || 0) + this.propW * dt) % (Math.PI * 2000); this.subProp.rotation.x = this.propA; }

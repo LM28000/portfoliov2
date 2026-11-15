@@ -3,6 +3,7 @@
 ## 15 novembre 2026 : la base flottante et le manège
 
 - **La plongée se voit d'en dessous** : à la fin de la mue, la caméra descend sous le bassin et regarde le sous-marin en sortir entre les deux coques, puis le suit jusqu'au manège. La caméra reste libre : elle reçoit des consignes, mais ne t'est jamais imposée.
+- **La remontée, en miroir** : on suit le sous-marin qui quitte le manège, on le regarde remonter dans le bassin par en dessous, puis la caméra ressort de l'eau à l'entrée du bassin et prend de la hauteur pendant qu'Elba reprend sa forme.
 - **Les caissons se lisent de près** : quand un caisson s'ouvre, la caméra entre dedans. Chaque tiroir porte une étiquette nette (le service et son rôle), et un clic fait coulisser le tiroir et dit ce qui est configuré. La fiche sur le côté disparaît.
 - **L'îlot du serveur devient une base flottante**, une station océanographique en U : deux coques orange, des conteneurs, un portique roulant, une passerelle et une hélisurface. Elba entre dans le bassin central par le sud et s'y transforme en sous-marin, sous le portique.
 - **La plongée part du bassin** : le sous-marin descend par le fond du bassin, passe sous la coque et rejoint le fond. La remontée revient au bassin par en dessous, nez vers la sortie.

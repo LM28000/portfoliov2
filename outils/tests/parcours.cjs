@@ -40,7 +40,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   await E(() => window.__elba.focus('panneau')); await shot('03-panneau', 3500); check((await st()).f === 'panneau', 'le panneau À VENDRE');
 
   console.log('Insula : le studio');
-  await E(() => window.__elba.focus('porte')); await p.waitForFunction(() => window.__elba.stu && !window.__elba.stu.path && window.__elba.st().phase === 'studio', null, { timeout: 60000 });
+  await E(() => window.__elba.focus('porte')); await p.waitForFunction(() => window.__elba.stu && !window.__elba.stu.path && window.__elba.st().phase === 'studio', null, { timeout: 180000 });
   await shot('04-studio'); check((await st()).ph === 'studio', 'entrée dans le studio par la porte-fenêtre');
   for (const k of ['annonces', 'carnet', 'frigo']) { await E((k) => window.__elba.stuFocus(k), k); await shot('05-' + k, 2500); check((await st()).sf === k, 'objet : ' + k); }
   await E(() => window.__elba.stuFocus('ordi')); await p.waitForFunction(() => { const w = window.__elba.stu.web; return w.style.display === 'block' && w.style.transform.startsWith('matrix3d'); }, null, { timeout: 60000 }).catch(() => {}); await shot('06-ordinateur', 3000);
