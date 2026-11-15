@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
 <main id="app">
@@ -136,7 +136,7 @@
     <h3>2 · Carte vivante</h3>
     <p>Une carte 3D de la France en temps réel : trains (voiture par voiture), avions, bateaux, bus et métros, météo, qualité de l'air, énergie, séismes. Une frise remonte sept jours en arrière et rejoue tout. Un serveur Rust archive le temps réel, le site est en TypeScript (React, MapLibre, deck.gl). Elle tourne en permanence sur mon serveur maison. <a href="https://github.com/LM28000/openstreetmap">le code</a></p>
     <h3>3 · Le serveur maison</h3>
-    <p>Un serveur chez moi, sous Debian, avec une trentaine de services dans Docker, chacun décrit dans un fichier versionné dans git. On y trouve un cloud privé, une IA locale (Ollama, n8n, Qdrant), une messagerie Matrix, un VPN (Headscale) et un SSO (Authelia), de la supervision (Grafana, Prometheus) et des sauvegardes chiffrées chaque nuit (Kopia). Un pare-feu ne laisse passer que le réseau local et le VPN.</p>
+    <p>Un serveur chez moi, sous Debian, avec ses services dans Docker, chacun décrit dans un fichier versionné dans git. L'accès : un VPN (Headscale), une connexion unique (Authentik) pour Nextcloud, Matrix et Portainer, et un coffre à mots de passe (Vaultwarden). Un cloud privé (Nextcloud), une messagerie (Matrix), une IA locale (Ollama). La supervision : Uptime Kuma surveille tous les services, avec Grafana, Scrutiny pour les disques et Dozzle pour les journaux. Kopia sauvegarde toutes les données Docker, et Portainer pilote les conteneurs. Dans le site, on y descend en sous-marin, sous une base flottante.</p>
     <h2>Mon parcours</h2>
     <ol>
       <li>2020 – 2023 · Précigné : Académie musicale de Liesse, bac mention Bien (maths, NSI), 1er prix national des très jeunes altistes.</li>
@@ -165,19 +165,19 @@
     </div>
   </noscript>
 </main>
-<script src="vendor/three.bundle.js?v=25"></script>
-<script src="js/shim.js?v=25"></script>
-<script src="js/scene.js?v=25"></script>
-<script src="js/cabin.js?v=25"></script>
-<script src="js/cabin3d.js?v=25"></script>
-<script src="js/archipel.js?v=25"></script>
-<script src="js/fond.js?v=25"></script>
-<script src="js/descente.js?v=25"></script>
-<script src="js/studio.js?v=25"></script>
-<script src="js/quai.js?v=25"></script>
-<script src="js/lumiere.js?v=25"></script>
-<script src="js/rendu.js?v=25"></script>
-<script src="js/audio.js?v=25"></script>
-<script src="js/main.js?v=25"></script>
+<script src="vendor/three.bundle.js?v=26"></script>
+<script src="js/shim.js?v=26"></script>
+<script src="js/scene.js?v=26"></script>
+<script src="js/cabin.js?v=26"></script>
+<script src="js/cabin3d.js?v=26"></script>
+<script src="js/archipel.js?v=26"></script>
+<script src="js/fond.js?v=26"></script>
+<script src="js/descente.js?v=26"></script>
+<script src="js/studio.js?v=26"></script>
+<script src="js/quai.js?v=26"></script>
+<script src="js/lumiere.js?v=26"></script>
+<script src="js/rendu.js?v=26"></script>
+<script src="js/audio.js?v=26"></script>
+<script src="js/main.js?v=26"></script>
 </body>
 </html>

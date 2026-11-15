@@ -1,39 +1,57 @@
-/* L'île du serveur : un îlot, une bouée jaune, et sous l'eau le village de caissons.
-   « Plonger » : Elba se transforme en sous-marin (animation exportée de Blender, jouée en réglant son temps),
-   descend jusqu'au village ; on tourne autour, on clique un caisson ; « Faire surface » rejoue tout à l'envers. */
-const PR_FOND = { prof: -20, mue: 9, descente: 14, nfps: 24, nf: 120, swap: 0.37, noir: [0.011, 0.013, 0.015],
+/* L'île du serveur : une base flottante (station océanographique) avec son bassin, et au fond un manège de caissons.
+   « Plonger » : dans le bassin, Elba se transforme en sous-marin (animation exportée de Blender, jouée en réglant son temps),
+   plonge par le fond du bassin et rejoint le manège. On fait tourner le manège : le caisson qui arrive devant s'ouvre,
+   ses câbles s'allument vers les caissons qu'il dessert. « Faire surface » ramène Elba au bassin, puis la mue se rejoue à l'envers. */
+const PR_FOND = { prof: -20, mue: 9, descente: 15, nfps: 24, nf: 120, swap: 0.37, noir: [0.011, 0.013, 0.015],
   ph: { plat: [0.18, 0.36], couleur: [0.42, 0.68], feux: [0.80, 0.90] } };
-const PR_CAISSONS = {
-  Caisson0: ['CLOUD PRIVÉ', ['Nextcloud', 'webmail', 'wiki'], 'Mes fichiers, mon agenda, mes mails et mes notes, hébergés chez moi.'],
-  Caisson1: ['IA LOCALE', ['Ollama', 'n8n', 'Qdrant'], 'Des modèles de langue qui tournent sur ma machine, des automatisations et une base de recherche.'],
-  Caisson2: ['MESSAGERIE', ['Matrix (Synapse)', 'Element'], 'Une messagerie chiffrée, sur mon propre serveur.'],
-  Caisson3: ['ACCÈS', ['VPN Headscale', 'SSO Authelia'], "Rien n'est ouvert sur Internet : on entre par le VPN, puis par une seule connexion."],
-  Caisson4: ['SUPERVISION', ['Grafana', 'Prometheus', 'Uptime Kuma'], "Des tableaux de bord et des alertes : je sais quand quelque chose ne va pas."],
-  Caisson5: ['SAUVEGARDES', ['Kopia chiffré', 'dumps SQL', 'SnapRAID'], 'Une sauvegarde chiffrée chaque nuit, et des disques protégés contre la panne.'],
-  Noeud: ['RÉSEAU', ['Debian 13', 'Docker', 'git'], "Le nœud central : une trentaine de services dans Docker, chacun décrit dans un fichier versionné dans git. Le gros câble part vers la Carte vivante, qui tourne ici, 24 h sur 24."]
-};
+// les caissons, dans l'ordre du manège ; liens : les caissons (et « N », le nœud central) que ses câbles desservent
+const PR_CAISSONS = [
+  { n: 'ACCÈS', s: ['Headscale', 'Authentik', 'Vaultwarden'], t: "Headscale, mon VPN. Authentik donne une connexion unique à Nextcloud, Matrix et Portainer. Vaultwarden garde les mots de passe.", liens: [1, 'N'] },
+  { n: 'CLOUD ET MESSAGERIE', s: ['Nextcloud', 'Matrix'], t: 'Mes fichiers et ma messagerie, hébergés chez moi, derrière la connexion unique.', liens: [] },
+  { n: 'IA LOCALE', s: ['Ollama'], t: 'Des modèles de langue qui tournent sur ma machine.', liens: [] },
+  { n: 'SUPERVISION', s: ['Grafana', 'Uptime Kuma', 'Scrutiny', 'Dozzle'], t: 'Uptime Kuma surveille tous les services. Grafana pour les tableaux de bord, Scrutiny pour la santé des disques, Dozzle pour les journaux.', liens: [0, 1, 2, 4, 'N'] },
+  { n: 'SAUVEGARDES', s: ['Kopia'], t: 'Kopia sauvegarde toutes les données Docker.', liens: [0, 1, 2, 3, 'N'] }
+];
+const PR_NOEUD = { n: 'PILOTAGE', s: ['Portainer', 'Docker', 'git'], t: 'Le nœud central : Portainer pilote tous les conteneurs. Chaque service est décrit dans un fichier versionné dans git.' };
 Object.assign(PR_RADIO, {
-  serveur: "Ici, tout se passe sous l'eau. La bouée jaune marque l'emplacement de mon serveur maison : une trentaine de services, posés sur le fond. Clique sur « Plonger » : Elba se transforme en sous-marin.",
-  mue: "Préparation à la plongée : on rentre les voiles, on ferme tout… Elba devient sous-marin.",
-  fond: "Bienvenue à vingt mètres : sept caissons, un par famille de services, reliés au nœud central. Le gros câble part vers la Carte vivante. Clique sur un caisson pour t'en approcher.",
-  surface: "On remonte. Elba reprend sa forme de voilier."
+  serveur: "Bienvenue à la base. Mon serveur maison est en dessous : ses services tournent dans un manège de caissons, au fond. Clique sur « Plonger » : Elba se transforme en sous-marin dans le bassin.",
+  mue: "On rentre les voiles, on ferme tout… Elba devient sous-marin.",
+  fond: "Bienvenue au fond. Fais tourner le manège avec les flèches : le caisson qui arrive devant s'ouvre et montre les services qu'il contient. Les câbles qui s'allument montrent ce qu'il dessert.",
+  surface: "On remonte au bassin. Elba reprend sa forme de voilier."
 });
 Object.assign(Component.prototype, {
   srvPh(ph) { return ph === 'mue' || ph === 'plongee' || ph === 'fond' || ph === 'remonte'; },
-  srvBerth() { const I = PR_ISLES.serveur; return { x: I.x - 4, z: I.z + I.rz + 16, h: Math.PI / 2 }; },
-  // E : là où le sous-marin s'arrête, à -11,5 m, nez au sud ; le village est devant lui, un peu à droite
-  srvEnd() { const B = this.srvBerth(); return { x: B.x + 14, y: -11.5, z: B.z + 12 }; },
-  srvVC() { const E = this.srvEnd(); return { x: E.x - 7, y: PR_FOND.prof, z: E.z + 8 }; },
-  // ---------- chargement (à l'approche de l'île du serveur)
+  srvBO() { const I = PR_ISLES.serveur; return { x: I.x, z: I.z }; },                                  // centre du bassin
+  srvBerth() { const O = this.srvBO(); return { x: O.x - 2, z: O.z, h: 0 }; },                          // dans le bassin, nez vers le bloc nord
+  srvApp(B) { return [{ x: B.x - 60, z: B.z }, { x: B.x - 26, z: B.z }]; },                            // on entre par l'ouverture du bassin
+  srvVC() { const O = this.srvBO(); return { x: O.x + 4, y: PR_FOND.prof, z: O.z + 20 }; },             // centre du manège
+  srvEnd() { const V = this.srvVC(); return { x: V.x + 18, y: -10, z: V.z + 1 }; },                    // le sous-marin en attente, sur le côté du manège, hors du champ principal
+  // la base : ses coques, son bloc nord (pour les collisions de la barre à la main)
+  basePen(x, z) { const O = this.srvBO(), lx = x - O.x, lz = z - O.z, m = 1.4; let p = -1e9;
+    for (const [x0, x1, z0, z1] of [[-26, 26, -15, -7], [-26, 26, 7, 15], [16, 26, -15, 15]]) p = Math.max(p, Math.min(lx - x0, x1 - lx, lz - z0, z1 - lz) + m); return p; },
+  // ---------- chargement : la base dès le départ (on la voit de l'archipel), le reste à l'approche
+  loadBase() {
+    if (this.baseLoading) return; this.baseLoading = true; const T = window.THREE, L = new T.GLTFLoader(), O = this.srvBO();
+    L.load('assets/base.glb', (g) => { const b = g.scene; b.position.set(O.x, 0, O.z); const G = this.isleG && this.isleG.serveur; (G || this.scene).add(b); this.baseG = b; this.renduOmbres(T, b);
+      b.traverse((o) => { if (o.isMesh && o.material && /^Projo|^FeuRouge|^FeuVert/.test(o.material.name || '')) o.material.toneMapped = true; }); });
+  },
   loadFond() {
     if (this.fondLoading) return; this.fondLoading = true; const T = window.THREE, L = new T.GLTFLoader(); if (T.MeshoptDecoder) L.setMeshoptDecoder(T.MeshoptDecoder);
-    const B = this.srvBerth(), V = this.srvVC();
-    L.load('assets/fond.glb', (g) => {
-      const root = g.scene; const buoy = root.getObjectByName('MarqueSpeciale');
-      if (buoy) { buoy.parent.remove(buoy); buoy.position.set(B.x - 7, 0, B.z - 1); this.scene.add(buoy); this.srvBuoy = buoy; }
-      root.position.set(V.x, V.y, V.z); this.scene.add(root); this.fondG = root; root.visible = false;
-      this.renduOmbres(T, root); if (buoy) this.renduOmbres(T, buoy);
-      this.caps = {}; root.traverse((o) => { if (PR_CAISSONS[o.name] && !this.caps[o.name]) this.caps[o.name] = o; });
+    const V = this.srvVC();
+    L.load('assets/manege.glb', (g) => {
+      const root = g.scene; root.position.set(V.x, V.y, V.z); root.rotation.y = Math.PI;   /* le caisson de devant regarde la base (au nord) */ this.scene.add(root); this.fondG = root; root.visible = false; this.renduOmbres(T, root);
+      this.manT = root.getObjectByName('Tournant'); this.manCap = []; this.manRid = []; this.manReg = []; this.manLia = [];
+      for (let i = 0; i < 5; i++) { const c = root.getObjectByName('Caisson' + i); this.manCap.push(c); let rid = null, reg = null; c.children.forEach((o) => { if (/^Rideau/.test(o.name)) rid = o; if (/^Reglette/.test(o.name)) reg = o; });
+        this.manRid.push(rid); if (reg && reg.isMesh) { reg.material = reg.material.clone(); reg.material.emissive.setRGB(0.9, 0.95, 1); } this.manReg.push(reg);
+        const li = root.getObjectByName('Liaison' + i); if (li && li.isMesh) { li.material = li.material.clone(); li.material.emissive = new T.Color(0.3, 0.85, 1); li.material.emissiveIntensity = 0; } this.manLia.push(li); }
+      this.manCour = null; root.traverse((o) => { if (o.isMesh && o.material && o.material.name === 'Couronne' && !this.manCour) { o.material = o.material.clone(); this.manCour = o.material; o.material.userData.e0 = o.material.emissiveIntensity || 1; } });
+      this.manLed = []; root.traverse((o) => { if (o.isMesh && o.material && /^Led/.test(o.material.name) && !this.manLed.includes(o.material)) this.manLed.push(o.material); });
+      this.manIdx = 0; this.manA = 0; this.manOpen = [0, 0, 0, 0, 0]; this.manNode = false;
+      // lumière de l'intérieur du caisson de devant, et impulsions le long des câbles
+      this.manLight = new T.PointLight(0xdbeaff, 0, 10, 1); this.manLight.position.set(V.x, V.y + 2.7, V.z - 9.0); this.scene.add(this.manLight);
+      this.manGlow = []; for (let i = 0; i < 5; i++) { const l = new T.PointLight(0x55d0ff, 0, 7, 1.2); root.add(l); this.manGlow.push(l); }   /* lueur des caissons desservis */
+      const pm = new T.MeshBasicMaterial({ color: new T.Color(0.55, 1.0, 1.0), toneMapped: false, fog: false });   /* lumineuses : le brouillard ne les éteint pas */ this.manPul = [];
+      for (let i = 0; i < 30; i++) { const s = new T.Mesh(new T.SphereGeometry(0.26, 12, 8), pm); s.visible = false; root.add(s); this.manPul.push(s); }
       this.buildFondFx(T);
     });
     L.load('assets/elba_sousmarin.glb', (g) => {
@@ -45,11 +63,9 @@ Object.assign(Component.prototype, {
       this.subFondus = ['Rouf', 'Hublot', 'Bois'].flatMap((n) => (mats[n] || []).map(keep)); this.subBlanc = (mats.PontBlanc || [])[0] ? mats.PontBlanc[0].color.clone() : new T.Color(0.8, 0.8, 0.77);
       this.subNoirs = ['CoqueBleue.001', 'PontBlanc.001'].flatMap((n) => (mats[n] || []).map(keep)); this.subAF = (mats['Antifouling.001'] || []).map(keep);
       this.subHub = mats.HublotSM || []; this.subPhare = mats.PhareSM || [];
-      // phare de nez (sous l'eau)
       const sp = new T.SpotLight(0xd8f2ff, 0, 45, 0.5, 0.6, 1.2); sp.position.set(4.3, 0.12, 0); const tg = new T.Object3D(); tg.position.set(12, -1.5, 0); rig.add(sp); rig.add(tg); sp.target = tg; this.subSpot = sp;
     });
   },
-  // ---------- l'ambiance sous l'eau : sable et reflets, surface vue d'en dessous, rayons, poissons, bulles, lueurs
   buildFondFx(T) {
     const V = this.srvVC(), G = new T.Group(); G.visible = false; this.scene.add(G); this.fondFx = G;
     // sable
@@ -83,37 +99,74 @@ Object.assign(Component.prototype, {
     this.fishP = []; for (let i = 0; i < 70; i++) this.fishP.push({ s: i < 40 ? 0 : 1, a: rnd() * 0.8, r: rnd() * 2.2, y: rnd() * 1.6, o: rnd() * 6.28 });
     // bulles
     const bg = new T.BufferGeometry(), bp = new Float32Array(120 * 3); bg.setAttribute('position', new T.BufferAttribute(bp, 3)); this.bub = new T.Points(bg, new T.PointsMaterial({ color: 0xdff6ff, size: 0.12, transparent: true, opacity: 0.7, depthWrite: false })); this.bub.frustumCulled = false; G.add(this.bub); this.bubN = 0;
-    // lueurs des caissons
-    this.capL = []; for (const k in this.caps) { const c = this.caps[k]; c.updateMatrixWorld(true); const p = new T.Vector3(); c.getWorldPosition(p); const l = new T.PointLight(0x5fd0ff, 0, 10, 1.6); l.position.copy(p).add(new T.Vector3(0, 0.4, 0)); G.add(l); this.capL.push(l); }
   },
+  // ---------- les gestes
   // ---------- les gestes
   plonger() {
     if (!this.subRig || !this.fondG) { this.loadFond(); this.say('Un instant, je prépare la plongée…'); clearTimeout(this.plongeT); this.plongeT = setTimeout(() => this.plonger(), 800); return; }
-    this.say(PR_RADIO.mue, 'LOUIS-MARIE · LE SERVEUR'); this.subT = this.subT || 0; this.subDir = 1; this.subMove = 0; this.fondFocus = null;
+    this.say(PR_RADIO.mue, 'LOUIS-MARIE · LE SERVEUR'); this.subT = this.subT || 0; this.subDir = 1; this.subMove = 0; this.manNode = false;
     this.subRig.visible = true; this.boat.children.forEach((c) => { if (c !== this.subRig) c.visible = false; });
-    const b = this.b; Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1, dist: 30, pitch: 0.22, yaw: this.orb.yaw });
+    const b = this.b; Object.assign(this.orbW, { tx: b.x, tz: b.z, ty: 1, dist: 32, pitch: 0.5, yaw: -Math.PI / 2 + 0.35 });   // de haut, depuis l'entrée du bassin
     this.setState({ phase: 'mue', panel: null });
   },
-  faireSurface() { this.fondFocus = null; this.subDir = -1; this.subUp = 0; this.setState({ phase: 'remonte', panel: null }); this.say(PR_RADIO.surface, 'LOUIS-MARIE · LE SERVEUR'); },
-  fondFocusK(k) { const c = this.caps && this.caps[k]; if (!c) return; const p = new window.THREE.Vector3(); c.getWorldPosition(p); this.fondFocus = k;
-    Object.assign(this.orbW, { tx: p.x, tz: p.z, ty: p.y + 0.4, dist: k === 'Noeud' ? 16 : 12, pitch: 0.22 });
-    const [n, list, txt] = PR_CAISSONS[k]; this.setState({ panel: { kicker: k === 'Noeud' ? 'LE NŒUD CENTRAL' : 'UN CAISSON', title: n, list: list.map((x) => [x, '']), paras: [txt] } }); this.say(n + ' : ' + txt, 'LOUIS-MARIE · LE SERVEUR'); },
-  fondOverview() { const V = this.srvVC(); this.fondFocus = null; Object.assign(this.orbW, { tx: V.x, tz: V.z, ty: V.y + 2, dist: 38, pitch: 0.3 }); this.setState({ panel: null }); },
+  faireSurface() { this.manNode = false; this.subDir = -1; this.subUp = 0; this.setState({ phase: 'remonte', panel: null }); this.say(PR_RADIO.surface, 'LOUIS-MARIE · LE SERVEUR'); },
+  // le manège : un cran à gauche ou à droite, ou directement un caisson
+  manGo(i) { if (!this.manCap) return; this.manIdx = ((i % 5) + 5) % 5; this.manNode = false; this.setState({ panel: null }); this.fondOverview(); },
+  manStep(d) { this.manGo((this.manIdx || 0) + d); },
+  manNodeOn() { this.manNode = true; const P = PR_NOEUD; this.setState({ panel: { kicker: 'LE NŒUD CENTRAL', title: P.n, list: P.s.map((x) => [x, '']), paras: [P.t] } }); this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · LE SERVEUR'); },
+  fondOverview() { const V = this.srvVC(); Object.assign(this.orbW, { tx: V.x, tz: V.z - 9.4, ty: V.y + 2.4, dist: 15, pitch: 0.24, yaw: Math.PI + 0.22 }); },
   fondHit(cx, cy) { if (!this.fondG) return null; const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(), rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
-    const h = rc.intersectObject(this.fondG, true); for (const x of h) { let o = x.object; while (o && !PR_CAISSONS[o.name]) o = o.parent; if (o) return o.name; } return null; },
-  // les routes : une seule courbe de Bézier chacune, nez au nord à la bouée, nez au sud au-dessus du village.
-  // Le sous-marin part et arrive à vitesse nulle : son cap et son assiette ne peuvent pas sauter.
-  diveCurve() { if (this.diveC) return this.diveC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), v = (x, y, z) => new T.Vector3(x, y, z);
-    this.diveC = new T.CubicBezierCurve3(v(B.x, 0, B.z), v(B.x, -1, B.z - 15), v(E.x, E.y + 0.5, E.z - 13), v(E.x, E.y, E.z)); return this.diveC; },
-  upCurve() { if (this.upC) return this.upC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), v = (x, y, z) => new T.Vector3(x, y, z);
-    this.upC = new T.CubicBezierCurve3(v(E.x, E.y, E.z), v(E.x, E.y + 1, E.z + 13), v(B.x, -1, B.z + 15), v(B.x, 0, B.z)); return this.upC; },
-  // ---------- à chaque image
+    const h = rc.intersectObject(this.fondG, true); for (const x of h) { let o = x.object; while (o && o !== this.fondG) { const m = /^Caisson(\d)$/.exec(o.name); if (m) return +m[1]; if (/^(Tour|DomeTour|PlaqueTour|GravureTour|HublotTour)/.test(o.name)) return 'N'; o = o.parent; } } return null; },
+  fondClick(cx, cy) { const k = this.fondHit(cx, cy); if (k === 'N') this.manNodeOn(); else if (k != null) this.manGo(k); },
+  // le manège à chaque image : on ferme, on tourne, on s'arrête, on ouvre ; les câbles du caisson ouvert s'allument
+  manStepFrame(T, t, dt, ph) {
+    if (!this.manT) return; const ss = (a, b, x) => { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * x * (x * (6 * x - 15) + 10); };
+    const tau = Math.PI * 2, want = -this.manIdx * tau / 5; let d = want - this.manA; while (d > Math.PI) d -= tau; while (d < -Math.PI) d += tau;
+    const closed = this.manOpen.every((k, i) => i === this.manIdx || k < 0.02);
+    if (closed && Math.abs(d) > 1e-4) { const v = Math.sign(d) * Math.min(Math.abs(d), dt * (0.25 + Math.abs(d) * 1.6)); this.manA += v; }   // ralentit en arrivant au cran
+    this.manT.rotation.y = this.manA;
+    const front = Math.abs(d) < 0.01 && ph === 'fond';
+    for (let i = 0; i < 5; i++) { const tgt = front && i === this.manIdx && !this.manNode ? 1 : 0; this.manOpen[i] += Math.max(-dt / 0.9, Math.min(dt / 1.3, tgt - this.manOpen[i]));
+      const k = ss(0, 1, this.manOpen[i]); if (this.manRid[i]) this.manRid[i].rotation.x = -118 * Math.PI / 180 * k; if (this.manReg[i]) this.manReg[i].material.emissiveIntensity = 6 * k; }
+    const ko = ss(0, 1, this.manOpen[this.manIdx]); this.manLight.intensity = ko * 14 * LUXP / 4 * (this.camEau || 0);
+    // fiche du caisson ouvert
+    const P = PR_CAISSONS[this.manIdx], panelK = ko > 0.6 ? this.manIdx : null;
+    if (!this.manNode && this.panelK !== panelK) { this.panelK = panelK; this.setState({ panel: panelK == null ? null : { kicker: 'CAISSON ' + (panelK + 1) + ' / 5', title: P.n, list: P.s.map((x) => [x, '']), paras: [P.t] } }); if (panelK != null) this.say(P.n + ' : ' + P.t, 'LOUIS-MARIE · LE SERVEUR'); }
+    if (this.manNode) this.panelK = 'N';
+    // câbles et impulsions : depuis le caisson ouvert vers le nœud, puis vers les caissons desservis
+    const src = this.manNode ? 'N' : this.manIdx, liens = this.manNode ? [0, 1, 2, 3, 4] : P.liens, kl = this.manNode ? 1 : ko;
+    for (let i = 0; i < 5; i++) { const on = (i === src && liens.length) || liens.includes(i); if (this.manLia[i]) this.manLia[i].material.emissiveIntensity += ((on ? 3.2 * kl : 0) - this.manLia[i].material.emissiveIntensity) * Math.min(1, dt * 4); }
+    const ang = (i) => -Math.PI / 2 + i * tau / 5, R0 = 9.4 - 1.7, R1 = 2.4, y = 1.05, pt = (i, r) => { const a = ang(i); return new T.Vector3(Math.cos(a) * r, y, -Math.sin(a) * r); };
+    // les impulsions passent par le haut, là où on les voit : montée le long de la suspente, la couronne, descente sur le caisson desservi
+    const tg = liens.filter((x) => x !== 'N'); let n = 0; const RC = 9.4, yc = 6.4, yt = 4.1;
+    const arc = (a0, a1, f) => { let d2 = a1 - a0; while (d2 > Math.PI) d2 -= tau; while (d2 < -Math.PI) d2 += tau; const a = a0 + d2 * f; return new T.Vector3(Math.cos(a) * RC, yc, -Math.sin(a) * RC); };
+    if (kl > 0.3 && liens.length) tg.forEach((j, q) => { for (let m = 0; m < 3 && n < this.manPul.length; m++) { const s = (t * 0.32 + m / 3 + q * 0.11) % 1, p = this.manPul[n++]; p.visible = true;
+        const a0 = src === 'N' ? ang(j) : ang(src), a1 = ang(j); let v3;
+        if (s < 0.18) { v3 = new T.Vector3(Math.cos(a0) * RC, yt + (yc - yt) * s / 0.18, -Math.sin(a0) * RC); if (src === 'N') v3 = new T.Vector3(Math.cos(a0) * 2.2 * (1 - s / 0.18) + Math.cos(a0) * RC * s / 0.18, 7.0 - 0.6 * s / 0.18, -Math.sin(a0) * (2.2 * (1 - s / 0.18) + RC * s / 0.18)); }
+        else if (s < 0.82) v3 = arc(a0, a1, (s - 0.18) / 0.64);
+        else v3 = new T.Vector3(Math.cos(a1) * RC, yc - (yc - yt) * (s - 0.82) / 0.18, -Math.sin(a1) * RC);
+        p.position.copy(v3).applyAxisAngle(new T.Vector3(0, 1, 0), this.manA); p.scale.setScalar(0.8 + 0.5 * kl); } });
+    if (this.manCour) this.manCour.emissiveIntensity = this.manCour.userData.e0 * (1 + 3 * (liens.length ? kl : 0));
+    for (; n < this.manPul.length; n++) this.manPul[n].visible = false;
+    if (this.manGlow) this.manGlow.forEach((l, i) => { const on = tg.includes(i) && kl > 0.3; l.position.copy(pt(i, 9.4)).setY(2.4).applyAxisAngle(new T.Vector3(0, 1, 0), this.manA); l.intensity += ((on ? (2.2 + 0.6 * Math.sin(t * 3 + i)) * LUXP / 4 * (this.camEau || 0) : 0) - l.intensity) * Math.min(1, dt * 4); });
+    if (this.manLed) this.manLed.forEach((m, i) => { m.emissiveIntensity = (Math.sin(t * (3 + i) + i) > -0.6 ? 1 : 0.15) * (m.userData.e0 || (m.userData.e0 = m.emissiveIntensity || 1)); });
+  },
+  // les routes, toutes faites de courbes de Bézier : le sous-marin part et arrive à vitesse nulle, son cap et son assiette ne sautent pas.
+  // Plongée : tout droit dans le bassin, on descend par le fond du bassin, on passe sous la coque et on vient se ranger à gauche du manège, nez à l'est.
+  diveCurve() { if (this.diveC) return this.diveC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), v = (x, y, z) => new T.Vector3(x, y, z), M = v(B.x + 12, -8, B.z);
+    const P = new T.CurvePath(); P.add(new T.CubicBezierCurve3(v(B.x, 0, B.z), v(B.x + 7, -0.3, B.z), v(B.x + 11, -3, B.z), M));
+    P.add(new T.CubicBezierCurve3(M, v(M.x + 1.6, -10.5, M.z), v(E.x - 7, E.y, E.z), v(E.x, E.y, E.z))); this.diveC = P; return P; },
+  // Remontée : on file vers l'est au-dessus du manège, on revient sous le bloc nord, et on remonte dans le bassin, nez vers la sortie.
+  upCurve() { if (this.upC) return this.upC; const T = window.THREE, B = this.srvBerth(), E = this.srvEnd(), O = this.srvBO(), v = (x, y, z) => new T.Vector3(x, y, z), N = v(O.x + 24, -8, O.z);
+    const P = new T.CurvePath(); P.add(new T.CubicBezierCurve3(v(E.x, E.y, E.z), v(E.x + 14, E.y + 0.5, E.z), v(N.x + 10, N.y, N.z), N));
+    P.add(new T.CubicBezierCurve3(N, v(N.x - 8, N.y, N.z), v(B.x + 10, -1.5, B.z), v(B.x, 0, B.z))); this.upC = P; return P; },
   fondStep(T, t, dt, ph) {
-    const I = PR_ISLES.serveur; if (!this.fondLoading && (this.isleK === 'serveur' || this.sailDest === 'serveur' || this.transitK === 'serveur' || Math.hypot(this.b.x - I.x, this.b.z - I.z) < 260)) this.loadFond();
-    if (this.srvBuoy) { this.srvBuoy.position.y = 0.06 * Math.sin(t * 1.2) - 0.05; this.srvBuoy.rotation.z = 0.03 * Math.sin(t * 0.9); }
+    const I = PR_ISLES.serveur; if (!this.baseLoading && this.isleG) this.loadBase();
+    if (!this.fondLoading && (this.isleK === 'serveur' || this.sailDest === 'serveur' || this.transitK === 'serveur' || Math.hypot(this.b.x - I.x, this.b.z - I.z) < 260)) this.loadFond();
     const sub = this.srvPh(ph);
     if (!sub) { if (this.subRig && this.subRig.visible) { this.subRig.visible = false; this.subT = 0; this.subMove = 0; if (this.boat) this.boat.children.forEach((c) => { if (c !== this.subRig) c.visible = true; }); } this.eau(0); return; }
     if (!this.subRig) return;
+    this.manStepFrame(T, t, dt, ph);
     const ss = (a, b, x) => { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * x * (x * (6 * x - 15) + 10); };
     // 1. la mue (t de 0 à 1, ou de 1 à 0 en remontant, une fois en surface)
     if (ph === 'mue') { this.subT = Math.min(1, this.subT + dt / PR_FOND.mue); if (this.subT >= 1) { this.setState({ phase: 'plongee' }); this.subMove = 0; } }
@@ -133,14 +186,19 @@ Object.assign(Component.prototype, {
     if (ph === 'remonte' && this.subUp < 1) { C = this.upCurve(); u = ss(0, 1, this.subUp); fade = 1 - ss(0.85, 1, u); }
     else if (this.subMove > 0) { C = this.diveCurve(); u = ss(0, 1, this.subMove); fade = ss(0, 0.15, u); }
     this.hovA = (this.hovA || 0) + ((ph === 'fond' ? 0.25 : 0) - (this.hovA || 0)) * Math.min(1, dt * 0.8);
-    if (C) { const p = C.getPointAt(u), tg = C.getTangentAt(Math.min(0.999, Math.max(0.001, u)));
+    if (C) { u = Math.min(0.9999, Math.max(0, u));   /* une courbe en deux tronçons ne renvoie rien à 1 exactement (arrondi) */
+      const p = C.getPointAt(u), tg = C.getTangentAt(Math.min(0.999, Math.max(0.001, u)));
       const nofl = 1 - fade, bobY = (0.05 * Math.sin(t * 1.3) - 0.05) * nofl;
       bo.position.set(p.x, p.y + bobY + this.hovA * Math.sin(t * 0.6), p.z); bo.rotation.set(0, 0, 0);
-      const h = Math.atan2(-tg.z, tg.x); b.x = p.x; b.z = p.z; b.h = h;
+      // le cap suit la trajectoire en douceur (et ne bouge pas quand on descend presque à la verticale)
+      const hz = Math.hypot(tg.x, tg.z); let h = b.h; if (hz > 0.05) { let dh = Math.atan2(-tg.z, tg.x) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; h += dh * Math.min(1, dt * 4 * Math.min(1, hz / 0.3)); }
+      b.x = p.x; b.z = p.z; b.h = h;
       const want = Math.asin(Math.max(-0.4, Math.min(0.4, tg.y))) * fade; this.subPitch = (this.subPitch || 0) + (want - (this.subPitch || 0)) * Math.min(1, dt * 1.2);
       bo.rotateY(h); bo.rotateX(0.02 * Math.sin(t * 1.1) * nofl); bo.rotateZ(this.subPitch + 0.015 * Math.sin(t * 0.9) * nofl); }
-    else this.subPitch = 0;
-    if (ph === 'mue' || ph === 'plongee' || ph === 'remonte') Object.assign(this.orbW, { tx: bo.position.x, tz: bo.position.z, ty: bo.position.y + 1, dist: Math.max(this.orbW.dist, ph === 'mue' ? 24 : 20) });
+    else this.subPitch = (this.subPitch || 0) * Math.max(0, 1 - dt * 2);
+    if (ph === 'mue' || (ph === 'plongee' && this.subMove < 1) || ph === 'remonte') Object.assign(this.orbW, {   /* arrivé au fond : le cadrage du manège prend la main */ tx: bo.position.x, tz: bo.position.z, ty: bo.position.y + 1, dist: Math.max(this.orbW.dist, ph === 'mue' ? 28 : 20) });
+    // en plongée, la caméra suit le sous-marin sous l'eau : son inclinaison baisse pour rester sous la surface
+    if (ph === 'plongee' && bo.position.y < -1.5) { const W = this.orbW, pmax = Math.asin(Math.max(0.06, Math.min(0.9, (-1.6 - W.ty) / W.dist))); if (W.pitch > pmax) W.pitch = pmax; }
     // hélice : elle se met à tourner à la fin de la mue, tourne pendant la plongée, ralentit au fond
     if (this.subProp) { const sp = ss(0.84, 1, st), w = C ? 7 : ph === 'fond' ? 2.5 : 7 * sp; this.propW = (this.propW || 0) + (w - (this.propW || 0)) * Math.min(1, dt * 1.2); this.propA = ((this.propA || 0) + this.propW * dt) % (Math.PI * 2000); this.subProp.rotation.x = this.propA; }
     if (this.subSpot) this.subSpot.intensity = kf * 60 * LUXP / 4 * (this.camEau || 0);
@@ -151,8 +209,8 @@ Object.assign(Component.prototype, {
     // 3. sous l'eau ?
     this.eau(this.cam.position.y < -0.1 ? 1 : 0, T, t, dt);
   },
-  surfaced() { const B = this.srvBerth(); this.subT = 0; this.subMove = 0; this.subRig.visible = false; this.boat.children.forEach((c) => { if (c !== this.subRig) c.visible = true; });
-    Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.flyTo('serveur'); },
+  surfaced() { this.subT = 0; this.subMove = 0; this.subRig.visible = false; this.boat.children.forEach((c) => { if (c !== this.subRig) c.visible = true; });
+    const B = this.srvBerth(); Object.assign(this.b, { x: B.x, z: B.z, v: 0, turn: 0 }); this.flyTo('serveur', true); },
   // bascule de l'ambiance : brouillard bleu-vert, ciel et mer cachés, plafond vu d'en dessous
   eau(on, T, t, dt) {
     if (!on && !this.camEau) return; this.camEau = on; const S = this.scene;
@@ -165,7 +223,7 @@ Object.assign(Component.prototype, {
     if (this.rays) this.rays.forEach((r) => { r.children[0].material.opacity = (0.05 + 0.035 * Math.sin(t * 0.4 + r.userData.ph)) * Math.min(1, Math.max(0, (r.position.distanceTo(this.cam.position) - 6) / 10)); r.rotation.z = 0.12 + 0.03 * Math.sin(t * 0.3 + r.userData.ph); });
     if (this.capL) this.capL.forEach((l, i) => { l.intensity = (1.6 + 0.3 * Math.sin(t * 2 + i)) * LUXP / 4; });
     if (this.fish) { const V = this.srvVC(), m = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), sc = new T.Vector3(1.9, 0.7, 0.45), pos = new T.Vector3();
-      this.fishP.forEach((f, i) => { const c = f.s ? { x: V.x + 6, y: V.y + 6, z: V.z - 4, R: 9, w: -0.16 } : { x: V.x - 4, y: V.y + 4, z: V.z + 5, R: 13, w: 0.12 }; const a = t * c.w + f.a + Math.sin(t * 0.5 + f.o) * 0.05;
+      this.fishP.forEach((f, i) => { const c = f.s ? { x: V.x + 4, y: V.y + 10, z: V.z - 6, R: 18, w: -0.12 } : { x: V.x - 6, y: V.y + 8.5, z: V.z + 4, R: 22, w: 0.09 }; const a = t * c.w + f.a + Math.sin(t * 0.5 + f.o) * 0.05;
         pos.set(c.x + Math.cos(a) * (c.R + f.r), c.y + f.y + 0.3 * Math.sin(t + f.o), c.z + Math.sin(a) * (c.R + f.r)); e.set(0, -a + (c.w > 0 ? -Math.PI / 2 : Math.PI / 2), 0); q.setFromEuler(e); m.compose(pos, q, sc); this.fish.setMatrixAt(i, m); });
       this.fish.instanceMatrix.needsUpdate = true; }
   }

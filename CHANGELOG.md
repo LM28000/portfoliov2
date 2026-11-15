@@ -1,5 +1,12 @@
 # Journal des changements
 
+## 15 novembre 2026 : la base flottante et le manège
+
+- **L'îlot du serveur devient une base flottante**, une station océanographique en U : deux coques orange, des conteneurs, un portique roulant, une passerelle et une hélisurface. Elba entre dans le bassin central par le sud et s'y transforme en sous-marin, sous le portique.
+- **La plongée part du bassin** : le sous-marin descend par le fond du bassin, passe sous la coque et rejoint le fond. La remontée revient au bassin par en dessous, nez vers la sortie.
+- **Au fond, un manège de caissons** : cinq caissons tournent autour du nœud central (PILOTAGE, Portainer). On le fait tourner avec les flèches, les boutons ou en cliquant sur un caisson. Celui qui arrive devant s'ouvre en rideau et montre ses services, un tiroir gravé par service. Des impulsions de lumière courent sur la couronne vers les caissons qu'il dessert : la connexion unique, les sauvegardes, la supervision.
+- **La liste des services** suit ce qui tourne vraiment : Headscale, Authentik, Vaultwarden, Nextcloud, Matrix, Ollama, Grafana, Uptime Kuma, Scrutiny, Dozzle, Kopia et Portainer. La version texte est à jour.
+
 ## 14 novembre 2026 : la plongée au serveur
 
 - **L'île du serveur change.** Le bâtiment en béton laisse place à un îlot nu et à une bouée jaune à voyant en X, la marque qui signale un câble ou une installation sous l'eau. Elba s'arrête à côté.

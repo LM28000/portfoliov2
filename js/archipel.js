@@ -3,8 +3,8 @@ const PR_ISLES = {
   insula: { n: 1, name: 'Insula', to: 'Insula', line: 'Choisir où acheter, entre amis', x: 4, z: -2, top: 40 },
   cartevivante: { n: 2, name: 'Carte vivante', to: 'la Carte vivante', line: 'La France en direct : trains, avions, météo', x: -190, z: 0, rx: 46, rz: 34, h: 8, s: 1.3, top: 34,
     view: { ty: 8, yaw: 0.12, pitch: 0.5, dist: 95 }, code: 'https://github.com/LM28000/openstreetmap' },
-  serveur: { n: 3, name: 'Le serveur', to: 'le serveur', line: 'Mon serveur maison, posé au fond', x: 190, z: -24, rx: 18, rz: 13, h: 5, s: 4.1, top: 24,
-    view: { dx: -6, dz: 26, ty: 1.5, yaw: 0.55, pitch: 0.22, dist: 34 } }
+  serveur: { n: 3, name: 'Le serveur', to: 'le serveur', line: 'Mon serveur maison, sous une base flottante', x: 190, z: -24, rx: 26, rz: 15, h: 5, s: 4.1, top: 28,
+    view: { ty: 4, yaw: -1.0, pitch: 0.38, dist: 80 } }
 };
 Object.assign(PR_RADIO, {
   approche2: "Tu vois le petit ponton, au sud de l'île ? Approche doucement, je t'aide à accoster.",
@@ -26,7 +26,7 @@ Object.assign(Component.prototype, {
     const sand = new T.Color(0xcdb994), grass = new T.Color(0x6f8a4a), grass2 = new T.Color(0x8c9a58), rock = new T.Color(0x857b70);
     const wood = new T.MeshStandardMaterial({ color: new T.Color(0x3b2a1c).convertSRGBToLinear(), roughness: 0.8 });
     ['cartevivante', 'serveur'].forEach((k) => {
-      const I = PR_ISLES[k]; const g = new T.Group(); g.userData.isle = k; this.isleG[k] = g; this.scene.add(g);
+      const I = PR_ISLES[k]; const g = new T.Group(); g.userData.isle = k; this.isleG[k] = g; this.scene.add(g); if (k === 'serveur') return;   /* la base flottante arrive par loadBase (fond.js) */
       const geo = new T.PlaneGeometry(I.rx * 2.5, I.rz * 2.5, 90, 70); geo.rotateX(-Math.PI / 2); const pa = geo.attributes.position;
       for (let i = 0; i < pa.count; i++) pa.setY(i, this.isleH(I, I.x + pa.getX(i), I.z + pa.getZ(i)));
       geo.computeVertexNormals(); const nor = geo.attributes.normal, col = new Float32Array(pa.count * 3), c = new T.Color();
@@ -77,14 +77,14 @@ Object.assign(Component.prototype, {
   // la même règle partout : le pilote auto emmène Elba à l'île choisie
   goSail(k) { if (k === 'insula') this.autopilot(); else this.sailTo(k); },
   // à l'approche d'une île barrée à la main, on propose d'accoster
-  approachStep(ph, b) { if (!this.A) return; const pts = { insula: this.A }; ['cartevivante', 'serveur'].forEach((k) => { const B = this.berth(k); pts[k] = { x: B.x, z: B.z + 24 }; });
+  approachStep(ph, b) { if (!this.A) return; const pts = { insula: this.A }; ['cartevivante', 'serveur'].forEach((k) => { const B = this.berth(k); pts[k] = k === 'serveur' ? this.srvApp(B)[1] : { x: B.x, z: B.z + 24 }; });
     const best = this.sailDest || 'insula', bd = Math.hypot(b.x - pts[best].x, b.z - pts[best].z);
     if (ph === 'mer' && bd < 45) { this.approachK = best; this.setState({ phase: 'approche' }); this.say(best === 'insula' ? PR_RADIO.approche : PR_RADIO.approche2); }
     else if (ph === 'approche' && (bd > 60 || best !== this.approachK)) this.setState({ phase: 'mer' }); },
   // accoster depuis l'approche : on part d'où l'on est, sans revenir au point d'approche (plus de demi-tour)
   finalApproach(k) {
     const b = this.b, here = { x: b.x, z: b.z }; let T, pre;
-    if (k === 'insula') { T = this.D; pre = [this.A, this.Dapp]; } else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }, { x: T.x, z: T.z + 9 }]; }
+    if (k === 'insula') { T = this.D; pre = [this.A, this.Dapp]; } else if (k === 'serveur') { T = this.berth(k); pre = this.srvApp(T); } else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }, { x: T.x, z: T.z + 9 }]; }
     const dT = Math.hypot(T.x - b.x, T.z - b.z), L = Math.max(3, Math.min(8, dT / 4)), lead = { x: b.x + Math.cos(b.h) * L, z: b.z - Math.sin(b.h) * L };
     const ahead = pre.filter((p) => Math.hypot(p.x - T.x, p.z - T.z) < dT - 6);
     const pts = [here, lead]; let s0 = lead; ahead.forEach((p) => { this.plan(s0, p).forEach((q) => pts.push(q)); s0 = p; }); pts.push(T);
@@ -97,7 +97,9 @@ Object.assign(Component.prototype, {
   // points pour quitter proprement l'endroit où l'on est
   departPts() { const b = { x: this.b.x, z: this.b.z }, pts = [b], at = this.boatAt(); let s0 = b;
     if (at === 'insula' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
-    else if (at === 'cartevivante' || at === 'serveur') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
+    else if (at === 'serveur') { if (Math.cos(this.b.h) > 0) [[6, -2.5], [3, -5], [-3, -4]].forEach(([dx, dz]) => pts.push({ x: b.x + dx, z: b.z + dz }));   /* demi-tour dans le bassin */
+      s0 = { x: b.x - 34, z: this.srvBerth().z }; pts.push({ x: b.x - 14, z: s0.z }); pts.push(s0); }
+    else if (at === 'cartevivante') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
     else { const P = this.P0; let e = null; if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) e = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; else e = this.escape(b); if (e) { pts.push(e); s0 = e; } }
     return { pts, s0 }; },
   // aller voir un lieu : si Elba y est déjà, la caméra y vole ; sinon traversée express
@@ -110,7 +112,7 @@ Object.assign(Component.prototype, {
     const { pts, s0 } = this.departPts(); let T, pre;
     if (k === 'insula') { T = { x: this.D.x, z: this.D.z }; pre = [this.A, this.Dapp]; }
     else if (k === 'ponton') { T = { x: this.P0.x + 3, z: this.P0.z - 4 }; pre = [{ x: T.x + 4, z: T.z + 26 }, { x: T.x, z: T.z + 10 }]; }
-    else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }]; }
+    else { T = this.berth(k); pre = k === 'serveur' ? this.srvApp(T) : [{ x: T.x, z: T.z + 24 }]; }
     let a = s0; pre.forEach((p) => { this.plan(a, p).forEach((q) => pts.push(q)); a = p; }); pts.push(T);
     this.cruise(pts, true, 30); const C = this.cruiseP; C.transit = true; C.vmax = Math.max(60, Math.min(240, C.len / 2)); C.v = 4;
     if (this.wake) { this.wake.userData.n = 0; this.wake.geometry.setDrawRange(0, 0); } this.transitK = k; this.transitThen = then || null; this.transitT = T; this.autoDock = true; this.sailK = null; this.sailDest = k === 'ponton' ? 'insula' : k; this.isleK = null;
@@ -142,17 +144,18 @@ Object.assign(Component.prototype, {
     const st = this.st(); if (st.plan) this.setPlan(false); this.focused = null; clearTimeout(this.appT);
     const b = { x: this.b.x, z: this.b.z }, B = this.berth(k), pts = [b]; let s0 = b;
     if (st.phase === 'accoste' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
+    else if (st.phase === 'escale' && this.isleK === 'serveur') { const d = this.departPts(); pts.length = 0; d.pts.forEach((p) => pts.push(p)); s0 = d.s0; }
     else if (st.phase === 'escale') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
     else { const P = this.P0; let e = null; if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) e = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; else e = this.escape(b); if (e) { pts.push(e); s0 = e; } }
-    const app = { x: B.x, z: B.z + 24 }; this.plan(s0, app).forEach((p) => pts.push(p)); pts.push(B);
+    const app = k === 'serveur' ? this.srvApp(B) : [{ x: B.x, z: B.z + 24 }]; let a0 = s0; app.forEach((ap) => { this.plan(a0, ap).forEach((p) => pts.push(p)); a0 = ap; }); pts.push(B);
     this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.sailDest = k; this.isleK = null;
     this.setState({ phase: 'mer', auto: true, focus: null, showApp: false, showCard: false, ask: null });
     this.say('Cap sur ' + PR_ISLES[k].to + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
   },
-  flyTo(k) {
+  flyTo(k, keepH) {
     if (k === 'insula') { if (!this.D) return; this.setState({ showMap: false }); const u = this.jetty.u; Object.assign(this.b, { x: this.D.x, z: this.D.z, h: Math.atan2(u.z, -u.x), v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.isleK = null;
       this.overview(); this.visited = true; this.seen('insula'); this.setState({ phase: 'accoste', showCard: false }); this.say(PR_RADIO.accoste); return; }
-    const I = PR_ISLES[k]; if (!I) return; this.isleK = k; this.seen(k); const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: B.h, v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.sailK = null; this.autoDock = false; const v = I.view, narrow = this.host.clientWidth < this.host.clientHeight;
+    const I = PR_ISLES[k]; if (!I) return; this.isleK = k; this.seen(k); const B = this.berth(k); Object.assign(this.b, { x: B.x, z: B.z, h: keepH ? this.b.h : B.h, v: 0, turn: 0 }); this.cruiseP = null; this.route = []; this.sailK = null; this.autoDock = false; const v = I.view, narrow = this.host.clientWidth < this.host.clientHeight;
     Object.assign(this.orbW, { tx: I.x + (v.dx || 0), tz: I.z + (v.dz || 0), ty: v.ty, yaw: v.yaw, pitch: v.pitch, dist: v.dist * (narrow ? 1.7 : 1) });
     this.setState({ phase: 'escale', showMap: false, ask: null, auto: false }); this.say(PR_RADIO[k], 'LOUIS-MARIE · ' + I.name.toUpperCase());
   },
@@ -162,7 +165,7 @@ Object.assign(Component.prototype, {
   islesHit(cx, cy) { const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(); const rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
     if (this.island && (rc.intersectObject(this.island, true).length || rc.intersectObject(this.trees, true).length)) return 'insula';
     for (const k in this.isleG || {}) if (rc.intersectObject(this.isleG[k], true).length) return k; return null; },
-  islePen(x, z) { let p = -1e9; ['cartevivante', 'serveur'].forEach((k) => { const I = PR_ISLES[k]; p = Math.max(p, 1.1 - Math.hypot((x - I.x) / I.rx, (z - I.z) / I.rz)); }); return p; },
+  islePen(x, z) { const I = PR_ISLES.cartevivante; return Math.max(1.1 - Math.hypot((x - I.x) / I.rx, (z - I.z) / I.rz), this.basePen(x, z)); },
   isleStep(T, t, dt, ph) {
     this.transitFx(T, ph);
     if (!this.isleG) return;

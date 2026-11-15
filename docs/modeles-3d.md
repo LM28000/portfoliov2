@@ -88,14 +88,14 @@ $B -b blender/cabine.blend -P scripts/export_cabine.py           # -> assets/cab
 
 Les objets de la cabine (coffre, compas, lanternes, livres, seau, appareil photo, cadre) sont des modèles Poly Haven (CC0), enregistrés en `.blend` dans `assets/cabine/`.
 
-## Le serveur : Elba sous-marin et le village
+## Le serveur : la base, Elba sous-marin et le manège
 
 ```bash
 $B -b --factory-startup -P scripts/export_sousmarin.py            # -> site/assets/elba_sousmarin.glb (Elba + la transformation, animation « t de 0 à 1 »)
-$B -b --factory-startup -P scripts/export_fond.py -- export       # -> site/assets/fond.glb (caissons, câbles, bouée)
+$B -b --factory-startup -P scripts/export_serveur.py              # -> site/assets/base.glb (la base flottante) et site/assets/manege.glb (le manège)
 ```
 
-La transformation est décrite dans `scripts/sousmarin.py` : une seule variable `t` pilote tout, et les étapes se chevauchent. Le site joue l'animation exportée en réglant son temps. Il fait lui-même les fondus de couleur, les feux et la bascule de coque : la coque d'Elba laisse place, au moment où le pont est plat, à une copie de même forme, qui se déforme ensuite.
+La base est décrite dans `scripts/base_station.py`, le manège dans `scripts/carrousel.py`, avec les petites fonctions de `scripts/formes.py`. La transformation est décrite dans `scripts/sousmarin.py` : une seule variable `t` pilote tout, et les étapes se chevauchent. Le site joue l'animation exportée en réglant son temps. Il fait lui-même les fondus de couleur, les feux et la bascule de coque : la coque d'Elba laisse place, au moment où le pont est plat, à une copie de même forme, qui se déforme ensuite.
 
 ## Ce que le code attend des modèles
 
@@ -111,6 +111,7 @@ Le site retrouve les objets par leur nom. Si vous renommez un objet dans un scri
 | `cabine.glb` | `BouteilleGrp0`…`4`, `CarteParcours`, `treasure_chest…`, `PagesLivre`, `Grp_cadre`, `VHF`… | `cabin3d.js` |
 | `elba.glb` | matières `feu_…` (feux de navigation), `Hublot…` (allumés la nuit) | `scene.js`, `cabin.js` |
 | `elba_sousmarin.glb` | `Coque`, `CoqueSousMarin` (bascule) ; matières `CoqueBleue.001`, `PontBlanc.001`, `Antifouling.001`, `Rouf`, `Hublot`, `Bois`, `HublotSM`, `PhareSM` (fondus, feux) | `fond.js` |
-| `fond.glb` | `MarqueSpeciale` (la bouée), `Caisson0`…`5`, `Noeud` (clics) | `fond.js` |
+| `base.glb` | aucun nom attendu ; centre du bassin à l'origine, bassin ouvert vers −X | `fond.js` |
+| `manege.glb` | `Tournant` (ce qui tourne), `Caisson0`…`4` (clics), leurs enfants `Rideau…` (ouverture) et `Reglette…` (éclairage), `Liaison0`…`4` (câbles), `Tour…` (le nœud), matières `Couronne`, `Led…` | `fond.js` |
 
 Côté web, les matières sont simplifiées à l'export : pas de relief, pas de métal (le site n'a pas de carte d'environnement), et des textures de 512 ou 1024 px. Les textures qu'on doit lire de près gardent 1024 px.

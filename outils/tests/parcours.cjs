@@ -58,11 +58,13 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
 
   console.log('Le serveur : la plongée');
   await E(() => window.__elba.goTo('serveur')); await p.waitForFunction(() => window.__elba.st().phase === 'escale' && window.__elba.subRig && window.__elba.fondG, null, { timeout: 120000 }).catch(() => {});
-  s = await st(); check(s.ph === 'escale' && s.acts.includes('↓ Plonger avec Elba'), 'escale à la bouée, bouton « Plonger »'); await shot('09-bouee');
-  await E(() => window.__elba.plonger()); await p.waitForFunction(() => window.__elba.st().phase === 'fond', null, { timeout: 120000 }).catch(() => {});
-  check((await st()).ph === 'fond' && await E(() => window.__elba.cam.position.y < -1 && window.__elba.subSM.visible), 'Elba devenue sous-marin, au fond'); await shot('10-village', 3000);
-  await E(() => window.__elba.fondFocusK('Caisson4')); await p.waitForTimeout(1500); check(await E(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION'), 'un caisson ouvre sa fiche');
-  await E(() => window.__elba.faireSurface()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 120000 }).catch(() => {});
+  s = await st(); check(s.ph === 'escale' && s.acts.includes('↓ Plonger avec Elba'), 'escale dans le bassin de la base, bouton « Plonger »'); await shot('09-bouee');
+  await E(() => window.__elba.plonger()); await p.waitForFunction(() => window.__elba.st().phase === 'fond', null, { timeout: 240000 }).catch(() => {});
+  { const f = await E(() => { const C = window.__elba; return { ph: C.st().phase, y: +C.cam.position.y.toFixed(1), sm: !!(C.subSM && C.subSM.visible), t: +(C.subT || 0).toFixed(2) }; });
+    check(f.ph === 'fond' && f.y < -1 && f.sm, 'Elba devenue sous-marin, au fond' + (f.ph === 'fond' && f.y < -1 && f.sm ? '' : ' : ' + JSON.stringify(f))); } await shot('10-village', 3000);
+  await E(() => window.__elba.manGo(3)); await p.waitForFunction(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION', null, { timeout: 60000 }).catch(() => {}); await shot('10b-caisson', 1500);
+  check(await E(() => (window.__elba.renderVals().panel || {}).title === 'SUPERVISION' && window.__elba.manOpen[3] > 0.9), 'le manège tourne, le caisson de devant s’ouvre et montre sa fiche');
+  await E(() => window.__elba.faireSurface()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 240000 }).catch(() => {});
   check((await st()).ph === 'escale' && await E(() => !window.__elba.subRig.visible && window.__elba.cam.position.y > 0), 'retour en surface, Elba redevenue voilier'); await shot('11-surface');
 
   check(errs.length === 0, 'aucune erreur dans la console' + (errs.length ? ' : ' + errs.slice(0, 3).join(' | ') : ''));
