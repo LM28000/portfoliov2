@@ -171,9 +171,9 @@ Object.assign(Component.prototype, {
   // ---------- l'orbite : la capsule se sépare, la caméra entre dedans et regarde la Terre ; le film prend le relais
   vgEnterOrbit(T) {
     const V = this.vg, N = this.vgN; V.o = 0; V.lock = 0; V.lockE = 0; V.film = false; V.cues = {}; this.vgSceneI = -1;
-    if (!V.sep) { V.sep = true; this.scene.attach(N.e1); N.e1.visible = false; }
+    if (!V.sep) { V.sep = true; this.scene.attach(N.e1); } N.e1.visible = false;   /* le premier étage est loin : il ne reste pas sous la capsule */
     if (this.vgF1) this.vgF1.visible = false; if (this.vgF2) this.vgF2.visible = false; this.vgFL.intensity = 0;
-    this.scene.attach(N.cap); this.scene.attach(N.e2); N.cap.quaternion.identity(); V.e2v = new T.Vector3(-1.5, -3, 0.8);
+    this.scene.attach(N.cap); this.scene.attach(N.e2); N.cap.quaternion.identity(); V.e2v = new T.Vector3(-4.5, -1.5, 4);   /* le deuxième étage s'écarte de côté, hors de l'axe du hublot */
     const cp = new T.Vector3(); N.cap.getWorldPosition(cp); V.capP = cp.clone();
     V.dirG = new T.Vector3(0.3, -0.95, -0.1).normalize(); V.G = cp.clone().addScaledVector(V.dirG, 1000); V.Rg = 340;   // la Terre, sous la capsule
     const yaw = Math.atan2(-V.dirG.x, -V.dirG.z); V.yawG = yaw; V.pitchG = Math.asin(-V.dirG.y);
@@ -185,7 +185,7 @@ Object.assign(Component.prototype, {
   vgOrbitStep(T, t, dt) {
     const V = this.vg, N = this.vgN, ss = (a, b, x) => { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }; V.o += dt;
     const cp = V.capP; N.cap.position.copy(cp); N.cap.rotation.set(0.04 * Math.sin(t * 0.3), t * 0.02, 0.03 * Math.cos(t * 0.25));
-    if (N.e2.visible) { N.e2.position.addScaledVector(V.e2v, dt); N.e2.rotateZ(dt * 0.08); if (V.o > 10) N.e2.visible = false; }
+    if (N.e2.visible) { N.e2.position.addScaledVector(V.e2v, dt); N.e2.rotateZ(dt * 0.08); if (V.o > 4 || this.orb.dist < 8) N.e2.visible = false; }   /* parti avant qu'on regarde la Terre */
     this.vgTarget(cp.x, cp.y + 1.5, cp.z);
     const vid = this.vgVid, ready = vid && vid.readyState >= 2;
     // rentrer : le film revient à la Terre, l'image se recale sur la caméra, on ressort de la capsule
