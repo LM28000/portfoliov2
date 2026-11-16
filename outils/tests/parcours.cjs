@@ -1,4 +1,4 @@
-// Parcours complet dans un vrai navigateur (Chrome, rendu WebGL logiciel) : archipel, gestes, Insula, studio, cabine.
+// Parcours complet dans un vrai navigateur (Chrome, rendu WebGL logiciel) : archipel, gestes, Insula, studio, cabine, serveur, Vigie.
 // Usage (depuis outils/) : npm run parcours [-- URL]   (par défaut http://localhost:8000/, servir le site avec « python3 -m http.server »)
 // Les captures vont dans outils/tests/captures/. Code de sortie 1 si une étape échoue.
 const { chromium } = require('playwright');
@@ -67,6 +67,17 @@ const check = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); 
   check(lbl2.join() === 'Grafana,Uptime Kuma,Scrutiny,Dozzle', 'le manège tourne, le caisson de devant s’ouvre, ses tiroirs portent leurs étiquettes' + (lbl2.length ? '' : ' (aucune)'));
   await E(() => window.__elba.faireSurface()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 240000 }).catch(() => {});
   check((await st()).ph === 'escale' && await E(() => !window.__elba.subRig.visible && window.__elba.cam.position.y > 0), 'retour en surface, Elba redevenue voilier'); await shot('11-surface');
+
+  console.log('Vigie : le lancement');
+  await E(() => window.__elba.goTo('cartevivante')); await p.waitForFunction(() => window.__elba.st().phase === 'escale' && window.__elba.vgSmoke, null, { timeout: 120000 }).catch(() => {});
+  s = await st(); check(s.ph === 'escale' && s.acts.includes('↑ Embarquer dans la fusée'), 'escale au ponton de la plateforme, bouton « Embarquer dans la fusée »'); await shot('12-plateforme');
+  await E(() => window.__elba.vgEmbarquer()); await p.waitForFunction(() => { const C = window.__elba; return C.st().phase === 'vgVol' && C.vgN.fus.position.y > 120; }, null, { timeout: 120000 }).catch(() => {});
+  check(await E(() => window.__elba.vgN.fus.position.y > 120), 'la fusée décolle de la plateforme'); await shot('13-decollage', 200);
+  await E(() => window.__elba.vgPasser()); await p.waitForFunction(() => { const C = window.__elba, v = C.vgVid; return C.st().phase === 'vgOrbite' && v && !v.paused && v.currentTime > 0.5; }, null, { timeout: 180000 }).catch(() => {});
+  { const o = await E(() => { const C = window.__elba, v = C.vgVid; return { ph: C.st().phase, t: v ? +v.currentTime.toFixed(1) : -1, lock: C.vg && C.vg.lockE, fond: C.host.style.background, ciel: C.sky.visible }; });
+    check(o.ph === 'vgOrbite' && o.t >= 0.5 && o.lock === 1 && !o.ciel && /14, 18, 27/.test(o.fond), 'en orbite, le film de Vigie prend le relais de la Terre' + (o.t >= 0.5 ? '' : ' : ' + JSON.stringify(o))); } await shot('14-orbite', 2500);
+  await E(() => window.__elba.vgRentrer()); await p.waitForFunction(() => window.__elba.st().phase === 'escale', null, { timeout: 240000 }).catch(() => {});
+  check(await E(() => { const C = window.__elba; return C.st().phase === 'escale' && C.vg.amerri && C.sky.visible && !C.vgDirect && C.vgVid.style.display === 'none'; }), 'rentrée, parachutes, amerrissage près de la plateforme'); await shot('15-amerri');
 
   check(errs.length === 0, 'aucune erreur dans la console' + (errs.length ? ' : ' + errs.slice(0, 3).join(' | ') : ''));
   await b.close();

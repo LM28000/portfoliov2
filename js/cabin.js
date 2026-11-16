@@ -14,7 +14,7 @@ const PR_CABIN = {
     list: [
       ['Départ', 'Le ponton, à bord d’Elba.'],
       ['Escale n° 1 · Insula', 'Choisir où acheter, entre amis : 22 villes, les annonces du soir, 15 ans de calcul. Le studio à vendre sur le quai, la démo et l’app sur son ordinateur.'],
-      ['Escale n° 2 · Carte vivante', 'La France en direct : trains, avions, météo, sur une carte qui tourne chez moi.'],
+      ['Escale n° 2 · Vigie', 'La France en direct, vue depuis une fusée : trains, avions, bateaux, sur une carte qui tourne chez moi.'],
       ['Escale n° 3 · Le serveur', 'Mon serveur maison : une trentaine de services, tous décrits dans git.']
     ],
     paras: ['Mon CV complet est dans le coffre de la cabine.'],
@@ -34,7 +34,7 @@ const PR_CABIN_RADIO = {
 };
 
 const PR_STOPS = [
-  { k: 'cartevivante', n: '2', t: 'Carte vivante', d: 'La France en direct', x: 17, y: 26, big: true },
+  { k: 'cartevivante', n: '2', t: 'Vigie', d: 'La France en direct', x: 17, y: 26, big: true },
   { k: 'insula', n: '1', t: 'Insula', d: 'Choisir où acheter, entre amis', x: 50, y: 24, big: true },
   { k: 'serveur', n: '3', t: 'Le serveur', d: 'Mon serveur maison', x: 83, y: 26, big: true },
   { k: 'ponton', n: '⚓', t: 'Le ponton', d: 'Embarquer, barrer Elba', x: 26, y: 80 },

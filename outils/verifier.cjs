@@ -35,7 +35,6 @@ console.log('3. Fichiers cités par le code');
 const cited = new Set();
 for (const f of jsFiles.concat(['index.html'])) for (const m of read(f).matchAll(/['"(](assets\/[A-Za-z0-9_./-]+\.[a-z0-9]{2,5})['")]/g)) cited.add(m[1]);
 for (const p of [...cited].sort()) exists(p) ? ok(p) : ko('cité mais absent : ' + p);
-for (const i of [1, 2]) { const p = 'assets/carte-vivante-' + i + '.jpg'; exists(p) ? ok(p) : ko('absent : ' + p); }
 
 console.log('4. Voix de la VHF');
 const vdir = 'assets/audio/voix/';

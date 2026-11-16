@@ -12,6 +12,7 @@ Le site est une page statique. `index.html` charge three.js, puis les fichiers d
 | `js/cabin3d.js` | La cabine d'Elba (`assets/cabine.glb`) et ses objets. |
 | `js/archipel.js` | L'archipel : vue aérienne, les deux autres îles, la traversée d'île en île. |
 | `js/fond.js` | L'île du serveur : la base flottante (`assets/base.glb`), la transformation d'Elba en sous-marin dans son bassin (`assets/elba_sousmarin.glb`), la plongée, l'ambiance sous l'eau et le manège de caissons (`assets/manege.glb`). |
+| `js/vigie.js` | L'île de Vigie : la plateforme de lancement (`assets/vigie.glb`), le vol (ascenseur, décollage, flamme, fumée, montée, séparation), l'orbite et le film (`assets/vigie.mp4`, posé derrière la scène devenue transparente et calé sur la caméra), la rentrée et l'amerrissage |
 | `js/descente.js` | Descendre dans la cabine sans fondu. L'ouverture de la descente sert de « portail », qui montre la vraie cabine. |
 | `js/studio.js` | L'escale d'Insula : l'immeuble du quai, son panneau et le studio témoin (`assets/studio.glb`). |
 | `js/audio.js` | Musique, ambiance marine générée et voix de la VHF. |
@@ -40,7 +41,10 @@ Le parcours est une suite de phases (`state.phase`). Chaque phase a sa caméra, 
 | `transit` | traversée express d'une île à l'autre | vue de dessus qui suit la route |
 | `accoste` | au quai d'Insula | orbite autour de l'île |
 | `studio` | dans le studio témoin d'Insula | à la première personne, puis autour d'un objet |
-| `escale` | sur la Carte vivante, ou dans le bassin de la base du serveur | orbite autour de l'île |
+| `escale` | au ponton de la plateforme de Vigie, ou dans le bassin de la base du serveur | orbite autour de l'île |
+| `vgTour`, `vgVol` | l'ascenseur monte à la capsule ; compte à rebours, décollage et montée | orbite qui suit la fusée |
+| `vgOrbite` | en orbite : la Terre, puis le film de Vigie | orbite autour de la capsule, puis dedans |
+| `vgRetour` | rentrée, parachutes, amerrissage | orbite qui suit la capsule |
 | `mue` | Elba se transforme en sous-marin, en surface | orbite autour d'Elba |
 | `plongee`, `remonte` | le sous-marin descend vers le manège, ou remonte au bassin | orbite qui suit le sous-marin |
 | `fond` | devant le manège de caissons, à −20 m | orbite sous l'eau ; flèches ou clic sur un caisson pour faire tourner le manège |

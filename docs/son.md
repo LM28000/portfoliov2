@@ -30,4 +30,4 @@ $T/venv/bin/python audio/gen.py $T ../assets/audio/voix   # ne génère que les 
 python3 audio/index.py $T/voix/phrases.json           # réécrit index.json, supprime les clips orphelins
 ```
 
-`collect.js` lit les objets de textes radio (`PR_RADIO`, `PR_CAB_RADIO2`, `PR_STU_RADIO`) et chaque `say("…")` écrit en dur dans `js/`. `gen.py` corrige au passage la prononciation de quelques mots (« deck.gl », « Docker », « l'app »…).
+`collect.js` lit les objets de textes radio (`PR_RADIO`, `PR_CAB_RADIO2`, `PR_STU_RADIO`, les commentaires du film `PR_VG.scenes`) et chaque `say("…")` écrit en dur dans `js/` (y compris `fond.js` et `vigie.js`). `gen.py` corrige au passage la prononciation de quelques mots (« deck.gl », « Docker », « l'app »…).

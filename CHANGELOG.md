@@ -1,5 +1,14 @@
 # Journal des changements
 
+## 16 novembre 2026 : Vigie, le lancement
+
+- **La Carte vivante s'appelle maintenant Vigie**, partout : l'île, les étiquettes, la carte marine, la cabine, la version texte. Le lien vers le code mène à github.com/LM28000/vigie.
+- **L'île n° 2 devient une plateforme de lancement en mer** : deux flotteurs orange, six colonnes, un hangar marqué VIGIE, une tour rouge en treillis et la fusée « ARCHIPEL ». Elba s'amarre au ponton, au pied de la plateforme.
+- **« Embarquer dans la fusée »** : l'ascenseur monte à la capsule, le bras d'accès se retire, compte à rebours, décollage. La flamme éclaire le pont, la fumée sort du carneau et roule sur l'eau. La fusée monte, le ciel passe du bleu au bleu nuit, le premier étage se sépare.
+- **En orbite, la vraie Vigie** : la caméra entre dans la capsule et regarde la Terre. C'est la première image d'un film tourné image par image dans la vraie app (données du samedi 14 novembre) : quand la vue s'aligne, l'image s'élargit et le film démarre, sans raccord visible. On y voit la journée rejouée, un TGV, Paris, un avion cargo à Roissy, un porte-conteneurs au large de Calais, la population et l'ISS, chacun avec sa fiche ; la radio commente chaque scène, puis cite les couches que le film ne montre pas.
+- **« Rentrer sur Terre »** : rentrée dans l'atmosphère (lueur sous le bouclier), parachutes, amerrissage près de la plateforme. La capsule reste à flotter, et Elba attend au ponton.
+- La caméra reste libre pendant tout le vol : elle suit la fusée, mais l'angle et le recul restent à toi.
+
 ## 15 novembre 2026 : la base flottante et le manège
 
 - **La plongée se voit d'en dessous** : à la fin de la mue, la caméra descend sous le bassin et regarde le sous-marin en sortir entre les deux coques, puis le suit jusqu'au manège. La caméra reste libre : elle reçoit des consignes, mais ne t'est jamais imposée.

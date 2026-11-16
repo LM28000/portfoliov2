@@ -36,8 +36,8 @@ L'île est là pour montrer **la question à laquelle répond Insula** : « on v
 
 <br clear="right">
 
-### 4. La Carte vivante (île n° 2) et le serveur (île n° 3)
-La Carte vivante tourne seulement sur mon réseau local : son île montre donc des captures et un lien vers le code. Au serveur, Elba entre dans le bassin d'une base flottante. « Plonger avec Elba » la transforme en sous-marin sous le portique, et l'on descend jusqu'à un manège de caissons, à vingt mètres de fond. On le fait tourner : le caisson qui arrive devant s'ouvre et montre ses services, et ses liens vers les autres s'allument. « Faire surface » ramène Elba au bassin.
+### 4. Vigie (île n° 2) et le serveur (île n° 3)
+Vigie tourne seulement sur mon réseau local. Son île est une plateforme de lancement en mer : « Embarquer dans la fusée » fait décoller la fusée, et en orbite la Terre devient un film tourné dans la vraie app, avec ses fiches. « Rentrer sur Terre » ramène la capsule sous ses parachutes, près de la plateforme. Au serveur, Elba entre dans le bassin d'une base flottante. « Plonger avec Elba » la transforme en sous-marin sous le portique, et l'on descend jusqu'à un manège de caissons, à vingt mètres de fond. On le fait tourner : le caisson qui arrive devant s'ouvre et montre ses services, et ses liens vers les autres s'allument. « Faire surface » ramène Elba au bassin.
 
 ### 5. La cabine
 On descend par l'ouverture du rouf. On y trouve :

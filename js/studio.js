@@ -14,7 +14,7 @@ const PR_STU_RADIO = {
   annonces: "Les annonces qu'on a imprimées, avec nos notes. Insula les relève chaque soir dans les vingt-deux villes, et chiffre chacune.",
   carnet: "Le carnet du groupe : nos critères, les biens qu'on suit, et l'avis de chacun. Dans l'app, c'est l'espace « Nos biens ».",
   frigo: "La fiche du studio qu'on a préféré : le prix, le loyer, le rendement, et ce qu'il faut vérifier avant de visiter.",
-  cles: "Voilà pour Insula. Prends les clés : Elba t'attend en bas, et la Carte vivante est la prochaine île.",
+  cles: "Voilà pour Insula. Prends les clés : Elba t'attend en bas, et Vigie est la prochaine île.",
   app: "Alors, convaincu ? L'ordinateur reste allumé si tu veux y retourner.",
   sortie: "On redescend au quai."
 };
@@ -233,7 +233,7 @@ Object.assign(Component.prototype, {
     if (f) acts.push({ label: '← Revenir', cls: 'pr-btn2', go: () => this.stuUnfocus() });
     if (f === 'ordi') acts.push({ label: 'Ouvrir l’app dans un onglet ↗', cls: 'pr-btn2', go: () => window.open('https://insula.du-cray.eu/', '_blank', 'noopener') });
     if (f === 'annonces') acts.push({ label: '→ Annonce suivante', cls: 'pr-btn2', go: () => this.stuFocus('annonces') });
-    if (f === 'cles') acts.push({ label: '⛵ Larguer les amarres · Carte vivante', cls: 'pr-btn', go: () => this.leaveStudio(() => this.sailTo('cartevivante')) });
-    if (!f) { acts.push({ label: '← Redescendre au quai', cls: 'pr-btn2', go: () => this.leaveStudio() }); acts.push({ label: '⛵ Île suivante : Carte vivante', cls: 'pr-btn', go: () => this.leaveStudio(() => this.sailTo('cartevivante')) }); }
+    if (f === 'cles') acts.push({ label: '⛵ Larguer les amarres · Vigie', cls: 'pr-btn', go: () => this.leaveStudio(() => this.sailTo('cartevivante')) });
+    if (!f) { acts.push({ label: '← Redescendre au quai', cls: 'pr-btn2', go: () => this.leaveStudio() }); acts.push({ label: '⛵ Île suivante : Vigie', cls: 'pr-btn', go: () => this.leaveStudio(() => this.sailTo('cartevivante')) }); }
   }
 });

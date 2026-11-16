@@ -22,7 +22,7 @@ Pas de fiches qui s'ouvrent : on clique sur les objets, la caméra s'en approche
 | **L'archipel** | Vue aérienne des trois îles. On survole une île d'un clic, ou on embarque. |
 | **Le ponton** | On prend la barre d'Elba (flèches ou ZQSD), ou on laisse le pilote auto. |
 | **Insula** | Un immeuble sur le quai, avec un panneau « À vendre » au balcon. On monte au studio témoin : la vraie app sur l'écran du portable, les annonces imprimées, le carnet des amis, la fiche sur le frigo. |
-| **Carte vivante** | La France en temps réel : trains, avions, météo. |
+| **Vigie** | La France en temps réel : trains, avions, bateaux. Sur une plateforme de lancement : on décolle, et en orbite la Terre devient un film de la vraie app. |
 | **Le serveur** | Mon serveur maison et sa trentaine de services. Sous une base flottante : Elba devient sous-marin dans son bassin et plonge jusqu'au manège de caissons. |
 | **La cabine** | Mon parcours sur une carte marine, mon CV dans un coffre, des anecdotes en bouteille, le livre de bord du visiteur, et la VHF pour me contacter. |
 

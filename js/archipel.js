@@ -1,62 +1,27 @@
-/* L'archipel : vue aérienne d'arrivée, une île par projet (Insula, Carte vivante, le serveur), survol au clic. */
+/* L'archipel : vue aérienne d'arrivée, une île par projet (Insula, Vigie, le serveur), survol au clic. */
 const PR_ISLES = {
   insula: { n: 1, name: 'Insula', to: 'Insula', line: 'Choisir où acheter, entre amis', x: 4, z: -2, top: 40 },
-  cartevivante: { n: 2, name: 'Carte vivante', to: 'la Carte vivante', line: 'La France en direct : trains, avions, météo', x: -190, z: 0, rx: 46, rz: 34, h: 8, s: 1.3, top: 34,
-    view: { ty: 8, yaw: 0.12, pitch: 0.5, dist: 95 }, code: 'https://github.com/LM28000/openstreetmap' },
+  cartevivante: { n: 2, name: 'Vigie', to: 'Vigie', line: 'La France en direct : trains, avions, bateaux', x: -190, z: 0, rx: 31, rz: 19, top: 72,   /* une plateforme de lancement (vigie.js) */
+    view: { ty: 24, yaw: -0.62, pitch: 0.3, dist: 135 }, code: 'https://github.com/LM28000/vigie' },
   serveur: { n: 3, name: 'Le serveur', to: 'le serveur', line: 'Mon serveur maison, sous une base flottante', x: 190, z: -24, rx: 26, rz: 15, h: 5, s: 4.1, top: 28,
     view: { ty: 4, yaw: -1.0, pitch: 0.38, dist: 80 } }
 };
 Object.assign(PR_RADIO, {
-  approche2: "Tu vois le petit ponton, au sud de l'île ? Approche doucement, je t'aide à accoster.",
+  approche2: "Tu vois le ponton, au pied de la plateforme ? Approche doucement, je t'aide à accoster.",
   archipel: "Ici Louis-Marie, bienvenue ! Voici l'archipel : chaque île est un de mes projets. Clique sur une île pour la survoler. Ou embarque à bord d'Elba : tu barres, et je te guide à la radio.",
-  cartevivante: "La Carte vivante : la France en 3D et en temps réel. On voit les trains voiture par voiture, les avions, les bateaux, la météo, l'énergie, les séismes. Une frise remonte sept jours en arrière, et tout est rejoué. Derrière, il y a un serveur en Rust qui archive le temps réel, et un site en TypeScript (MapLibre, deck.gl). Elle tourne en permanence sur mon serveur maison, l'île d'en face.",
-  serveur: "La salle des machines : un serveur chez moi, sous Debian, avec une trentaine de services dans Docker. Chacun est décrit dans un fichier versionné dans git. Il y a un cloud privé, une IA locale, une messagerie, un VPN, de la supervision, et des sauvegardes chiffrées chaque nuit. C'est lui qui fait tourner la Carte vivante."
+  cartevivante: "Vigie : la France en 3D et en temps réel. On y voit les trains voiture par voiture, les avions, les bateaux, la météo, l'énergie, les séismes. Une frise remonte sept jours en arrière, et tout est rejoué. Derrière, un serveur en Rust archive le temps réel, et le site est en TypeScript (MapLibre, deck.gl). Elle tourne sur mon serveur maison, l'île d'en face. Embarque dans la fusée : en orbite, tu verras la vraie Vigie.",
+  serveur: "La salle des machines : un serveur chez moi, sous Debian, avec une trentaine de services dans Docker. Chacun est décrit dans un fichier versionné dans git. Il y a un cloud privé, une IA locale, une messagerie, un VPN, de la supervision, et des sauvegardes chiffrées chaque nuit. C'est lui qui fait tourner Vigie."
 });
 Object.assign(Component.prototype, {
-  orbitPh(ph) { return ph === 'accoste' || ph === 'nuit' || ph === 'archipel' || ph === 'escale' || ph === 'transit' || this.srvPh(ph); },
+  orbitPh(ph) { return ph === 'accoste' || ph === 'nuit' || ph === 'archipel' || ph === 'escale' || ph === 'transit' || this.srvPh(ph) || this.vgPh(ph); },
   // limite du déplacement (clic droit) selon l'endroit
   clampPan(tx, tz) { const ph = this.st().phase; let c = { x: 0, z: 0, rx: 85, rz: 55 };
-    if (ph === 'archipel') c = { x: 0, z: 10, rx: 380, rz: 260 }; else if (ph === 'escale') { const I = PR_ISLES[this.isleK]; c = { x: I.x, z: I.z, rx: 80, rz: 60 }; } else if (this.srvPh(ph)) { const V = this.srvVC(); c = { x: V.x, z: V.z - 10, rx: 45, rz: 45 }; }
+    if (ph === 'archipel') c = { x: 0, z: 10, rx: 380, rz: 260 }; else if (ph === 'escale') { const I = PR_ISLES[this.isleK]; c = { x: I.x, z: I.z, rx: 80, rz: 60 }; } else if (this.srvPh(ph)) { const V = this.srvVC(); c = { x: V.x, z: V.z - 10, rx: 45, rz: 45 }; } else if (this.vgPh(ph)) c = { x: this.orbW.tx, z: this.orbW.tz, rx: 80, rz: 80 };
     const rr = Math.hypot((tx - c.x) / c.rx, (tz - c.z) / c.rz); if (rr > 1) { tx = c.x + (tx - c.x) / rr; tz = c.z + (tz - c.z) / rr; } return [tx, tz]; },
-  distLim(ph) { return ph === 'archipel' ? [300, 1300] : ph === 'escale' ? [18, 260] : this.srvPh(ph) ? [8, 70] : [10, 220]; },
-  isleH(I, x, z) { const lx = x - I.x, lz = z - I.z, r = Math.hypot(lx / I.rx, lz / I.rz); const n = Math.sin(lx * 0.11 + I.s) * Math.cos(lz * 0.13 + I.s * 2) * 0.6 + Math.sin(lx * 0.05 - lz * 0.07 + I.s) * 0.4;
-    if (r >= 1) return 0.6 - (r - 1) * 16; let y = I.h * Math.pow(1 - r * r, 0.7) * (0.82 + 0.18 * n) + 0.6; const flat = I.h * 0.72; if (r < 0.42) y = flat + (y - flat) * Math.pow(r / 0.42, 3) * 0.2; return y; },
+  distLim(ph) { return ph === 'archipel' ? [300, 1300] : ph === 'escale' ? [18, 260] : this.srvPh(ph) ? [8, 70] : this.vgPh(ph) ? [1.2, 420] : [10, 220]; },
   buildIsles(T) {
-    this.isleG = {}; const tl = new T.TextureLoader();
-    const sand = new T.Color(0xcdb994), grass = new T.Color(0x6f8a4a), grass2 = new T.Color(0x8c9a58), rock = new T.Color(0x857b70);
-    const wood = new T.MeshStandardMaterial({ color: new T.Color(0x3b2a1c).convertSRGBToLinear(), roughness: 0.8 });
-    ['cartevivante', 'serveur'].forEach((k) => {
-      const I = PR_ISLES[k]; const g = new T.Group(); g.userData.isle = k; this.isleG[k] = g; this.scene.add(g); if (k === 'serveur') return;   /* la base flottante arrive par loadBase (fond.js) */
-      const geo = new T.PlaneGeometry(I.rx * 2.5, I.rz * 2.5, 90, 70); geo.rotateX(-Math.PI / 2); const pa = geo.attributes.position;
-      for (let i = 0; i < pa.count; i++) pa.setY(i, this.isleH(I, I.x + pa.getX(i), I.z + pa.getZ(i)));
-      geo.computeVertexNormals(); const nor = geo.attributes.normal, col = new Float32Array(pa.count * 3), c = new T.Color();
-      for (let i = 0; i < pa.count; i++) { const y = pa.getY(i), ny = nor.getY(i); if (y < 1.1) c.copy(sand); else c.copy(grass).lerp(grass2, Math.min(1, Math.max(0, (y - 3) / 8))); if (k === 'serveur') c.lerp(rock, 0.35); if (ny < 0.75) c.lerp(rock, Math.min(1, (0.75 - ny) * 4)); c.convertSRGBToLinear(); col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b; }
-      geo.setAttribute('color', new T.BufferAttribute(col, 3));
-      const land = new T.Mesh(geo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); land.position.set(I.x, 0, I.z); g.add(land);
-      // quelques pins, loin du centre
-      if (this.treeMats) { let seed = I.s * 1000; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-        for (let i = 0; i < 26; i++) { const a = rnd() * Math.PI * 2, r = 0.5 + rnd() * 0.36; const x = I.x + Math.cos(a) * I.rx * r, z = I.z + Math.sin(a) * I.rz * r; if (Math.sin(a) > (k === 'serveur' ? -0.1 : 0.35)) continue; const kk = 1 + Math.floor(rnd() * 3), [, w, h, z0] = PR_TREE_IMG[kk], s = 0.55 + rnd() * 0.35, y = this.isleH(I, x, z);
-          for (let j = 0; j < 2; j++) { const m = new T.Mesh(new T.PlaneGeometry(w, h), this.treeMats[kk]); m.position.set(x, y + (z0 + h / 2) * s, z); m.scale.setScalar(s); m.rotation.y = a + j * Math.PI / 2; g.add(m); } } }
-      const top = this.isleH(I, I.x, I.z);
-      if (k === 'cartevivante') {
-        // grand écran incliné : la vraie carte, deux vues qui alternent
-        const W = 36, H = W / 1.6; const scr = new T.Group(); scr.position.set(I.x, top + 1.5, I.z - 2); scr.rotation.x = -0.55;
-        this.cvTex = [1, 2].map((n) => { const t = tl.load('assets/carte-vivante-' + n + '.jpg'); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t; });
-        const fr = new T.Mesh(new T.BoxGeometry(W + 1, H + 1, 0.5), new T.MeshStandardMaterial({ color: 0x151a22, roughness: 0.5 })); fr.position.y = H / 2; scr.add(fr);
-        const pl = new T.Mesh(new T.PlaneGeometry(W, H), new T.MeshBasicMaterial({ map: this.cvTex[0], toneMapped: false })); pl.position.set(0, H / 2, 0.27); scr.add(pl); this.cvScreen = pl; g.add(scr);
-        for (const sx of [-W / 2 + 2, W / 2 - 2]) { const post = new T.Mesh(new T.BoxGeometry(0.6, 9, 0.6), wood); post.position.set(I.x + sx, top + 3, I.z - 2 - 6); g.add(post); }
-        // une voie ferrée en boucle et un train qui y roule
-        const pts = []; for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, x = I.x + Math.cos(a) * I.rx * 0.66, z = I.z + Math.sin(a) * I.rz * 0.64; pts.push(new T.Vector3(x, this.isleH(I, x, z) + 0.4, z)); }
-        const curve = new T.CatmullRomCurve3(pts, true, 'centripetal'); this.cvRail = curve;
-        g.add(new T.Mesh(new T.TubeGeometry(curve, 256, 0.45, 5, true), new T.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.9 })));
-        const white = new T.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.5 }), red = new T.MeshStandardMaterial({ color: new T.Color(0xb4412e).convertSRGBToLinear(), roughness: 0.5 });
-        this.cvTrain = []; for (let i = 0; i < 5; i++) { const car = new T.Group(); const body = new T.Mesh(new T.BoxGeometry(2.6, 2.4, 6.2), i === 0 ? red : white); body.position.y = 1.5; car.add(body); const stripe = new T.Mesh(new T.BoxGeometry(2.65, 0.5, 6.25), i === 0 ? white : red); stripe.position.y = 1.1; car.add(stripe); g.add(car); this.cvTrain.push(car); }
-        // un avion qui tourne au-dessus
-        const plane = new T.Group(); const fus = new T.Mesh(new T.CylinderGeometry(0.7, 0.5, 9, 10), white); fus.rotation.x = Math.PI / 2; plane.add(fus); const wing = new T.Mesh(new T.BoxGeometry(11, 0.2, 1.8), white); plane.add(wing); const tail = new T.Mesh(new T.BoxGeometry(0.2, 2, 1.4), red); tail.position.set(0, 1, -4); plane.add(tail); g.add(plane); this.cvPlane = plane;
-      }
-      if (k !== 'serveur') { const pier = new T.Mesh(new T.BoxGeometry(3, 0.4, 18), wood); pier.position.set(I.x - 6, 0.55, I.z + I.rz + 3); g.add(pier);
-      for (let i = -1; i <= 2; i++) for (const sx of [-1.3, 1.3]) { const pile = new T.Mesh(new T.CylinderGeometry(0.14, 0.14, 4, 8), wood); pile.position.set(I.x - 6 + sx, -1.4, I.z + I.rz + 3 + i * 4); g.add(pile); } }
-    });
+    this.isleG = {};
+    ['cartevivante', 'serveur'].forEach((k) => { const g = new T.Group(); g.userData.isle = k; this.isleG[k] = g; this.scene.add(g); });   /* la plateforme arrive par loadVigie (vigie.js), la base par loadBase (fond.js) */
     // étiquettes des îles (vue de l'archipel)
     this.isleLbl = {}; Object.keys(PR_ISLES).forEach((k) => { const I = PR_ISLES[k]; const el = document.createElement('button'); el.className = 'isle-lbl'; el.innerHTML = '<span class="il-k"></span><b></b><small></small><span class="il-go">survoler →</span>';
       el.querySelector('.il-k').textContent = 'PROJET ' + I.n; el.querySelector('b').textContent = I.name; el.querySelector('small').textContent = I.line; el.onclick = () => this.visit(k); el.addEventListener('wheel', (e) => { e.preventDefault(); this.renderer.domElement.dispatchEvent(new WheelEvent('wheel', e)); }, { passive: false }); el.style.display = 'none'; this.layer.appendChild(el); this.isleLbl[k] = el; });
@@ -71,20 +36,21 @@ Object.assign(Component.prototype, {
     this.archView(instant); this.setState({ phase: 'archipel', focus: null, showApp: false, ask: null, auto: false }); this.say(PR_RADIO.archipel); },
   // l'orbite repart de la caméra actuelle (pas de saut)
   orbFromCam() { const O = this.orb, c = this.cam.position; O.tx = this.look ? this.look.x : this.b.x; O.tz = this.look ? this.look.z : this.b.z; O.ty = 0; O.dist = Math.max(5, Math.hypot(c.x - O.tx, c.y, c.z - O.tz)); O.yaw = Math.atan2(c.x - O.tx, c.z - O.tz); O.pitch = Math.asin(Math.min(1, c.y / O.dist)); },
-  berth(k) { if (k === 'serveur') return this.srvBerth(); const I = PR_ISLES[k]; return { x: I.x - 6 + 3.2, z: I.z + I.rz + 6, h: Math.PI / 2 }; },
+  berth(k) { if (k === 'serveur') return this.srvBerth(); if (k === 'cartevivante') return this.vgBerth(); const I = PR_ISLES[k]; return { x: I.x - 6 + 3.2, z: I.z + I.rz + 6, h: Math.PI / 2 }; },
   berthed(k) { if (!PR_ISLES[k] || !PR_ISLES[k].rx) return false; const B = this.berth(k); return Math.hypot(this.b.x - B.x, this.b.z - B.z) < 6; },
   // le pilote auto emmène Elba jusqu'au ponton de l'île suivante
   // la même règle partout : le pilote auto emmène Elba à l'île choisie
+  isleApp(k, B) { return k === 'serveur' ? this.srvApp(B) : k === 'cartevivante' ? this.vgApp(B) : [{ x: B.x, z: B.z + 24 }]; },
   goSail(k) { if (k === 'insula') this.autopilot(); else this.sailTo(k); },
   // à l'approche d'une île barrée à la main, on propose d'accoster
-  approachStep(ph, b) { if (!this.A) return; const pts = { insula: this.A }; ['cartevivante', 'serveur'].forEach((k) => { const B = this.berth(k); pts[k] = k === 'serveur' ? this.srvApp(B)[1] : { x: B.x, z: B.z + 24 }; });
+  approachStep(ph, b) { if (!this.A) return; const pts = { insula: this.A }; ['cartevivante', 'serveur'].forEach((k) => { const B = this.berth(k); const ap = this.isleApp(k, B); pts[k] = ap[ap.length - 1]; });
     const best = this.sailDest || 'insula', bd = Math.hypot(b.x - pts[best].x, b.z - pts[best].z);
     if (ph === 'mer' && bd < 45) { this.approachK = best; this.setState({ phase: 'approche' }); this.say(best === 'insula' ? PR_RADIO.approche : PR_RADIO.approche2); }
     else if (ph === 'approche' && (bd > 60 || best !== this.approachK)) this.setState({ phase: 'mer' }); },
   // accoster depuis l'approche : on part d'où l'on est, sans revenir au point d'approche (plus de demi-tour)
   finalApproach(k) {
     const b = this.b, here = { x: b.x, z: b.z }; let T, pre;
-    if (k === 'insula') { T = this.D; pre = [this.A, this.Dapp]; } else if (k === 'serveur') { T = this.berth(k); pre = this.srvApp(T); } else { T = this.berth(k); pre = [{ x: T.x, z: T.z + 24 }, { x: T.x, z: T.z + 9 }]; }
+    if (k === 'insula') { T = this.D; pre = [this.A, this.Dapp]; } else { T = this.berth(k); pre = this.isleApp(k, T); }
     const dT = Math.hypot(T.x - b.x, T.z - b.z), L = Math.max(3, Math.min(8, dT / 4)), lead = { x: b.x + Math.cos(b.h) * L, z: b.z - Math.sin(b.h) * L };
     const ahead = pre.filter((p) => Math.hypot(p.x - T.x, p.z - T.z) < dT - 6);
     const pts = [here, lead]; let s0 = lead; ahead.forEach((p) => { this.plan(s0, p).forEach((q) => pts.push(q)); s0 = p; }); pts.push(T);
@@ -99,7 +65,7 @@ Object.assign(Component.prototype, {
     if (at === 'insula' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
     else if (at === 'serveur') { if (Math.cos(this.b.h) > 0) [[6, -2.5], [3, -5], [-3, -4]].forEach(([dx, dz]) => pts.push({ x: b.x + dx, z: b.z + dz }));   /* demi-tour dans le bassin */
       s0 = { x: b.x - 34, z: this.srvBerth().z }; pts.push({ x: b.x - 14, z: s0.z }); pts.push(s0); }
-    else if (at === 'cartevivante') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
+    else if (at === 'cartevivante') { pts.push({ x: b.x + 12, z: b.z + 2 }); s0 = { x: b.x + 30, z: b.z + 20 }; pts.push(s0); }   /* on longe le ponton vers l'est, puis on s'écarte */
     else { const P = this.P0; let e = null; if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) e = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; else e = this.escape(b); if (e) { pts.push(e); s0 = e; } }
     return { pts, s0 }; },
   // aller voir un lieu : si Elba y est déjà, la caméra y vole ; sinon traversée express
@@ -112,7 +78,7 @@ Object.assign(Component.prototype, {
     const { pts, s0 } = this.departPts(); let T, pre;
     if (k === 'insula') { T = { x: this.D.x, z: this.D.z }; pre = [this.A, this.Dapp]; }
     else if (k === 'ponton') { T = { x: this.P0.x + 3, z: this.P0.z - 4 }; pre = [{ x: T.x + 4, z: T.z + 26 }, { x: T.x, z: T.z + 10 }]; }
-    else { T = this.berth(k); pre = k === 'serveur' ? this.srvApp(T) : [{ x: T.x, z: T.z + 24 }]; }
+    else { T = this.berth(k); pre = this.isleApp(k, T); }
     let a = s0; pre.forEach((p) => { this.plan(a, p).forEach((q) => pts.push(q)); a = p; }); pts.push(T);
     this.cruise(pts, true, 30); const C = this.cruiseP; C.transit = true; C.vmax = Math.max(60, Math.min(240, C.len / 2)); C.v = 4;
     if (this.wake) { this.wake.userData.n = 0; this.wake.geometry.setDrawRange(0, 0); } this.transitK = k; this.transitThen = then || null; this.transitT = T; this.autoDock = true; this.sailK = null; this.sailDest = k === 'ponton' ? 'insula' : k; this.isleK = null;
@@ -144,10 +110,10 @@ Object.assign(Component.prototype, {
     const st = this.st(); if (st.plan) this.setPlan(false); this.focused = null; clearTimeout(this.appT);
     const b = { x: this.b.x, z: this.b.z }, B = this.berth(k), pts = [b]; let s0 = b;
     if (st.phase === 'accoste' && this.jetty) { const u = this.jetty.u, n = this.jetty.n; pts.push({ x: b.x + u.x * 4 + n.x * 3, z: b.z + u.z * 4 + n.z * 3 }); s0 = { x: this.Dapp.x + n.x * 10, z: this.Dapp.z + n.z * 10 }; pts.push(s0); }
-    else if (st.phase === 'escale' && this.isleK === 'serveur') { const d = this.departPts(); pts.length = 0; d.pts.forEach((p) => pts.push(p)); s0 = d.s0; }
+    else if (st.phase === 'escale' && (this.isleK === 'serveur' || this.isleK === 'cartevivante')) { const d = this.departPts(); pts.length = 0; d.pts.forEach((p) => pts.push(p)); s0 = d.s0; }
     else if (st.phase === 'escale') { s0 = { x: b.x, z: b.z + 22 }; pts.push(s0); }
     else { const P = this.P0; let e = null; if (Math.abs(b.x - P.x) < 12 && b.z > P.z - 16 && b.z < P.z + 16) e = { x: b.x + (b.x >= P.x ? 3 : -3), z: P.z - 22 }; else e = this.escape(b); if (e) { pts.push(e); s0 = e; } }
-    const app = k === 'serveur' ? this.srvApp(B) : [{ x: B.x, z: B.z + 24 }]; let a0 = s0; app.forEach((ap) => { this.plan(a0, ap).forEach((p) => pts.push(p)); a0 = ap; }); pts.push(B);
+    const app = this.isleApp(k, B); let a0 = s0; app.forEach((ap) => { this.plan(a0, ap).forEach((p) => pts.push(p)); a0 = ap; }); pts.push(B);
     this.b.v = 1; this.cruise(pts, true, 17); this.autoDock = true; this.sailK = k; this.sailDest = k; this.isleK = null;
     this.setState({ phase: 'mer', auto: true, focus: null, showApp: false, showCard: false, ask: null });
     this.say('Cap sur ' + PR_ISLES[k].to + ' ! Je tiens la barre, regarde la route en pointillés sur la carte marine.');
@@ -165,15 +131,12 @@ Object.assign(Component.prototype, {
   islesHit(cx, cy) { const T = window.THREE, r = this.renderer.domElement.getBoundingClientRect(); const rc = new T.Raycaster(); rc.setFromCamera(new T.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.cam);
     if (this.island && (rc.intersectObject(this.island, true).length || rc.intersectObject(this.trees, true).length)) return 'insula';
     for (const k in this.isleG || {}) if (rc.intersectObject(this.isleG[k], true).length) return k; return null; },
-  islePen(x, z) { const I = PR_ISLES.cartevivante; return Math.max(1.1 - Math.hypot((x - I.x) / I.rx, (z - I.z) / I.rz), this.basePen(x, z)); },
+  islePen(x, z) { return Math.max(this.vgPen(x, z), this.basePen(x, z)); },
   isleStep(T, t, dt, ph) {
     this.transitFx(T, ph);
     if (!this.isleG) return;
     // brume repoussée vue de haut
     const far = ph === 'archipel' ? 3000 : (this.st().plan ? 2600 : 1350), near = ph === 'archipel' ? 500 : 220; const F = this.scene.fog; F.far += (far - F.far) * Math.min(1, dt * 2); F.near += (near - F.near) * Math.min(1, dt * 2);
-    if (this.cvRail && this.cvTrain) { const u0 = (t * 0.035) % 1; this.cvTrain.forEach((car, i) => { const u = (u0 - i * 0.0215 + 1) % 1; const p = this.cvRail.getPointAt(u), tg = this.cvRail.getTangentAt(u); car.position.copy(p); car.rotation.set(0, Math.atan2(tg.x, tg.z), 0); }); }
-    if (this.cvPlane) { const I = PR_ISLES.cartevivante, a = t * 0.18; this.cvPlane.position.set(I.x + Math.cos(a) * 52, 34 + 2 * Math.sin(t * 0.5), I.z + Math.sin(a) * 40); this.cvPlane.rotation.set(0, -a, 0.35); }
-    if (this.cvScreen) { const i = Math.floor(t / 7) % 2; if (this.cvScreen.material.map !== this.cvTex[i]) { this.cvScreen.material.map = this.cvTex[i]; this.cvScreen.material.needsUpdate = true; } }
     // étiquettes
     const W = this.host.clientWidth, H = this.host.clientHeight, show = ph === 'archipel';
     for (const k in this.isleLbl) { const el = this.isleLbl[k], I = PR_ISLES[k]; if (!show) { el.style.display = 'none'; continue; } const p = new T.Vector3(I.x, I.top, I.z).project(this.cam); if (p.z > 1) { el.style.display = 'none'; continue; } el.style.display = 'block'; el.style.left = ((p.x + 1) / 2 * W) + 'px'; el.style.top = ((1 - p.y) / 2 * H) + 'px'; el.classList.toggle('done', !!(this.visitedSet || {})[k]); }

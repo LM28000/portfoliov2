@@ -15,7 +15,7 @@ Les mêmes crédits sont affichés sur le site (carte du voyage, puis « Crédit
 | Textures | oak_wood_planks, plank_flooring_04, rough_linen, wood_plank_wall (Poly Haven) | CC0 |
 | Musique | Mendelssohn, ouverture « Les Hébrides », Musopen Symphony ; Satie, Gymnopédie n° 1, Michael Laucke (Wikimedia Commons) | domaine public |
 | Voix de la VHF | synthèse [Piper](https://github.com/rhasspy/piper), voix « upmc » (données UPMC, locuteur Pierre) | CC BY-SA 4.0 |
-| Captures de la Carte vivante | fond OpenFreeMap, © OpenMapTiles, données © contributeurs OpenStreetMap | ODbL |
+| Film de Vigie (`assets/vigie.mp4`) | fond OpenFreeMap, © OpenMapTiles, données © contributeurs OpenStreetMap ; trains SNCF et Île-de-France Mobilités, avions ADS-B (adsb.lol), navires AIS, population INSEE | ODbL et licences des sources |
 | Polices | Fraunces, Inter, JetBrains Mono, Caveat (Google Fonts) | SIL OFL |
 
 ## Faits pour ce site

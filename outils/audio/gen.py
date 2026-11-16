@@ -3,7 +3,7 @@ S = sys.argv[1]; out = sys.argv[2]; os.makedirs(out, exist_ok=True)
 d = json.load(open(S + '/voix/phrases.json'))
 # prononciation (uniquement pour la synthèse)
 P = [('ZQSD', 'Z, Q, S, D'), ('deck.gl', 'dèque gé elle'), ('TypeScript', 'taïpe scripte'), ('MapLibre', 'mappe libre'), ('Rust', 'reust'), ('Debian', 'débiane'), ('Docker', 'dokeur'),
-     (' git', ' guite'), ('3D', 'trois dé'), ('Louis-Marie', 'Louis-Marie'), ('Elba', 'Elba'), ('CV', 'cé vé'), ('…', ','), ('(', ', '), (')', ','), ('app ', 'appli '), ("l'app", "l'appli"), ('IA', 'I.A.'), ('Précigné', 'Précigné')]
+     (' git', ' guite'), ('3D', 'trois dé'), ('Louis-Marie', 'Louis-Marie'), ('Elba', 'Elba'), ('CV', 'cé vé'), ('…', ','), ('(', ', '), (')', ','), ('app ', 'appli '), ("l'app", "l'appli"), ('IA', 'I.A.'), ('Précigné', 'Précigné'), ('TGV', 'T.G.V.'), ('RER', 'R.E.R.'), ('ISS', 'I.S.S.'), ('INSEE', 'Insé')]
 import wave
 from piper import PiperVoice
 from piper.config import SynthesisConfig

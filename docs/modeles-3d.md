@@ -97,6 +97,14 @@ $B -b --factory-startup -P scripts/export_serveur.py              # -> site/asse
 
 La base est décrite dans `scripts/base_station.py`, le manège dans `scripts/carrousel.py`, avec les petites fonctions de `scripts/formes.py`. La transformation est décrite dans `scripts/sousmarin.py` : une seule variable `t` pilote tout, et les étapes se chevauchent. Le site joue l'animation exportée en réglant son temps. Il fait lui-même les fondus de couleur, les feux et la bascule de coque : la coque d'Elba laisse place, au moment où le pont est plat, à une copie de même forme, qui se déforme ensuite.
 
+## Vigie : la plateforme de lancement
+
+```bash
+$B -b --factory-startup -P scripts/export_vigie.py                # -> site/assets/vigie.glb (option « -- controle.png » : une image de contrôle)
+```
+
+La plateforme, la tour et la fusée sont décrites dans `scripts/vigie_plateforme.py`. Le film de l'orbite (`assets/vigie.mp4`) est filmé dans la vraie app, puis monté avec `scripts/monter_film.py` (1440 × 810).
+
 ## Ce que le code attend des modèles
 
 Le site retrouve les objets par leur nom. Si vous renommez un objet dans un script, mettez le code à jour.
@@ -111,6 +119,7 @@ Le site retrouve les objets par leur nom. Si vous renommez un objet dans un scri
 | `cabine.glb` | `BouteilleGrp0`…`4`, `CarteParcours`, `treasure_chest…`, `PagesLivre`, `Grp_cadre`, `VHF`… | `cabin3d.js` |
 | `elba.glb` | matières `feu_…` (feux de navigation), `Hublot…` (allumés la nuit) | `scene.js`, `cabin.js` |
 | `elba_sousmarin.glb` | `Coque`, `CoqueSousMarin` (bascule) ; matières `CoqueBleue.001`, `PontBlanc.001`, `Antifouling.001`, `Rouf`, `Hublot`, `Bois`, `HublotSM`, `PhareSM` (fondus, feux) | `fond.js` |
+| `vigie.glb` | `Fusee` > `Etage1`, `Etage2` > `Capsule` > `Parachutes` (le vol), `Bras` (bras d'accès), `Ascenseur` ; centre de la plateforme à l'origine, fusée en +X | `vigie.js` |
 | `base.glb` | aucun nom attendu ; centre du bassin à l'origine, bassin ouvert vers −X | `fond.js` |
 | `manege.glb` | `Tournant` (ce qui tourne), `Caisson0`…`4` (clics), leurs enfants `Rideau…` (ouverture) et `Reglette…` (éclairage), `Liaison0`…`4` (câbles), `Tour…` (le nœud), matières `Couronne`, `Led…` | `fond.js` |
 

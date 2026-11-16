@@ -214,3 +214,5 @@ body.dragging .isle-lbl, body.dragging .boat-pin { pointer-events: none; }
 .tiroir-lbl span { display: none; max-width: 220px; white-space: normal; margin-top: 4px; font-size: 12.5px; line-height: 1.35; color: #d8e4ea; }
 .tiroir-lbl.sel span { display: block; } .tiroir-lbl:hover, .tiroir-lbl.sel { box-shadow: 0 0 0 3px var(--sun), 0 6px 18px rgba(0,0,0,.35); }
 body:not(.ph-fond) .tiroir-lbl { display: none !important; }
+/* Vigie : pendant le film, la carte marine laisse la place aux fiches du film (en haut à droite) */
+body.ph-vgOrbite .chart, body.ph-vgOrbite #mapBtn { display: none !important; }

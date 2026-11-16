@@ -70,6 +70,6 @@ Object.assign(Component.prototype, {
   },
   renduFrame(scene, cam, expo) {
     const r = this.renderer, R = this.rendu; r.toneMappingExposure = expo;
-    if (R && R.comp) { R.rp.scene = scene; R.rp.camera = cam; const dehors = scene === this.scene && this.st().phase !== 'studio'; if (R.comp.passes.includes(R.ao)) R.ao.enabled = dehors; if (R.comp.passes.includes(R.halo)) R.halo.enabled = this.st().phase !== 'studio'; /* intérieurs : profondeur trop étirée (3 cm à 3 km) */ R.comp.render(); } else r.render(scene, cam);
+    if (R && R.comp && !(this.vgDirect && scene === this.scene)) { R.rp.scene = scene; R.rp.camera = cam; const dehors = scene === this.scene && this.st().phase !== 'studio'; if (R.comp.passes.includes(R.ao)) R.ao.enabled = dehors; if (R.comp.passes.includes(R.halo)) R.halo.enabled = this.st().phase !== 'studio'; /* intérieurs : profondeur trop étirée (3 cm à 3 km) */ R.comp.render(); } else r.render(scene, cam);
   }
 });
